@@ -8,16 +8,9 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ### B-01 · P1 · Real portraits & gallery art 🔒 owner is generating art
 
-Owner-side task. Agent part: when files land in `public/art/<id>/`, verify they load in shop cards, roster, profile, chat (mood variants) and gallery; tune `object-position` in `style.css` if faces are cropped.
+Owner-side task. Agent part: when files land in `public/art/<id>/`, verify they load in shop cards, roster, profile, chat (mood variants), gallery and the battlefield (`chibi.webp`; code already wired, B-02 done); tune `object-position` in `style.css` if faces are cropped.
 
 - Accept: smoke screenshots show real art on all 3 viewports; no layout shifts.
-
-### B-02 · P1 · Chibi sprites on the battlefield
-
-Load `public/art/<id>/chibi.webp` (256×256) in `BattleScene` if present; draw it instead of the circle, scaled to ~1 tile, with a subtle idle bob, a small recoil when `tower.flash > 0`, and flip to face the aim direction. Fall back to current circle rendering when missing.
-
-- Files: `src/game/BattleScene.ts` (preload via `this.load.image` with a `loaderror` guard).
-- Accept: works with and without the file; no console errors; portrait transposition still correct.
 
 ### B-03 · P1 · Juice: audio + feedback
 

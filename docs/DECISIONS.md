@@ -41,3 +41,7 @@ One canonical file (read natively by Codex, Jules, Cursor, and others); `CLAUDE.
 ### D-010 · 2026-09-28 · Smoke tests use `@sparticuz/chromium` on Linux
 
 Cloud/sandboxed agents usually can't download Playwright browsers, but can install npm packages. The npm-bundled Chromium works there and in GitHub Actions. It runs single-process, so the smoke test launches one browser per viewport.
+
+### D-011 · 2026-09-28 · Optional battlefield art probed with `<img>`, not the Phaser loader
+
+Phaser's loader logs `console.error` for every missing file, and the smoke test (rightly) fails on console errors. Chibi sprites are optional, so `BattleScene` probes them with a plain `Image` after the scene starts (never blocking the battle) and adds successful loads with `textures.addImage`. Missing files only produce the browser's network 404 line, same as the DOM art fallback. Chibi art faces right; the scene mirrors it toward the target.

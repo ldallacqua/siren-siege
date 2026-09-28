@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
-import { HEROINE_BY_ID } from '../data/heroines.ts';
+import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
 import { MAPS } from '../data/maps.ts';
 import type { MapDef } from '../data/types.ts';
 import type { Battle } from './Battle.ts';
 import type { Fx, Tower } from './sim/BattleSim.ts';
+import { chibiPose, type Facing } from './chibiPose.ts';
 import { Path } from './sim/path.ts';
 
 interface View {
@@ -12,6 +13,9 @@ interface View {
   ox: number;
   oy: number;
 }
+
+/** Texture key for a heroine's optional map sprite (public/art/<id>/chibi.webp). */
+const chibiKey = (id: string) => `chibi-${id}`;
 
 interface LiveFx extends Fx {
   age: number;
@@ -29,8 +33,12 @@ export class BattleScene extends Phaser.Scene {
   private path = new Path(MAPS[0].path);
   private bg!: Phaser.GameObjects.Graphics;
   private g!: Phaser.GameObjects.Graphics;
+  /** Drawn above sprites: tier pips. */
+  private top!: Phaser.GameObjects.Graphics;
   private view: View = { portrait: false, tile: 32, ox: 0, oy: 0 };
   private labels = new Map<number, Phaser.GameObjects.Text>();
+  private sprites = new Map<number, { img: Phaser.GameObjects.Image; facing: Facing }>();
+  private ghostImg: Phaser.GameObjects.Image | null = null;
   private fx: LiveFx[] = [];
   private stars: { x: number; y: number; s: number; p: number }[] = [];
   private dragging = false;
@@ -43,6 +51,8 @@ export class BattleScene extends Phaser.Scene {
   create(): void {
     this.bg = this.add.graphics();
     this.g = this.add.graphics();
+    this.top = this.add.graphics().setDepth(6);
+    this.loadChibis();
     for (let i = 0; i < 70; i++) this.stars.push({ x: Math.random() * 20, y: Math.random() * 12, s: Math.random(), p: Math.random() * 6 });
     this.scale.on('resize', () => this.layout());
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.onDown(p));
@@ -55,10 +65,31 @@ export class BattleScene extends Phaser.Scene {
     this.battle = b;
     this.map = b?.map ?? MAPS[0];
     this.path = b?.sim.path ?? new Path(this.map.path);
-    for (const t of this.labels.values()) t.destroy();
-    this.labels.clear();
     this.fx = [];
     this.layout();
+  }
+
+  /**
+   * Optional chibi sprites load in the background so a missing file never
+   * blocks the battle; until (or unless) a texture exists, towers draw as circles.
+   */
+  private loadChibis(): void {
+    // A plain <img> probe instead of this.load: Phaser's loader console.errors on a 404.
+    for (const h of HEROINES) {
+      const img = new Image();
+      img.onload = () => {
+        const key = chibiKey(h.id);
+        if (!this.textures.exists(key)) this.textures.addImage(key, img);
+      };
+      img.src = `art/${h.id}/chibi.webp`;
+    }
+  }
+
+  private clearTowerObjects(): void {
+    for (const t of this.labels.values()) t.destroy();
+    this.labels.clear();
+    for (const s of this.sprites.values()) s.img.destroy();
+    this.sprites.clear();
   }
 
   // ---------------------------------------------------------------- layout
@@ -74,8 +105,7 @@ export class BattleScene extends Phaser.Scene {
     const tile = Math.max(8, Math.min(W / cols, H / rows));
     this.view = { portrait, tile, ox: (W - cols * tile) / 2, oy: (H - rows * tile) / 2 };
     this.drawBackground();
-    for (const t of this.labels.values()) t.destroy();
-    this.labels.clear();
+    this.clearTowerObjects();
   }
 
   private sx(x: number, y: number): number {
@@ -185,8 +215,13 @@ export class BattleScene extends Phaser.Scene {
     const b = this.battle;
     const g = this.g;
     g.clear();
+    this.top.clear();
     this.drawStars(dt);
-    if (!b) return;
+    this.ghostImg?.setVisible(false);
+    if (!b) {
+      if (this.labels.size || this.sprites.size) this.clearTowerObjects();
+      return;
+    }
     b.tick(dt);
     const sim = b.sim;
     const T = this.view.tile;
@@ -273,6 +308,12 @@ export class BattleScene extends Phaser.Scene {
         this.labels.delete(uid);
       }
     }
+    for (const [uid, s] of this.sprites) {
+      if (!seen.has(uid)) {
+        s.img.destroy();
+        this.sprites.delete(uid);
+      }
+    }
 
     // Fx
     for (const f of this.fx) {
@@ -322,6 +363,16 @@ export class BattleScene extends Phaser.Scene {
       g.fillCircle(x, y, T * 0.42);
       g.lineStyle(2, col, 1);
       g.strokeCircle(x, y, T * 0.42);
+      const key = chibiKey(def.id);
+      if (this.textures.exists(key)) {
+        if (!this.ghostImg) this.ghostImg = this.add.image(0, 0, key).setDepth(4).setOrigin(0.5, 0.82);
+        this.ghostImg
+          .setTexture(key)
+          .setVisible(true)
+          .setAlpha(0.7)
+          .setPosition(x, y + T * 0.32);
+        this.ghostImg.setScale((T * 1.15) / this.ghostImg.height);
+      }
     }
   }
 
@@ -350,11 +401,65 @@ export class BattleScene extends Phaser.Scene {
     const y = this.sy(t.x, t.y);
     const r = T * 0.42;
     const def = t.def;
+    const key = chibiKey(def.id);
+    const hasChibi = this.textures.exists(key);
     g.fillStyle(0x000000, 0.35);
     g.fillEllipse(x, y + r * 0.75, r * 1.8, r * 0.6);
     if (t.flash > 0) {
       g.fillStyle(def.color, 0.35);
       g.fillCircle(x, y, r * 1.3);
+    }
+    // Aim direction in screen space (transposed in portrait)
+    const ax = Math.cos(t.aim);
+    const ay = Math.sin(t.aim);
+    const dx = this.view.portrait ? ay : ax;
+    const dy = this.view.portrait ? ax : ay;
+    if (selected) {
+      g.lineStyle(3, 0xffffff, 1);
+      g.strokeCircle(x, y, r * 1.08);
+    }
+    if (hasChibi) this.drawChibi(t, key, x, y, dx, dy);
+    else this.drawDisc(t, x, y, dx, dy);
+    // Tier pips (above the sprite)
+    const pips = t.tiers.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < pips; i++) {
+      this.top.fillStyle(0xffd23f, 1);
+      this.top.fillCircle(x - (pips - 1) * r * 0.2 + i * r * 0.4, y + r * 1.05, r * 0.12);
+    }
+  }
+
+  /** Real art: chibi sprite with idle bob, recoil on attack, flipped toward the target. */
+  private drawChibi(t: Tower, key: string, x: number, y: number, dx: number, dy: number): void {
+    const T = this.view.tile;
+    const label = this.labels.get(t.uid);
+    if (label) {
+      label.destroy();
+      this.labels.delete(t.uid);
+    }
+    let s = this.sprites.get(t.uid);
+    if (!s) {
+      s = { img: this.add.image(x, y, key).setOrigin(0.5, 0.82).setDepth(4), facing: 1 };
+      this.sprites.set(t.uid, s);
+    }
+    const pose = chibiPose(this.time.now / 1000, t.uid * 1.7, dx, dy, t.flash, s.facing);
+    s.facing = pose.facing;
+    const scale = (T * 1.15) / s.img.height;
+    // Feet sit on the shadow ellipse; squash keeps the feet planted.
+    s.img
+      .setPosition(x + pose.dx * T, y + T * 0.32 + pose.dy * T)
+      .setScale(scale * (2 - pose.squash), scale * pose.squash)
+      .setFlipX(pose.facing < 0);
+  }
+
+  /** Fallback: colored disc with an initial and an aim marker. */
+  private drawDisc(t: Tower, x: number, y: number, dx: number, dy: number): void {
+    const g = this.g;
+    const r = this.view.tile * 0.42;
+    const def = t.def;
+    const sprite = this.sprites.get(t.uid);
+    if (sprite) {
+      sprite.img.destroy();
+      this.sprites.delete(t.uid);
     }
     g.fillStyle(def.accent, 1);
     g.fillCircle(x, y, r);
@@ -362,24 +467,9 @@ export class BattleScene extends Phaser.Scene {
     g.fillCircle(x, y, r * 0.82);
     g.fillStyle(0xffffff, 0.25);
     g.fillCircle(x - r * 0.25, y - r * 0.3, r * 0.35);
-    // Aim marker (in screen space: transpose the angle in portrait)
     if (t.stats.attack === 'bolt' || t.stats.attack === 'bomb') {
-      const ax = Math.cos(t.aim);
-      const ay = Math.sin(t.aim);
-      const dx = this.view.portrait ? ay : ax;
-      const dy = this.view.portrait ? ax : ay;
       g.fillStyle(0xffffff, 0.95);
       g.fillCircle(x + dx * r * 0.95, y + dy * r * 0.95, r * 0.16);
-    }
-    if (selected) {
-      g.lineStyle(3, 0xffffff, 1);
-      g.strokeCircle(x, y, r * 1.08);
-    }
-    // Tier pips
-    const pips = t.tiers.reduce((a, b) => a + b, 0);
-    for (let i = 0; i < pips; i++) {
-      g.fillStyle(0xffd23f, 1);
-      g.fillCircle(x - (pips - 1) * r * 0.2 + i * r * 0.4, y + r * 1.05, r * 0.12);
     }
     let label = this.labels.get(t.uid);
     if (!label) {

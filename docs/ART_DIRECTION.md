@@ -16,7 +16,7 @@ All files go in `public/art/<heroine-id>/`. The game picks them up automatically
 | `portrait.webp`                     | 1200×1600 (3:4) | Default. Thighs-up, facing viewer, transparent or simple dark background. Used in shop cards, roster, profile                                              |
 | `portrait-<mood>.webp`              | 1200×1600       | Same pose/crop as `portrait`, only expression/arms change. Moods used by chats: `smile`, `tease`, `smirk`, `wink`, `laugh`, `blush`, `shy`, `pout`, `grin` |
 | `gallery-1.webp` … `gallery-5.webp` | 1600×1200 (4:3) | Unlockable illustrations (see themes below)                                                                                                                |
-| `chibi.webp` _(v1)_                 | 256×256         | Map sprite, 2–3 head-tall chibi, top-down-ish 3/4 view                                                                                                     |
+| `chibi.webp` _(v1)_                 | 256×256         | Map sprite, 2–3 head-tall chibi, top-down-ish 3/4 view. **Facing screen-right** (the game mirrors it), transparent background, feet near the bottom edge   |
 
 Export WebP quality 85. Keep portraits on transparent backgrounds where possible so chats can layer them over scenes.
 

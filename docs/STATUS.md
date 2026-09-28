@@ -13,12 +13,13 @@
 - Bond 1–10 (+2% attack rate/level), 8 chat episodes (2 per heroine, Bond 1 and 3), 20 gallery slots (Bond 2/4/6/8/10).
 - Unlocks: Kaede after reaching wave 10, Selene after clearing wave 20.
 - Responsive: landscape sidebar, portrait bottom dock with transposed map, short-landscape compact mode. Touch/mouse/keyboard.
+- Battlefield chibi sprites: drop `public/art/<id>/chibi.webp` and towers render it (idle bob, recoil on attack, flips toward the target); falls back to colored discs per heroine when missing.
 - Save in localStorage; `?dev` mode.
-- Tooling: unit tests (24), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
+- Tooling: unit tests (27), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
 ## Known issues / limitations
 
-- **All art is placeholder** (generated SVG cards; heroines on the map are colored circles with an initial). Real art drops into `public/art/<id>/` — see `docs/ART_DIRECTION.md`.
+- **All art is placeholder** (generated SVG cards; heroines on the map are colored discs with an initial until `chibi.webp` files exist). Real art drops into `public/art/<id>/` — see `docs/ART_DIRECTION.md`.
 - **No audio** at all yet.
 - Balance only validated by the naive bot (`npm run sim`: loses around wave 19–20). No human playtest data yet.
 - Upgrade tiers stop at 3 (BTD6 has 5). No camo/regrow enemies, no hero abilities.
@@ -32,14 +33,15 @@
 
 ## Last session
 
-**2026-09-28 — initial build + AI-readiness (Claude, cloud session)**
+**2026-09-28 — B-02 chibi sprites (Claude, cloud session)**
 
-- Built the MVP from scratch (engine choice, sim, rendering, UI, meta, docs) and deployed it.
-- Made the repo agent-ready: AGENTS.md (canonical), CLAUDE/GEMINI/Copilot/Cursor pointers, STATUS/BACKLOG/ARCHITECTURE/DECISIONS docs, Vitest tests, smoke test, Prettier, CI, Claude Code SessionStart hook, devcontainer, PR template, Dependabot.
+- `BattleScene` probes `art/<id>/chibi.webp` with a plain `<img>` after `create()` (non-blocking; Phaser's loader `console.error`s on 404, which the smoke test rejects) and registers hits via `textures.addImage`.
+- Towers with a texture draw as a sprite (~1.15 tiles tall, feet on the shadow) with idle bob, recoil + squash while `tower.flash > 0`, and a horizontal flip toward the aim (deadzone avoids jitter on vertical aim; portrait transposition respected). Pose math is pure in `src/game/chibiPose.ts`, tested in `tests/chibi.test.ts`. Placement ghost shows the sprite too. Tier pips moved to a top graphics layer so they draw over sprites.
+- Smoke verified on all 3 viewports without art and with temporary generated test chibis (not committed).
 - Nothing half-done.
 
 ## Next up
 
-1. **B-01 real art pass** — owner is generating heroine portraits; wire in chibi map sprites once they exist (B-02).
+1. **B-01 real art pass** — owner is generating art; when portraits/chibis land, check crops and sprite scale in smoke screenshots.
 2. **B-03 juice** — sound effects, music, pop particles, floating gold text.
-3. **B-05 tiers 4–5** on every path.
+3. **B-04 heroine barks**, then **B-05 tiers 4–5**.
