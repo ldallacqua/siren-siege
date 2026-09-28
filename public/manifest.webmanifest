@@ -1,0 +1,10 @@
+{
+  "name": "Siren Siege",
+  "short_name": "Siren Siege",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#140a1f",
+  "theme_color": "#140a1f",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
