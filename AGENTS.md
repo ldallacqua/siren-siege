@@ -8,7 +8,7 @@ This file is the single source of truth for any AI coding agent (Claude Code, Co
 
 - Live: https://ldallacqua.github.io/siren-siege/ (served from the `gh-pages` branch, deployed by CI on every push to `main`)
 - Owner: Lucas (ldallacqua). Talks to agents in English or Portuguese.
-- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · Art: `docs/ART_DIRECTION.md`
+- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names)
 
 ## 2. Resume protocol (do this first, every session)
 
@@ -40,6 +40,7 @@ The next agent has **no memory of your session** — if it isn't in the repo, it
 | `npm run sim`    | Headless balance bot plays all 20 waves and prints per-wave lives/cash (`npm run sim -- scarlet yuki`) |
 | `npm run smoke`  | Build + real-browser test at 1280×720, 390×844 touch, 844×390 touch; screenshots → `artifacts/smoke/`  |
 | `npm run format` | Prettier write                                                                                         |
+| `npm run art`    | Convert PNG/JPG in `public/art/<id>/` to correctly sized WebP, delete sources, list misnamed files     |
 | `npm run build`  | Typecheck + Vite build to `dist/`                                                                      |
 
 **Look at the smoke screenshots** (`artifacts/smoke/*.png`) after UI changes — that's how you "see" the game. The smoke test finds Chromium via `$CHROME_PATH`, then `@sparticuz/chromium` (bundled via npm, works in sandboxed/cloud Linux where browser downloads are blocked), then Playwright's own (`npx playwright-core install chromium` on macOS/Windows).
@@ -70,10 +71,10 @@ src/
   state/save.ts    localStorage save (versioned), bond XP, unlocks, ?dev flag
   main.ts          Boot, DPR-aware resize, app flow (home ↔ battle ↔ results), match XP awards
   style.css        All styling; orientation handled with aspect-ratio media queries
-scripts/           balance-sim.ts, smoke.ts, session-start.sh
+scripts/           balance-sim.ts, smoke.ts, art-import.ts, session-start.sh
 tests/             data.test.ts, sim.test.ts
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
-docs/              GDD, ARCHITECTURE, ART_DIRECTION, STATUS, BACKLOG, DECISIONS
+docs/              GDD, ARCHITECTURE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
 ```
 
 ## 6. Common tasks — recipes
@@ -88,7 +89,7 @@ docs/              GDD, ARCHITECTURE, ART_DIRECTION, STATUS, BACKLOG, DECISIONS
 
 **Write a chat:** add a `ChatEpisode` to `EPISODES` using the `her()/nar()/pick()/end()` helpers. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of: smile, tease, smirk, wink, laugh, blush, shy, pout, grin. Tests verify links, reachability and endings.
 
-**Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_DIRECTION.md`. No code change.
+**Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots.
 
 **Add a new screen:** add a `showX()` in `ui/screens.ts` that builds DOM with `h()` and calls `show()`. Style in `style.css` with a portrait and a short-landscape variant.
 

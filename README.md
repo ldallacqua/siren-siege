@@ -28,7 +28,7 @@ Pushing to `main` deploys to GitHub Pages via `.github/workflows/deploy.yml`.
 
 ## Adding art
 
-Drop WebP files into `public/art/<heroine>/` — `portrait.webp`, `portrait-<mood>.webp`, `gallery-1.webp`…`gallery-5.webp`. The game uses them automatically and shows placeholders for anything missing. Specs and generation prompts: [docs/ART_DIRECTION.md](docs/ART_DIRECTION.md).
+Drop WebP files into `public/art/<heroine>/` — `portrait.webp`, `portrait-<mood>.webp`, `chibi.webp`, `gallery-1.webp`…`gallery-5.webp`. The game uses them automatically and shows placeholders for anything missing. Step-by-step guide with ChatGPT prompts: [docs/ART_GUIDE.md](docs/ART_GUIDE.md) · style bible: [docs/ART_DIRECTION.md](docs/ART_DIRECTION.md). PNG/JPG uploads can be converted with `npm run art`.
 
 ## Resuming work with AI
 
@@ -37,6 +37,7 @@ Any AI agent can pick up where the last one stopped: start at [AGENTS.md](AGENTS
 ## Docs
 
 - [docs/GDD.md](docs/GDD.md) — game design, MVP vs v1 scope, systems, milestones
+- [docs/ART_GUIDE.md](docs/ART_GUIDE.md) — how to generate the images with ChatGPT, name and upload them
 - [docs/ART_DIRECTION.md](docs/ART_DIRECTION.md) — style guide, asset specs, image prompts
 - [PROMPT.md](PROMPT.md) — AI prompts to rebuild or keep developing the game
 - [AGENTS.md](AGENTS.md) — instructions for AI coding agents (CLAUDE.md, GEMINI.md, Copilot and Cursor files point to it)

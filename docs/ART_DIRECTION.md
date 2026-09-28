@@ -7,6 +7,8 @@
 - **Heroines:** clearly adult women (mid-20s and up), mature proportions and faces, confident and alluring. Fan service through outfit design, pose, framing and expression — cleavage, thighs, bare shoulders, tight fits, swimsuits, teasing looks, blushing. **Ceiling: suggestive, never nude or explicit.**
 - Each heroine owns a color: Scarlet crimson, Yuki ice-blue, Kaede ember-orange, Selene lilac. Keep it dominant in her outfit, effects and UI frame.
 
+> **Making the images?** Step-by-step ChatGPT workflow, copy-paste prompts, naming and upload: [ART_GUIDE.md](ART_GUIDE.md).
+
 ## Asset list & specs
 
 All files go in `public/art/<heroine-id>/`. The game picks them up automatically; missing files fall back to placeholders.

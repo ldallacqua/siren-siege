@@ -8,7 +8,7 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ### B-01 · P1 · Real portraits & gallery art 🔒 owner is generating art
 
-Owner-side task. Agent part: when files land in `public/art/<id>/`, verify they load in shop cards, roster, profile, chat (mood variants), gallery and the battlefield (`chibi.webp`; code already wired, B-02 done); tune `object-position` in `style.css` if faces are cropped.
+Owner-side task (workflow + ChatGPT prompts in `docs/ART_GUIDE.md`). Agent part: if the owner uploaded PNG/JPG, run `npm run art` first; when files land in `public/art/<id>/`, verify they load in shop cards, roster, profile, chat (mood variants), gallery and the battlefield (`chibi.webp`; code already wired, B-02 done); tune `object-position` in `style.css` if faces are cropped.
 
 - Accept: smoke screenshots show real art on all 3 viewports; no layout shifts.
 

@@ -6,4 +6,8 @@ Put real artwork here, one folder per heroine id: `scarlet/`, `yuki/`, `kaede/`,
 - `chibi.webp` (256×256, facing right, transparent) — battlefield sprite; without it towers draw as colored discs
 - `gallery-1.webp` … `gallery-5.webp` (1600×1200)
 
-Missing files show generated placeholders. See docs/ART_DIRECTION.md.
+Missing files show generated placeholders.
+
+**How to make these images (ChatGPT prompts), name them and upload them: [docs/ART_GUIDE.md](../../docs/ART_GUIDE.md).** Style bible: docs/ART_DIRECTION.md.
+
+PNG/JPG uploads are fine too: run `npm run art` to convert them to correctly sized WebP (and to list misnamed files).

@@ -14,6 +14,7 @@
 - Unlocks: Kaede after reaching wave 10, Selene after clearing wave 20.
 - Responsive: landscape sidebar, portrait bottom dock with transposed map, short-landscape compact mode. Touch/mouse/keyboard.
 - Battlefield chibi sprites: drop `public/art/<id>/chibi.webp` and towers render it (idle bob, recoil on attack, flips toward the target); falls back to colored discs per heroine when missing.
+- Art pipeline for the owner: `docs/ART_GUIDE.md` (ChatGPT workflow, copy-paste prompts per heroine and asset, naming, phone upload); `npm run art` converts PNG/JPG uploads to sized WebP and lists misnamed files; empty `public/art/<id>/` folders exist for GitHub web upload.
 - Save in localStorage; `?dev` mode.
 - Tooling: unit tests (27), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
@@ -38,10 +39,11 @@
 - `BattleScene` probes `art/<id>/chibi.webp` with a plain `<img>` after `create()` (non-blocking; Phaser's loader `console.error`s on 404, which the smoke test rejects) and registers hits via `textures.addImage`.
 - Towers with a texture draw as a sprite (~1.15 tiles tall, feet on the shadow) with idle bob, recoil + squash while `tower.flash > 0`, and a horizontal flip toward the aim (deadzone avoids jitter on vertical aim; portrait transposition respected). Pose math is pure in `src/game/chibiPose.ts`, tested in `tests/chibi.test.ts`. Placement ghost shows the sprite too. Tier pips moved to a top graphics layer so they draw over sprites.
 - Smoke verified on all 3 viewports without art and with temporary generated test chibis (not committed).
+- Follow-up (owner request): wrote `docs/ART_GUIDE.md` for generating all art with ChatGPT; added `scripts/art-import.ts` (`npm run art`, uses the smoke-test Chromium, no new deps) — tested with PNGs, misnamed files and a misspelled folder.
 - Nothing half-done.
 
 ## Next up
 
-1. **B-01 real art pass** — owner is generating art; when portraits/chibis land, check crops and sprite scale in smoke screenshots.
+1. **B-01 real art pass** — owner will generate art with ChatGPT per `docs/ART_GUIDE.md`. When files land (or he says "import the new art"): `npm run art`, `npm run smoke`, check crops and chibi scale in screenshots.
 2. **B-03 juice** — sound effects, music, pop particles, floating gold text.
 3. **B-04 heroine barks**, then **B-05 tiers 4–5**.
