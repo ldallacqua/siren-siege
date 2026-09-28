@@ -4,7 +4,8 @@ name: CI
 on:
   pull_request:
   push:
-    branches-ignore: [main, gh-pages]
+    # Dependabot branches are covered by their pull_request run.
+    branches-ignore: [main, gh-pages, 'dependabot/**']
   workflow_dispatch:
 
 permissions:
@@ -14,8 +15,8 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -23,7 +24,7 @@ jobs:
       - run: npm run check
       - name: Smoke test (desktop, phone portrait, phone landscape)
         run: npm run smoke
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: smoke-screenshots
