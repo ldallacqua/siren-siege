@@ -61,27 +61,21 @@ towers are alluring adult anime heroines. Deliver a working, deployable project,
 
 ---
 
-## 2. Continue-development prompt (use in every new session on this repo)
+## 2. Resume prompt (use this to start every new session — cloud or local)
+
+The repo carries its own memory (`AGENTS.md`, `docs/STATUS.md`, `docs/BACKLOG.md`), so this short prompt is all a new AI session needs:
 
 ```text
-You're working on Siren Siege (repo: ldallacqua/siren-siege), a Phaser 4 + TypeScript + Vite
-browser tower defense where the towers are adult anime heroines, modeled on Bloons TD 6, with a
-Bond / chat / gallery layer. Read CLAUDE.md, docs/GDD.md and docs/ART_DIRECTION.md first.
-
-Rules:
-- Keep src/game/sim and src/data free of Phaser and DOM imports.
-- Every change must keep `npm run build` green and `npm run sim` winnable-but-not-trivial.
-- Test in portrait and landscape, mouse and touch, before calling anything done.
-- Content stays suggestive, never explicit; all characters are adults.
-- Small commits with clear messages; push to main (Pages deploys automatically).
-
-Today's task: <DESCRIBE THE TASK, e.g. "Milestone M2 — Juice: add sound effects, music,
-pop particles, floating damage text and a screen shake when a boss spawns">.
-
-Start by telling me your plan in 3–5 bullets, then implement it.
+Resume work on Siren Siege (GitHub: ldallacqua/siren-siege).
+Follow the resume protocol in AGENTS.md: read AGENTS.md, docs/STATUS.md and docs/BACKLOG.md,
+run npm ci and npm run check, then work on <the top unblocked BACKLOG item | TASK DESCRIPTION>.
+Tell me your plan in 3-5 bullets before big changes. Finish with the handoff protocol
+(AGENTS.md section 3): check + smoke green, STATUS/BACKLOG updated, committed and pushed to main.
 ```
 
-### Ready-made task lines for the prompt above
+**From your phone:** open the Claude app → **Code** tab (or claude.ai/code), pick the `ldallacqua/siren-siege` repository, paste the prompt above. The cloud session installs dependencies automatically, and every push to `main` redeploys the live game.
+
+### Ready-made task lines (or just say "the top BACKLOG item")
 
 - **M1 art hookup:** "Add chibi map sprites: load public/art/<id>/chibi.webp if present and draw it instead of the colored circle, with a subtle idle bob and a recoil when she attacks."
 - **M2 juice:** "Add Web Audio SFX (pop, shot, bomb, freeze, upgrade, wave start), a looping music track per map with a mute toggle, pop particles and floating '+$' text."

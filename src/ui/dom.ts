@@ -2,7 +2,11 @@ type Child = Node | string | number | null | undefined | false;
 type Props = Record<string, unknown> & { class?: string; style?: string };
 
 /** Tiny hyperscript helper: h('button', { class: 'x', onclick }, 'Label'). */
-export function h<K extends keyof HTMLElementTagNameMap>(tag: K, props: Props | null = null, ...children: Child[]): HTMLElementTagNameMap[K] {
+export function h<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  props: Props | null = null,
+  ...children: Child[]
+): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   if (props) {
     for (const [k, v] of Object.entries(props)) {

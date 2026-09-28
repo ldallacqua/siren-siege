@@ -2,7 +2,6 @@
 // Usage: npm run sim            (all heroines)
 //        npm run sim -- scarlet yuki   (restrict roster)
 import { HEROINES } from '../src/data/heroines.ts';
-declare const process: { argv: string[] };
 import { MAPS, WAVES } from '../src/data/maps.ts';
 import { BattleSim, STEP } from '../src/game/sim/BattleSim.ts';
 import { canBuyUpgrade } from '../src/game/sim/upgrades.ts';
@@ -53,7 +52,10 @@ function spend(): void {
 }
 
 const log: string[] = [];
-sim.onWaveEnd = (w) => log.push(`wave ${String(w).padStart(2)}  lives ${String(Math.max(0, sim.lives)).padStart(3)}  cash ${sim.cash}  towers ${sim.towers.length}`);
+sim.onWaveEnd = (w) =>
+  log.push(
+    `wave ${String(w).padStart(2)}  lives ${String(Math.max(0, sim.lives)).padStart(3)}  cash ${sim.cash}  towers ${sim.towers.length}`,
+  );
 while (sim.result === 'playing') {
   if (!sim.waveActive) {
     spend();
@@ -63,5 +65,7 @@ while (sim.result === 'playing') {
   if (sim.time > 60 * 60) break;
 }
 console.log(log.join('\n'));
-console.log(`\nroster: ${ids.join(', ')}\nresult: ${sim.result} at wave ${sim.wave}/${WAVES.length}, lives ${Math.max(0, sim.lives)}/${sim.maxLives}`);
+console.log(
+  `\nroster: ${ids.join(', ')}\nresult: ${sim.result} at wave ${sim.wave}/${WAVES.length}, lives ${Math.max(0, sim.lives)}/${sim.maxLives}`,
+);
 console.log(sim.towers.map((t) => `  ${t.def.id.padEnd(8)} ${t.tiers.join('-')}  pops ${t.pops}`).join('\n'));

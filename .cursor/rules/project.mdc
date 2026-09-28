@@ -1,0 +1,6 @@
+---
+description: Siren Siege project rules
+alwaysApply: true
+---
+
+Read and follow AGENTS.md at the repo root — it is the single source of truth (resume protocol, commands, architecture, rules, handoff protocol). Current state: docs/STATUS.md. Work queue: docs/BACKLOG.md.

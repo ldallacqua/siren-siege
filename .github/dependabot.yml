@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: monthly }
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Major bumps (e.g. Phaser 5) need a human/agent migration, not a bot PR.
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }

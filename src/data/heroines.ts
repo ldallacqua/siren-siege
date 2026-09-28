@@ -228,10 +228,15 @@ export const HEROINES: HeroineDef[] = [
         name: 'Demon Heart',
         tiers: [
           { name: 'Horn Polish', desc: 'Double damage to bosses.', cost: 300, apply: (s) => void (s.bossMult *= 2) },
-          { name: 'Long Throw', desc: '+25% range, +6 pierce.', cost: 450, apply: (s) => {
-            s.range *= 1.25;
-            s.pierce += 6;
-          } },
+          {
+            name: 'Long Throw',
+            desc: '+25% range, +6 pierce.',
+            cost: 450,
+            apply: (s) => {
+              s.range *= 1.25;
+              s.pierce += 6;
+            },
+          },
           {
             name: 'Oni Awakening',
             desc: '+3 damage, quadruple damage to bosses.',
@@ -261,8 +266,18 @@ export const HEROINES: HeroineDef[] = [
       {
         name: 'Moonlit Blessing',
         tiers: [
-          { name: 'Serenade', desc: 'Allies in range: +20% attack rate.', cost: 350, apply: (s) => void (s.buffRate = Math.max(s.buffRate, 0.2)) },
-          { name: 'Silver Halo', desc: 'Allies in range: +15% range.', cost: 500, apply: (s) => void (s.buffRange = Math.max(s.buffRange, 0.15)) },
+          {
+            name: 'Serenade',
+            desc: 'Allies in range: +20% attack rate.',
+            cost: 350,
+            apply: (s) => void (s.buffRate = Math.max(s.buffRate, 0.2)),
+          },
+          {
+            name: 'Silver Halo',
+            desc: 'Allies in range: +15% range.',
+            cost: 500,
+            apply: (s) => void (s.buffRange = Math.max(s.buffRange, 0.15)),
+          },
           {
             name: 'Goddess Descent',
             desc: 'Allies pierce armor, +35% attack rate.',
@@ -296,10 +311,15 @@ export const HEROINES: HeroineDef[] = [
               s.pierce = 2;
             },
           },
-          { name: 'Crescent Volley', desc: '+1 damage, +40% rate.', cost: 600, apply: (s) => {
-            s.damage += 1;
-            s.rate *= 1.4;
-          } },
+          {
+            name: 'Crescent Volley',
+            desc: '+1 damage, +40% rate.',
+            cost: 600,
+            apply: (s) => {
+              s.damage += 1;
+              s.rate *= 1.4;
+            },
+          },
           {
             name: 'Starfall',
             desc: '3 arrows per attack, +3 pierce.',

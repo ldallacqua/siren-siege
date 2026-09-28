@@ -2,7 +2,7 @@
 
 ## Look & feel
 
-- **Style:** high-quality anime / gacha key-art (think *Azur Lane*, *NIKKE*, *Blue Archive* splash art). Clean lineart, cel shading with soft gradients, rim light, glossy highlights.
+- **Style:** high-quality anime / gacha key-art (think _Azur Lane_, _NIKKE_, _Blue Archive_ splash art). Clean lineart, cel shading with soft gradients, rim light, glossy highlights.
 - **Mood:** night, moonlight, neon-pink and violet accents, shrine lanterns. UI palette: deep purple `#140a1f`, pink `#ff5fa2`, violet `#7b3fe4`, gold `#ffd23f`.
 - **Heroines:** clearly adult women (mid-20s and up), mature proportions and faces, confident and alluring. Fan service through outfit design, pose, framing and expression — cleavage, thighs, bare shoulders, tight fits, swimsuits, teasing looks, blushing. **Ceiling: suggestive, never nude or explicit.**
 - Each heroine owns a color: Scarlet crimson, Yuki ice-blue, Kaede ember-orange, Selene lilac. Keep it dominant in her outfit, effects and UI frame.
@@ -11,16 +11,16 @@
 
 All files go in `public/art/<heroine-id>/`. The game picks them up automatically; missing files fall back to placeholders.
 
-| File | Size | Notes |
-|---|---|---|
-| `portrait.webp` | 1200×1600 (3:4) | Default. Thighs-up, facing viewer, transparent or simple dark background. Used in shop cards, roster, profile |
-| `portrait-<mood>.webp` | 1200×1600 | Same pose/crop as `portrait`, only expression/arms change. Moods used by chats: `smile`, `tease`, `smirk`, `wink`, `laugh`, `blush`, `shy`, `pout`, `grin` |
-| `gallery-1.webp` … `gallery-5.webp` | 1600×1200 (4:3) | Unlockable illustrations (see themes below) |
-| `chibi.webp` *(v1)* | 256×256 | Map sprite, 2–3 head-tall chibi, top-down-ish 3/4 view |
+| File                                | Size            | Notes                                                                                                                                                      |
+| ----------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `portrait.webp`                     | 1200×1600 (3:4) | Default. Thighs-up, facing viewer, transparent or simple dark background. Used in shop cards, roster, profile                                              |
+| `portrait-<mood>.webp`              | 1200×1600       | Same pose/crop as `portrait`, only expression/arms change. Moods used by chats: `smile`, `tease`, `smirk`, `wink`, `laugh`, `blush`, `shy`, `pout`, `grin` |
+| `gallery-1.webp` … `gallery-5.webp` | 1600×1200 (4:3) | Unlockable illustrations (see themes below)                                                                                                                |
+| `chibi.webp` _(v1)_                 | 256×256         | Map sprite, 2–3 head-tall chibi, top-down-ish 3/4 view                                                                                                     |
 
 Export WebP quality 85. Keep portraits on transparent backgrounds where possible so chats can layer them over scenes.
 
-**Gallery themes by Bond level:** 2 *First Impression* (battle outfit, heroic pose) · 4 *Off Duty* (casual, relaxed, flirty) · 6 *Poolside* (swimsuit) · 8 *After Hours* (elegant nightwear / evening dress, bedroom-eyes) · 10 *Heart Unveiled* (most intimate moment of her story, romantic, still non-explicit).
+**Gallery themes by Bond level:** 2 _First Impression_ (battle outfit, heroic pose) · 4 _Off Duty_ (casual, relaxed, flirty) · 6 _Poolside_ (swimsuit) · 8 _After Hours_ (elegant nightwear / evening dress, bedroom-eyes) · 10 _Heart Unveiled_ (most intimate moment of her story, romantic, still non-explicit).
 
 ## Character sheets
 
@@ -53,6 +53,7 @@ Negative: child, loli, young-looking, nsfw, nude, nipples, explicit, lowres, bad
 ```
 
 **Example — Scarlet `portrait-tease.webp`:**
+
 ```
 masterpiece, best quality, anime key visual, gacha game splash art,
 1 adult woman, 27-year-old vampire gunslinger, long wavy crimson hair, pale skin,

@@ -20,12 +20,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - name: Balance check
-        run: npm run sim
+      # Same gate as CI: a red check never reaches the live site.
+      - run: npm run check
+      - name: Smoke test
+        run: npm run smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-screenshots
+          path: artifacts/smoke/
+          if-no-files-found: ignore
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

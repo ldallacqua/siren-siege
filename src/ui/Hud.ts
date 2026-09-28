@@ -122,8 +122,21 @@ export class Hud {
       { class: 'controls' },
       r.start,
       h('button', { class: 'btn icon', title: 'Game speed', onclick: () => b.setSpeed(b.speed >= 3 ? 1 : b.speed + 1) }, `${b.speed}×`),
-      h('button', { class: `btn icon ${sim.autoStart ? 'on' : ''}`, title: 'Auto-start waves', 'aria-label': 'Auto-start waves', onclick: () => b.toggleAuto() }, 'Auto'),
-      h('button', { class: `btn icon ${b.paused ? 'on' : ''}`, title: 'Pause (P)', 'aria-label': 'Pause (P)', onclick: () => b.togglePause() }, b.paused ? '▶' : '❚❚'),
+      h(
+        'button',
+        {
+          class: `btn icon ${sim.autoStart ? 'on' : ''}`,
+          title: 'Auto-start waves',
+          'aria-label': 'Auto-start waves',
+          onclick: () => b.toggleAuto(),
+        },
+        'Auto',
+      ),
+      h(
+        'button',
+        { class: `btn icon ${b.paused ? 'on' : ''}`, title: 'Pause (P)', 'aria-label': 'Pause (P)', onclick: () => b.togglePause() },
+        b.paused ? '▶' : '❚❚',
+      ),
       h('button', { class: 'btn icon', title: 'Menu', onclick: () => this.onMenu?.() }, '☰'),
     );
 
@@ -164,7 +177,11 @@ export class Hud {
   private buildPlacing(b: Battle, id: string): HTMLElement {
     const def = HEROINE_BY_ID[id];
     const touch = matchMedia('(pointer: coarse)').matches;
-    this.refs.placeBtn = h('button', { class: 'btn primary', disabled: true, onclick: () => b.confirmPlace() || toast("Can't place her there") }, 'Place');
+    this.refs.placeBtn = h(
+      'button',
+      { class: 'btn primary', disabled: true, onclick: () => b.confirmPlace() || toast("Can't place her there") },
+      'Place',
+    );
     return h(
       'div',
       { class: 'dock placing', style: `--c:${hex(def.color)}` },
@@ -174,7 +191,11 @@ export class Hud {
         artImg(portraitFile(def.id), def.id, def.name, true, 'head-art'),
         h('div', null, h('div', { class: 'head-name' }, def.name), h('div', { class: 'head-sub' }, `${def.title} · ◆ ${def.cost}`)),
       ),
-      h('p', { class: 'hint' }, touch ? 'Tap or drag on the map to position her, then tap again or press Place.' : 'Click the map to place her. Esc to cancel.'),
+      h(
+        'p',
+        { class: 'hint' },
+        touch ? 'Tap or drag on the map to position her, then tap again or press Place.' : 'Click the map to place her. Esc to cancel.',
+      ),
       h('div', { class: 'row' }, this.refs.placeBtn, h('button', { class: 'btn', onclick: () => b.cancel() }, 'Cancel')),
     );
   }
@@ -230,7 +251,11 @@ export class Hud {
       h(
         'div',
         { class: 'row' },
-        h('button', { class: 'btn', title: 'Targeting (Tab)', onclick: () => b.sim.cycleTargeting(t) }, `Target: ${TARGET_LABEL[t.targeting]}`),
+        h(
+          'button',
+          { class: 'btn', title: 'Targeting (Tab)', onclick: () => b.sim.cycleTargeting(t) },
+          `Target: ${TARGET_LABEL[t.targeting]}`,
+        ),
         h(
           'button',
           {

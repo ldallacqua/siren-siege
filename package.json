@@ -1,22 +1,36 @@
 {
   "name": "siren-siege",
   "version": "0.1.0",
-  "description": "Siren Siege — browser tower defense where your towers are anime heroines.",
+  "description": "Siren Siege \u2014 browser tower defense where your towers are anime heroines.",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run typecheck && vite build",
     "preview": "vite preview --host",
-    "typecheck": "tsc --noEmit",
-    "sim": "node --experimental-strip-types scripts/balance-sim.ts"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.node.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "sim": "node --experimental-strip-types --no-warnings scripts/balance-sim.ts",
+    "smoke": "npm run build && node --experimental-strip-types --no-warnings scripts/smoke.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run sim && vite build"
   },
   "license": "UNLICENSED",
   "dependencies": {
     "phaser": "^4.2.1"
   },
   "devDependencies": {
+    "@sparticuz/chromium": "^153.0.0",
+    "@types/node": "^22.20.4",
+    "playwright-core": "^1.63.0",
+    "prettier": "^3.9.9",
     "typescript": "^5.9.3",
-    "vite": "^8.3.1"
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
   },
   "private": true,
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=22.6"
+  }
 }

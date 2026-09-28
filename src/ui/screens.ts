@@ -60,9 +60,7 @@ export function showHome(a: HomeActions): void {
   const heroes = h(
     'div',
     { class: 'home-heroes' },
-    ...HEROINES.map((d, i) =>
-      artChain([portraitFile(d.id)], d.id, d.name, true, `home-hero h${i}`),
-    ),
+    ...HEROINES.map((d, i) => artChain([portraitFile(d.id)], d.id, d.name, true, `home-hero h${i}`)),
   );
   show(
     h(
@@ -78,7 +76,11 @@ export function showHome(a: HomeActions): void {
           'div',
           { class: 'home-buttons' },
           a.resume ? h('button', { class: 'btn primary big', onclick: a.resume }, 'Resume battle') : null,
-          h('button', { class: `btn ${a.resume ? '' : 'primary'} big`, onclick: a.play, autofocus: true }, a.resume ? 'New battle' : 'Play — Moonlit Shrine'),
+          h(
+            'button',
+            { class: `btn ${a.resume ? '' : 'primary'} big`, onclick: a.play, autofocus: true },
+            a.resume ? 'New battle' : 'Play — Moonlit Shrine',
+          ),
           h('button', { class: 'btn big', onclick: () => showRoster(a) }, 'Heroines'),
           h('button', { class: 'btn big', onclick: () => showGallery(a) }, 'Gallery'),
           h('button', { class: 'btn big ghost', onclick: () => showSettings(a) }, 'Settings'),
@@ -122,12 +124,30 @@ export function showRoster(a: HomeActions): void {
     const unlocked = isUnlocked(d.id);
     return h(
       'button',
-      { class: `roster-card ${unlocked ? '' : 'locked'}`, style: `--c:${hex(d.color)};--a:${hex(d.accent)}`, onclick: () => showProfile(d.id, a) },
+      {
+        class: `roster-card ${unlocked ? '' : 'locked'}`,
+        style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
+        onclick: () => showProfile(d.id, a),
+      },
       artChain([portraitFile(d.id)], d.id, d.name, true, 'roster-art'),
-      h('div', { class: 'roster-info' }, h('b', null, d.name), h('span', null, d.title), bondBar(d.id), unlocked ? null : h('em', null, `🔒 ${d.unlock?.label}`)),
+      h(
+        'div',
+        { class: 'roster-info' },
+        h('b', null, d.name),
+        h('span', null, d.title),
+        bondBar(d.id),
+        unlocked ? null : h('em', null, `🔒 ${d.unlock?.label}`),
+      ),
     );
   });
-  show(h('section', { class: 'screen list' }, topbar('Heroines', () => showHome(a)), h('div', { class: 'roster' }, ...cards)));
+  show(
+    h(
+      'section',
+      { class: 'screen list' },
+      topbar('Heroines', () => showHome(a)),
+      h('div', { class: 'roster' }, ...cards),
+    ),
+  );
 }
 
 export function showProfile(id: string, a: HomeActions): void {
@@ -179,7 +199,12 @@ export function showProfile(id: string, a: HomeActions): void {
 function galleryThumb(g: GalleryItem, lvl: number): HTMLElement {
   const open = lvl >= g.level;
   if (!open) return h('div', { class: 'thumb locked' }, h('span', null, `🔒 Bond ${g.level}`));
-  return h('button', { class: 'thumb', onclick: () => lightbox(g) }, artChain([g.file], g.heroine, g.title, false, 'thumb-art'), h('span', null, g.title));
+  return h(
+    'button',
+    { class: 'thumb', onclick: () => lightbox(g) },
+    artChain([g.file], g.heroine, g.title, false, 'thumb-art'),
+    h('span', null, g.title),
+  );
 }
 
 function lightbox(g: GalleryItem): void {
@@ -204,7 +229,14 @@ export function showGallery(a: HomeActions): void {
   });
   const total = GALLERY.length;
   const got = GALLERY.filter((g) => heroineLevel(g.heroine) >= g.level).length;
-  show(h('section', { class: 'screen list' }, topbar(`Gallery ${got}/${total}`, () => showHome(a)), ...sections));
+  show(
+    h(
+      'section',
+      { class: 'screen list' },
+      topbar(`Gallery ${got}/${total}`, () => showHome(a)),
+      ...sections,
+    ),
+  );
 }
 
 // ------------------------------------------------------------------ chat
@@ -299,7 +331,9 @@ export function playChat(ep: ChatEpisode, onClose: () => void): void {
       prog.chatsDone.push(ep.id);
       persist();
       const { before, after } = addXp(ep.heroine, earned + 50);
-      toast(after > before ? `Bond up! ${d.name.split(' ')[0]} is now Bond ${after} ♥` : `+${earned + 50} bond with ${d.name.split(' ')[0]}`);
+      toast(
+        after > before ? `Bond up! ${d.name.split(' ')[0]} is now Bond ${after} ♥` : `+${earned + 50} bond with ${d.name.split(' ')[0]}`,
+      );
     }
     onClose();
   };
@@ -346,10 +380,21 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
       'section',
       { class: `screen results ${r.won ? 'won' : 'lost'}` },
       h('h1', null, r.won ? 'Victory!' : 'Defeated'),
-      h('p', null, r.won ? 'The shrine is safe. Your heroines look... very pleased with you.' : `The Blight broke through on wave ${r.wave}/${r.total}.`),
+      h(
+        'p',
+        null,
+        r.won
+          ? 'The shrine is safe. Your heroines look... very pleased with you.'
+          : `The Blight broke through on wave ${r.wave}/${r.total}.`,
+      ),
       ...r.newlyUnlocked.map((id) => h('p', { class: 'new-hero' }, `✨ New heroine unlocked: ${HEROINE_BY_ID[id].name}!`)),
       h('div', { class: 'result-rows' }, ...(rows.length ? rows : [h('p', null, 'Deploy heroines to earn bond.')])),
-      h('div', { class: 'row center' }, h('button', { class: 'btn primary big', onclick: again }, 'Play again'), h('button', { class: 'btn big', onclick: home }, 'Home')),
+      h(
+        'div',
+        { class: 'row center' },
+        h('button', { class: 'btn primary big', onclick: again }, 'Play again'),
+        h('button', { class: 'btn big', onclick: home }, 'Home'),
+      ),
     ),
   );
 }

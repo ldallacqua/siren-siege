@@ -398,4 +398,3 @@ export class BattleScene extends Phaser.Scene {
     label.setPosition(x, y);
   }
 }
-

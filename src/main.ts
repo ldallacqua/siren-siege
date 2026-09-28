@@ -119,6 +119,14 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // Dev hook for debugging in the console: siren.battle.sim.cash = 1e6
-if (dev) Object.assign(window, { siren: { get battle() { return battle; }, save } });
+if (dev)
+  Object.assign(window, {
+    siren: {
+      get battle() {
+        return battle;
+      },
+      save,
+    },
+  });
 
 goHome();

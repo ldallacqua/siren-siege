@@ -28,7 +28,10 @@ export const ENEMIES: EnemyDef[] = [
     speed: 0.55,
     hp: 400,
     boss: true,
-    children: [{ id: 'iron', count: 2 }, { id: 'twin', count: 2 }],
+    children: [
+      { id: 'iron', count: 2 },
+      { id: 'twin', count: 2 },
+    ],
   },
 ];
 

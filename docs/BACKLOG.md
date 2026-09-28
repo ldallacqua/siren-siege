@@ -1,0 +1,101 @@
+# Backlog
+
+Prioritized. Take the top **unblocked** item unless the owner asks otherwise. When done: delete it here, note it in `docs/STATUS.md`. When you discover new work: add it with acceptance criteria.
+
+Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given)
+
+---
+
+### B-01 · P1 · Real portraits & gallery art 🔒 owner is generating art
+
+Owner-side task. Agent part: when files land in `public/art/<id>/`, verify they load in shop cards, roster, profile, chat (mood variants) and gallery; tune `object-position` in `style.css` if faces are cropped.
+
+- Accept: smoke screenshots show real art on all 3 viewports; no layout shifts.
+
+### B-02 · P1 · Chibi sprites on the battlefield
+
+Load `public/art/<id>/chibi.webp` (256×256) in `BattleScene` if present; draw it instead of the circle, scaled to ~1 tile, with a subtle idle bob, a small recoil when `tower.flash > 0`, and flip to face the aim direction. Fall back to current circle rendering when missing.
+
+- Files: `src/game/BattleScene.ts` (preload via `this.load.image` with a `loaderror` guard).
+- Accept: works with and without the file; no console errors; portrait transposition still correct.
+
+### B-03 · P1 · Juice: audio + feedback
+
+- Web Audio SFX (generated or small CC0 files in `public/sfx/`): pop, shot, bomb, freeze pulse, upgrade, place, wave start, leak, boss spawn, victory/defeat.
+- Music loop per map + mute/volume toggle in Settings and HUD (persist in `save.settings`).
+- Particles on pops, floating `+◆` text for boss kills and wave bonus, screen shake on boss spawn/leak.
+- Respect a `reducedMotion` setting (default from `prefers-reduced-motion`).
+- Accept: audio starts only after a user gesture (mobile autoplay rules); 60 fps holds with 200 enemies on a mid phone (use `npm run dev` + devtools throttling).
+
+### B-04 · P1 · Floating in-battle heroine barks
+
+When placed / upgraded to tier 3 / Bond level up, show a short speech bubble line from the heroine near her position (2–3 s). Lines in `src/data/barks.ts`, 3+ per heroine per event.
+
+- Accept: data test for barks; bubbles clamp inside the stage in both orientations.
+
+### B-05 · P2 · Tiers 4 and 5 (BTD6 parity)
+
+Raise `MAX_TIER` to 5; crosspath rule becomes 5-2-0 max (logic already generic). Design tier 4–5 for all 12 paths (big, visible power spikes; tier 5 costs 15–40k). Pips UI shows 5.
+
+- Accept: `canBuyUpgrade` tests for 5-2-0 / 5-3-0 / 4-2-1; balance sim still loses naive bot around wave 18–20; UI fits portrait (3 path columns).
+
+### B-06 · P2 · Camo and Regrow enemy modifiers
+
+Enemy flags `camo` (untargetable unless tower has `detection`) and `regrow` (regains a layer every 3 s up to its original type). Render camo with dashed outline/transparency, regrow with a small leaf/heart mark. Give detection to Scarlet Night Sight T2 and Selene Blessing T3 (buff).
+
+- Accept: unit tests for both; waves 12+ include some camo.
+
+### B-07 · P2 · Hero abilities (Bond 5)
+
+Each heroine gets an active ability unlocked at Bond 5: button in her panel, cooldown, visual. Ideas: Scarlet _Blood Moon_ (5 s triple fire rate), Yuki _Whiteout_ (freeze all on screen 2 s), Kaede _Oni Rampage_ (giant fire burst), Selene _Lunar Blessing_ (+50% rate to all for 8 s).
+
+- Accept: sim-level implementation with tests; works by tap and by hotkey (Z).
+
+### B-08 · P2 · Difficulty modes
+
+Easy / Normal / Hard / Impoppable: multipliers on enemy speed, start cash, lives, costs (BTD6: Easy 0.85× cost, Hard 1.08×, Impoppable 1.2× + 1 life). Map select screen showing best result per difficulty (medals).
+
+- Accept: stored per map+difficulty in save (migrate save v1 → v2).
+
+### B-09 · P2 · Write remaining chats (Bond 5, 7, 9) for all 4 heroines
+
+Follow the voice notes in `docs/GDD.md` §3.6. Each episode 8–12 nodes, 2 choices. Bond 9 episode is a confession arc.
+
+- Accept: data tests pass; tone stays suggestive, never explicit.
+
+### B-10 · P3 · Heroines 5–8
+
+Kunoichi (camo detection, shuriken pierce), mecha pilot (long range, missiles), succubus (charm: enemies walk backwards briefly), pirate captain (economy + cannon). Each needs data, chats, art sheet in ART_DIRECTION.
+
+- Blocked by: B-06 for the kunoichi's identity.
+
+### B-11 · P3 · Maps 2–4 + map select
+
+_Neon Harbor_ (two entrances merging), _Hot Spring Valley_ (water tiles only some heroines can use), _Blood Moon Castle_ (expert, short path). Map select screen.
+
+### B-12 · P2 · 18+ age gate + legal
+
+First-launch modal: "This game contains suggestive content. Are you 18 or older?" Remember the answer in save. Add Credits/Privacy screen (no tracking yet). Needed before promoting the game anywhere.
+
+- Accept: gate appears once; declining shows a polite exit screen.
+
+### B-13 · P3 · PWA / offline
+
+Service worker caching the build + art (vite-plugin-pwa or a small hand-written SW), install prompt, fullscreen display. Self-host the two fonts in `public/fonts/` instead of Google Fonts.
+
+### B-14 · P3 · Freeplay after wave 20 + stats
+
+Endless waves generated by formula after victory; stats page (pops, games, best wave, favorite heroine).
+
+### B-15 · P3 · Outfits (skins)
+
+Alternate outfits unlocked at Bond 7; outfit picker in profile; art file naming `outfit-<n>-portrait.webp`.
+
+---
+
+## Tech debt / nice to have
+
+- T-01 · Split `ui/screens.ts` into one file per screen when it passes ~600 lines.
+- T-02 · Lazy-load Phaser after the home screen renders to speed up first paint.
+- T-03 · Replace per-frame `Graphics.clear()` redraw with pooled sprites once real sprites exist (only if profiling shows a need).
+- T-04 · Smarter balance bot (buys tier 3s, positions by role) so balance targets are closer to real players.
