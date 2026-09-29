@@ -78,7 +78,15 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     await page.locator('img').evaluateAll(async (images) => {
       await Promise.all(images.map((img) => (img as HTMLImageElement).decode().catch(() => {})));
     });
-    return page.screenshot({ path: `${OUT}/${v.name}-${step}.png`, animations: 'disabled' });
+    const path = `${OUT}/${v.name}-${step}.png`;
+    // CI runners render WebGL in software; a busy frame can stall one capture.
+    // Retry once so a slow frame doesn't fail the deploy (assertions are unaffected).
+    try {
+      return await page.screenshot({ path, animations: 'disabled', timeout: 45000 });
+    } catch (e) {
+      console.warn(`  retrying screenshot ${v.name}-${step}: ${String(e).split('\n')[0]}`);
+      return page.screenshot({ path, animations: 'disabled', timeout: 45000 });
+    }
   };
 
   await page.goto(`${base}?dev`, { waitUntil: 'load' });
