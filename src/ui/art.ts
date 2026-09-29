@@ -1,4 +1,5 @@
 import { icon } from './icons.ts';
+import { calm, flipFrom } from './motion.ts';
 import { HEROINE_BY_ID } from '../data/heroines.ts';
 
 const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
@@ -67,7 +68,7 @@ export function openLightbox(
   files: string[],
   heroineId: string,
   caption: string,
-  opts: { portrait?: boolean; tint?: number; onClose?: () => void } = {},
+  opts: { portrait?: boolean; tint?: number; onClose?: () => void; from?: Element } = {},
 ): void {
   const portrait = opts.portrait ?? true;
   const img = document.createElement('img');
@@ -98,8 +99,17 @@ export function openLightbox(
   cap.className = 'lightbox-cap';
   cap.textContent = caption;
   layer.append(close, img, cap);
+  let closing = false;
   const done = () => {
-    layer.remove();
+    if (closing) return;
+    closing = true;
+    if (calm()) layer.remove();
+    else {
+      // fade out; inert so it can't be clicked twice
+      layer.inert = true;
+      layer.classList.add('closing');
+      window.setTimeout(() => layer.remove(), 200);
+    }
     window.removeEventListener('keydown', onKey, true);
     opts.onClose?.();
   };
@@ -112,4 +122,10 @@ export function openLightbox(
   layer.onclick = done;
   window.addEventListener('keydown', onKey, true);
   document.body.append(layer);
+  // Grow the picture out of whatever was tapped.
+  const from = opts.from?.getBoundingClientRect() ?? null;
+  if (from) img.style.animation = 'none';
+  const flip = () => flipFrom(img, from, 420);
+  if (img.complete) flip();
+  else img.addEventListener('load', flip, { once: true });
 }

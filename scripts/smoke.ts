@@ -82,6 +82,11 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   };
 
   await page.goto(`${base}?dev`, { waitUntil: 'load' });
+  // Title card: the first tap unlocks audio and reveals the lobby
+  await page.getByRole('button', { name: 'Tap to begin' }).waitFor();
+  await shot('0-title');
+  await page.getByRole('button', { name: 'Tap to begin' }).click();
+  await page.locator('.splash').waitFor({ state: 'detached' });
   await page.getByRole('button', { name: /Play/ }).waitFor();
   await shot('1-home');
 

@@ -4,13 +4,15 @@ import { portraitFile } from '../data/progression.ts';
 import type { Battle } from '../game/Battle.ts';
 import type { Tower } from '../game/sim/BattleSim.ts';
 import { canBuyUpgrade, lockReason, sellValue } from '../game/sim/upgrades.ts';
+import { ENEMY_BY_ID } from '../data/enemies.ts';
 import { heroineLevel, isUnlocked } from '../state/save.ts';
 import { artImg, openLightbox } from './art.ts';
 import { gold, h, hex, toast } from './dom.ts';
 import { icon } from './icons.ts';
+import { calm } from './motion.ts';
 
 interface DockRefs {
-  costButtons: { el: HTMLButtonElement; cost: () => number; ok: () => boolean }[];
+  costButtons: { el: HTMLButtonElement; cost: () => number; ok: () => boolean; was?: boolean }[];
   placeBtn?: HTMLButtonElement;
 }
 
@@ -36,6 +38,8 @@ export class Hud {
     pausedShown?: boolean;
     lastLives?: number;
     lastCash?: number;
+    shownCash?: number;
+    bannerWave?: number;
   } = {};
   private dockRefs: DockRefs = { costButtons: [] };
   private top: HTMLElement | null = null;
@@ -49,6 +53,7 @@ export class Hud {
     // Poll the ghost validity for the Place button (ghost moves without emits)
     const loop = () => {
       this.updatePlaceBtn();
+      this.tickCash();
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
@@ -133,7 +138,22 @@ export class Hud {
       r.cash.parentElement!.classList.add('gain');
     }
     r.lastCash = sim.cash;
-    if (r.cash) r.cash.textContent = gold(sim.cash);
+    if (r.cash && r.shownCash === undefined) {
+      r.shownCash = sim.cash;
+      r.cash.textContent = gold(sim.cash);
+    }
+    // A banner as each wave begins; bosses get a warning.
+    if (sim.waveActive && r.bannerWave !== sim.wave) {
+      r.bannerWave = sim.wave;
+      const boss = sim.waves[sim.wave - 1]?.groups.map((g) => ENEMY_BY_ID[g.enemy]).find((e) => e?.boss);
+      const final = sim.wave === sim.waves.length;
+      this.banner(
+        boss ? boss.name : final ? 'Final wave' : `Wave ${sim.wave}`,
+        boss ? 'Warning · a boss approaches' : final ? `Wave ${sim.wave}` : 'Incoming',
+        !!boss,
+      );
+      if (boss) sound.play('warn');
+    }
     if (r.wave) r.wave.textContent = `${sim.wave}/${sim.waves.length}`;
     if (r.waveBar) r.waveBar.style.width = `${(100 * sim.wave) / sim.waves.length}%`;
     // Controls are updated in place (rebuilding them made the whole panel flash).
@@ -162,7 +182,40 @@ export class Hud {
       const ok = c.ok();
       c.el.disabled = !ok;
       c.el.classList.toggle('poor', ok === false && sim.cash < c.cost());
+      // Flash a card the moment it becomes affordable.
+      if (ok && c.was === false && !calm()) {
+        c.el.classList.remove('afford-now');
+        void c.el.offsetWidth;
+        c.el.classList.add('afford-now');
+      }
+      c.was = ok;
     }
+  }
+
+  /** Gold counts up/down toward the real value instead of jumping. */
+  private tickCash(): void {
+    const r = this.refs;
+    const b = this.battle;
+    if (!b || !r.cash || r.shownCash === undefined) return;
+    const target = b.sim.cash;
+    if (r.shownCash === target) return;
+    const diff = target - r.shownCash;
+    r.shownCash = calm() || Math.abs(diff) < 1 ? target : r.shownCash + diff * 0.2;
+    const txt = gold(r.shownCash);
+    if (r.cash.textContent !== txt) r.cash.textContent = txt;
+  }
+
+  private banner(title: string, kicker: string, boss = false): void {
+    const stage = document.getElementById('stage');
+    if (!stage || calm()) return;
+    stage.querySelector('.banner')?.remove();
+    const el = h(
+      'div',
+      { class: `banner ${boss ? 'boss' : ''}`, 'aria-hidden': 'true' },
+      h('div', null, h('small', null, kicker), h('b', null, title)),
+    );
+    stage.append(el);
+    window.setTimeout(() => el.remove(), boss ? 2600 : 2000);
   }
 
   private updatePlaceBtn(): void {
@@ -233,7 +286,14 @@ export class Hud {
       this.dockRefs = this.shop.refs;
       dock = this.shop.el;
     }
-    this.dockSlot!.replaceChildren(dock);
+    if (this.dockSlot!.firstElementChild !== dock) {
+      dock.classList.remove('dock-panel-in');
+      if (this.dockSlot!.firstElementChild && !calm()) {
+        void dock.offsetWidth;
+        dock.classList.add('dock-panel-in');
+      }
+      this.dockSlot!.replaceChildren(dock);
+    }
   }
 
   private buildShop(b: Battle): HTMLElement {

@@ -22,14 +22,20 @@ describe('audio tuning', () => {
     expect(l.voices).toBe(3);
   });
 
+  it('menus and every heroine have a lofi track', () => {
+    expect(TRACKS.menu?.style).toBe('lofi');
+    for (const id of ['scarlet', 'yuki', 'kaede', 'selene']) expect(TRACKS[`chat-${id}`]?.style, id).toBe('lofi');
+    for (const tr of Object.values(TRACKS)) if (tr.melody) expect(tr.melody.length).toBe(8);
+  });
+
   it('every map has music, and the arpeggio stays in a sane range', () => {
     for (const m of MAPS) expect(trackFor(m.id)).toBeDefined();
     for (const tr of Object.values(TRACKS)) {
       expect(tr.bars.length).toBeGreaterThan(0);
       for (let step = 0; step < tr.bars.length * 8; step++) {
         const n = arpNote(tr, step);
-        expect(n).toBeGreaterThanOrEqual(55); // above G3
-        expect(n).toBeLessThanOrEqual(84); // below C6
+        expect(n).toBeGreaterThanOrEqual(50); // above D3
+        expect(n).toBeLessThanOrEqual(88); // below E6
       }
     }
   });

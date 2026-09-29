@@ -7,7 +7,7 @@ import { reducedMotion } from '../state/save.ts';
 import type { Battle } from './Battle.ts';
 import type { Enemy, Fx, Tower } from './sim/BattleSim.ts';
 import { clampCam, homeCam, viewOf, zoomAt, panBy, MAX_ZOOM, MIN_ZOOM, type Cam, type Frame } from './camera.ts';
-import { chibiPose, type Facing } from './chibiPose.ts';
+import { chibiPose, towerPresence, type Facing } from './chibiPose.ts';
 import { PX, paintMap, type MapArt } from './mapArt.ts';
 import { Vfx, type VfxView } from './Vfx.ts';
 
@@ -52,6 +52,10 @@ export class BattleScene extends Phaser.Scene {
   private view: View = { portrait: false, tile: 32, ox: 0, oy: 0 };
   private labels = new Map<number, Phaser.GameObjects.Text>();
   private sprites = new Map<number, { img: Phaser.GameObjects.Image; facing: Facing }>();
+  /** Per-tower motion: when she landed and when she last upgraded. */
+  private towerAnim = new Map<number, { born: number; tiers: number; bump: number }>();
+  /** Current tower's presence (scale, vertical offset in px) while drawing it. */
+  private pres = { s: 1, dy: 0 };
   private ghostImg: Phaser.GameObjects.Image | null = null;
   /** Below enemies: scorch marks, smoke, projectile shadows. */
   private under!: Phaser.GameObjects.Graphics;
@@ -119,6 +123,7 @@ export class BattleScene extends Phaser.Scene {
     for (const f of this.floats) f.obj.destroy();
     this.floats = [];
     this.clearTowerObjects();
+    this.towerAnim.clear();
     this.cam = null;
     this.touches.clear();
     this.gesture = 'none';
@@ -640,12 +645,29 @@ export class BattleScene extends Phaser.Scene {
     const def = t.def;
     const key = chibiKey(def.id);
     const hasChibi = this.textures.exists(key);
+    // She drops in when placed and pops when upgraded.
+    const tiers = t.tiers[0] + t.tiers[1] + t.tiers[2];
+    let a = this.towerAnim.get(t.uid);
+    if (!a) this.towerAnim.set(t.uid, (a = { born: this.clock, tiers, bump: -9 }));
+    if (a.tiers !== tiers) {
+      a.tiers = tiers;
+      a.bump = this.clock;
+    }
+    const pres = towerPresence(reducedMotion() ? 9 : this.clock - a.born, reducedMotion() ? 9 : this.clock - a.bump);
+    this.pres = { s: pres.s, dy: pres.drop * T };
+    const land = Math.min(1, pres.s);
     // Ground pad at her feet: shadow, a ring in her color, brighter when selected
     const fy = y + r * 0.72;
-    g.fillStyle(0x000000, 0.45);
-    g.fillEllipse(x, fy, r * 1.9, r * 0.7);
+    g.fillStyle(0x000000, 0.45 * land);
+    g.fillEllipse(x, fy, r * 1.9 * land, r * 0.7 * land);
     g.lineStyle(Math.max(1.5, T * 0.04), def.color, selected ? 1 : 0.55);
-    g.strokeEllipse(x, fy, r * 1.9, r * 0.7);
+    g.strokeEllipse(x, fy, r * 1.9 * land, r * 0.7 * land);
+    if (pres.ring > 0) {
+      // landing / upgrade shockwave on the ground
+      const k = 1 - pres.ring;
+      g.lineStyle(Math.max(1, T * 0.05), def.color, pres.ring * 0.9);
+      g.strokeEllipse(x, fy, r * 1.9 * (1 + k * 1.2), r * 0.7 * (1 + k * 1.2));
+    }
     if (selected) {
       const k = (this.clock * 1.4) % 1;
       g.lineStyle(Math.max(1, T * 0.03), 0xffffff, 0.8 * (1 - k));
@@ -694,10 +716,10 @@ export class BattleScene extends Phaser.Scene {
     }
     const pose = chibiPose(reducedMotion() ? 0 : this.time.now / 1000, t.uid * 1.7, dx, dy, t.flash, s.facing);
     s.facing = pose.facing;
-    const scale = (T * 1.15) / s.img.height;
+    const scale = ((T * 1.15) / s.img.height) * this.pres.s;
     // Feet sit on the shadow ellipse; squash keeps the feet planted.
     s.img
-      .setPosition(x + pose.dx * T, y + T * 0.32 + pose.dy * T)
+      .setPosition(x + pose.dx * T, y + T * 0.32 + pose.dy * T + this.pres.dy)
       .setScale(scale * (2 - pose.squash), scale * pose.squash)
       .setFlipX(pose.facing < 0);
   }
@@ -705,7 +727,8 @@ export class BattleScene extends Phaser.Scene {
   /** Fallback: colored disc with an initial and an aim marker. */
   private drawDisc(t: Tower, x: number, y: number, dx: number, dy: number): void {
     const g = this.g;
-    const r = this.view.tile * 0.42;
+    const r = this.view.tile * 0.42 * this.pres.s;
+    y += this.pres.dy;
     const def = t.def;
     const sprite = this.sprites.get(t.uid);
     if (sprite) {

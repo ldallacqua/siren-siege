@@ -2,7 +2,7 @@
 
 > Living handoff document. **Every session updates this before finishing** (see AGENTS.md §3).
 
-**Version:** 0.2.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-09-28
+**Version:** 0.4.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-09-29
 
 ## What works
 
@@ -30,13 +30,15 @@
 - **Lobby home (gacha style):** full-screen featured heroine (tap her for a Bond-gated idle line with voice blips), Commander badge (wins, best wave), left rail tiles Messages (new-chat badge) / Gallery / Codex, heroine picker on the right, big Heroines + Battle tiles at the bottom.
 - **Messages screen:** every chat across heroines, new first. **Arena select:** cards with painted map previews, difficulty, best wave, lock state.
 - **Second arena, Frostveil Pass (Hard):** Mount Shirahane snow palette (snowy firs, frozen pond, ice-blue lanterns), shorter path; unlocks at wave 10 on Moonlit Shrine; own music track. Bot reaches wave 15 there vs 19 on the shrine.
+- **Lofi music:** a calm menu track and one theme per heroine for her chats (swung e-piano chords, soft drums, low-pass + vinyl crackle, all synthesized); tracks crossfade, chats restore the previous track, pause/options duck the battle music.
+- **Motion design (D-019, `docs/UI_STYLE.md` → Motion):** title card ("Tap to begin", unlocks audio); directional screen transitions (forward/back, lobby dive/surface); lobby entrance choreography, per-heroine particles, parallax, colour wash on heroine switch, glowing Battle button; staggered lists/cards, 3D tilt on arena/roster cards; springy modals; lightbox grows from the tapped picture; menu↔battle wipe naming the arena; wave and boss banners; gold count-up, affordable-card flash, dock panel slide; heroines drop in when placed and pop on upgrade; results title reveal and bond bars filling from the old value; chat letterbox + title card intro; bond-bar shine. All off with Reduced motion.
 - Save in localStorage; `?dev` mode.
 - Tooling: unit tests (40), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
 ## Known issues / limitations
 
 - **MVP art scope:** remaining mood variants fall back to the main portrait; gallery slots 2–5 still show placeholders. The owner explicitly deferred the full 64-image set. Optional follow-up: B-01.
-- Audio is synthesized placeholder quality (no recorded samples); only one music track (Moonlit Shrine). 60 fps with 200 enemies on a mid phone is **not yet measured** (sounds are rate-limited to 24 voices, particles capped at 400).
+- Audio is synthesized placeholder quality (no recorded samples). 60 fps with 200 enemies on a mid phone is **not yet measured** (sounds are rate-limited to 24 voices, particles capped at 400).
 - Balance only validated by the naive bot (`npm run sim`: loses around wave 19–20). No human playtest data yet.
 - Upgrade tiers stop at 3 (BTD6 has 5). No camo/regrow enemies, no hero abilities.
 - Only 2 of the planned 5 chats per heroine are written; `speaker: 'you'` lines are supported but unused.
@@ -49,16 +51,16 @@
 
 ## Last session
 
-**2026-09-29 — lobby home, messages, second arena (Claude, cloud session)**
+**2026-09-29 — lofi music + motion design pass (Claude, cloud session)**
 
-- Owner asked for a NIKKE-style lobby and a second battle arena with a select screen.
-- `showHome` in `ui/screens.ts` is now the lobby (styles under "home (lobby)" in `style.css`); `showMessages`, `showMapSelect` added. Idle lines in `data/lore.ts` (`IDLE_LINES`).
-- `MapDef` gained `art`, `blurb`, `difficulty`, `unlock`; `mapArt.ts` takes a per-map palette (`PALETTES.shrine` / `.snow`). `save.isMapUnlocked()`. `Battle(mapId)` + `lastMap` in `main.ts`; results show the arena name. `MAP=frostveil-pass npm run sim` runs the bot there.
-- Smoke: arena select, lobby talk bubble, messages screen.
+- Owner asked for faint lofi music in menus and chats, and "motion everywhere".
+- Audio: `tuning.ts` tracks gained `style: 'lofi'` + `melody`; `sound.ts` now runs crossfading `Player`s with `startMusic(id)`, `stopMusic()`, `duck()`. Hooks in `main.ts` (menu/battle/duck) and `chat.ts` (heroine theme, restores previous).
+- Motion: new `src/ui/motion.ts`; `common.ts` `show()` does directional transitions (`goingBack()`), `closeScreens()` fades out; motion CSS block at the end of `style.css`; wiring in `screens.ts`, `Hud.ts` (banners, gold tween, afford flash), `art.ts` (lightbox FLIP), `chat.ts` (intro), `main.ts` (splash, wipe), `BattleScene.ts` (`towerPresence`). `body.calm` = reduced motion.
+- Smoke now dismisses the title card first (and screenshots it as `*-0-title.png`).
 - Nothing half-done.
 
 ## Next up
 
-1. **Owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+1. **Owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
 2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
 3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

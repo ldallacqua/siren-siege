@@ -34,3 +34,28 @@ export function chibiPose(time: number, phase: number, aimX: number, aimY: numbe
   const kick = k * 0.08;
   return { dx: -aimX * kick, dy: bob - aimY * kick, squash: 1 - k * 0.06, facing };
 }
+
+/**
+ * Placement drop and upgrade pop for a tower, from the seconds since it was
+ * placed (`age`) and since its last upgrade (`since`).
+ * s: scale multiplier, drop: vertical offset in tiles (negative = above), ring: 1..0 shockwave.
+ */
+export function towerPresence(age: number, since: number): { s: number; drop: number; ring: number } {
+  let s = 1;
+  let drop = 0;
+  let ring = 0;
+  if (age < 0.45) {
+    const p = age / 0.45;
+    // falls in, then squashes a little on landing
+    const fall = Math.min(1, p / 0.55);
+    drop = -(1 - fall) * (1 - fall) * 0.9;
+    s = fall < 1 ? 0.85 + 0.15 * fall : 1 + 0.12 * Math.sin(((p - 0.55) / 0.45) * Math.PI) * (1 - p);
+    if (fall >= 1) ring = 1 - (p - 0.55) / 0.45;
+  }
+  if (since >= 0 && since < 0.4) {
+    const q = since / 0.4;
+    s *= 1 + 0.25 * Math.sin(q * Math.PI) * (1 - q * 0.5);
+    ring = Math.max(ring, 1 - q);
+  }
+  return { s, drop, ring };
+}

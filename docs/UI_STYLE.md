@@ -34,7 +34,16 @@ The visual language for every screen. Read it before touching `src/style.css`, `
 - `.panel`: glass fill, hairline edge, a faint top highlight.
 - Counters (lives, gold, wave): icon + tabular number in a dark chip.
 - Section labels: small uppercase label with a short gold rule.
-- Motion: 120–180 ms ease-out; press = scale 0.97; screens fade and rise 6 px only when navigating to a different screen. Never re-render a screen for an in-screen change (update nodes in place, D-016). Respect `reducedMotion()`.
+- Motion: see **Motion** below. Never re-render a screen for an in-screen change (update nodes in place, D-016).
+
+## Motion (`src/ui/motion.ts` + the "motion" block at the end of `style.css`)
+
+- Easing tokens: `--ease` (settle, most things), `--spring` (slight overshoot: pops, modals, badges), `--out` (exits). Micro-interactions 120–200 ms, entrances 350–450 ms, exits ~300 ms (exits are faster than entrances).
+- Navigation is directional: `show()` slides the new screen in from the right and the old one out to the left; back buttons (`topbar`, or call `goingBack()` first) reverse it. The lobby "dives" (scale up + fade) into a destination and "surfaces" on return. The outgoing screen stays briefly as `.leaving` (inert, `aria-hidden`, titles stripped).
+- Lists enter with `stagger(el)` (45 ms per item, capped at 14); add `pop` to the container for cards (spring scale) or `from-left` for rows. Card grids that are tappable art get `tilt(el)` (3D tilt + glare on mouse only).
+- Menu ↔ battle goes through `wipe(mid, label, kicker)`; the arena name shows on the wipe. Battle: wave/boss banners over the stage, gold counts toward its value, shop cards flash when they become affordable, the dock panel slides in on change, heroines drop in when placed and pop on upgrade (`towerPresence()` in `chibiPose.ts`).
+- Ambient motion is slow (≥ 3 s loops): moon glow, bond-bar shine, Battle-button glow, lobby particles per heroine, pointer/tilt parallax via `data-depth`.
+- Reduced motion (Settings toggle or OS) sets `body.calm`: all CSS animation/transition collapses, `calm()` short-circuits every helper. Always check it before adding a JS-driven animation.
 
 ## Battlefield
 

@@ -9,9 +9,10 @@ import { GALLERY, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode, GalleryItem } from '../data/types.ts';
 import { dev, heroineLevel, isMapUnlocked, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
 import { openLightbox } from './art.ts';
-import { playChat } from './chat.ts';
+import { playChat, startAmbient, type Ambient } from './chat.ts';
 import { artChain, bondBar, closeScreens, show, topbar } from './common.ts';
 import { h, hex, toast } from './dom.ts';
+import { applyCalm, parallax, stagger, tilt } from './motion.ts';
 
 export { closeScreens };
 import { icon, type IconName } from './icons.ts';
@@ -25,6 +26,9 @@ export interface HomeActions {
 
 /** Which heroine the lobby features; the player can switch with the avatars. */
 let featured = '';
+
+/** Lobby particles behind each heroine. */
+const LOBBY_FX: Record<string, Ambient> = { scarlet: 'petals', yuki: 'snow', kaede: 'embers', selene: 'sparkle' };
 
 /** Chats the player can open but hasn't finished yet. */
 function newChats(): ChatEpisode[] {
@@ -66,9 +70,12 @@ export function showHome(a: HomeActions): void {
   let hero = heroFor(d.id);
   const heroWrap = h('button', { class: 'lobby-hero', 'aria-label': 'Talk to her', onclick: () => talk() }, hero);
   const bubble = h('div', { class: 'lobby-bubble', 'aria-live': 'polite' });
+  const fx = h('canvas', { class: 'home-fx', 'aria-hidden': 'true', 'data-depth': '22' });
+  let stopFx = startAmbient(fx, LOBBY_FX[d.id] ?? 'motes', d.color, reducedMotion());
   const nameB = h('b', null, d.name);
   const nameS = h('span', null, d.title);
   const bondSlot = h('div', { class: 'lobby-bond' }, bondBar(d.id));
+  const nameBox = h('div', { class: 'home-name' }, nameB, nameS, bondSlot);
   let lastLine = -1;
   let bubbleTimer = 0;
 
@@ -104,8 +111,17 @@ export function showHome(a: HomeActions): void {
     next.classList.add('swap');
     hero.replaceWith(next);
     hero = next;
+    // A wash of her colour rolls across the scene, and her particles take over.
+    const wash = h('div', { class: 'home-wash' });
+    heroWrap.before(wash);
+    window.setTimeout(() => wash.remove(), 800);
+    stopFx();
+    stopFx = startAmbient(fx, LOBBY_FX[id] ?? 'motes', u.color, reducedMotion());
     nameB.textContent = u.name;
     nameS.textContent = u.title;
+    nameBox.classList.remove('swap');
+    void nameBox.offsetWidth;
+    nameBox.classList.add('swap');
     bondSlot.replaceChildren(bondBar(id));
     bubble.classList.remove('on');
     for (const p of screen.querySelectorAll<HTMLElement>('.pick')) p.classList.toggle('on', p.dataset.id === id);
@@ -115,7 +131,8 @@ export function showHome(a: HomeActions): void {
     'section',
     { class: 'screen home lobby', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
     h('div', { class: 'home-bg' }),
-    h('div', { class: 'home-moon' }),
+    h('div', { class: 'home-moon', 'data-depth': '8' }),
+    fx,
     heroWrap,
     h('div', { class: 'home-shade' }),
     bubble,
@@ -151,12 +168,12 @@ export function showHome(a: HomeActions): void {
       h(
         'div',
         { class: 'home-pick', role: 'group', 'aria-label': 'Featured heroine' },
-        ...unlocked.map((u) =>
+        ...unlocked.map((u, i) =>
           h(
             'button',
             {
               class: `pick ${u.id === featured ? 'on' : ''}`,
-              style: `--c:${hex(u.color)};--a:${hex(u.accent)}`,
+              style: `--c:${hex(u.color)};--a:${hex(u.accent)};--i:${i}`,
               title: `Show ${u.name}`,
               'aria-label': `Show ${u.name}`,
               'data-id': u.id,
@@ -167,7 +184,7 @@ export function showHome(a: HomeActions): void {
         ),
       ),
     ),
-    h('div', { class: 'home-name' }, nameB, nameS, bondSlot),
+    nameBox,
     // bottom: the two big destinations
     h(
       'div',
@@ -193,9 +210,11 @@ export function showHome(a: HomeActions): void {
         icon('play'),
       ),
     ),
-    h('p', { class: 'home-foot' }, 'All characters are adults (21+) · v0.3', dev ? ' · DEV MODE' : ''),
+    h('p', { class: 'home-foot' }, 'All characters are adults (21+) · v0.4', dev ? ' · DEV MODE' : ''),
   );
+  heroWrap.dataset.depth = '14';
   show(screen);
+  parallax(screen);
 }
 
 /** Every chat the player can read, newest first. */
@@ -216,20 +235,22 @@ export function showMessages(a: HomeActions): void {
       'section',
       { class: 'screen list messages' },
       topbar('Messages', () => showHome(a), fresh ? `${fresh} new` : 'All caught up'),
-      h(
-        'div',
-        { class: 'screen-inner msg-list' },
-        ...rows.map(({ d, ep, open, done }) =>
-          h(
-            'button',
-            {
-              class: `msg ${open ? '' : 'locked'} ${open && !done ? 'new' : ''}`,
-              style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
-              onclick: () => (open ? playChat(ep, () => showMessages(a)) : toast(`Reach Bond ${ep.level} with ${d.name.split(' ')[0]}`)),
-            },
-            artChain([portraitFile(d.id)], d.id, d.name, true, 'msg-av'),
-            h('span', { class: 'msg-body' }, h('b', null, d.name), h('span', null, open ? ep.title : `Locked · Bond ${ep.level}`)),
-            h('span', { class: 'msg-tag' }, open ? (done ? 'Read' : 'New') : icon('lock')),
+      stagger(
+        h(
+          'div',
+          { class: 'screen-inner msg-list from-left' },
+          ...rows.map(({ d, ep, open, done }) =>
+            h(
+              'button',
+              {
+                class: `msg ${open ? '' : 'locked'} ${open && !done ? 'new' : ''}`,
+                style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
+                onclick: () => (open ? playChat(ep, () => showMessages(a)) : toast(`Reach Bond ${ep.level} with ${d.name.split(' ')[0]}`)),
+              },
+              artChain([portraitFile(d.id)], d.id, d.name, true, 'msg-av'),
+              h('span', { class: 'msg-body' }, h('b', null, d.name), h('span', null, open ? ep.title : `Locked · Bond ${ep.level}`)),
+              h('span', { class: 'msg-tag' }, open ? (done ? 'Read' : 'New') : icon('lock')),
+            ),
           ),
         ),
       ),
@@ -252,31 +273,34 @@ export function showMapSelect(a: HomeActions, start: (mapId: string) => void): v
         /* preview is decorative */
       }
     });
-    return h(
-      'button',
-      {
-        class: `arena ${open ? '' : 'locked'} art-${m.art ?? 'shrine'}`,
-        'aria-label': m.name,
-        onclick: () => (open ? start(m.id) : toast(m.unlock?.label ?? 'Locked')),
-      },
-      preview,
-      h('span', { class: 'arena-shade' }),
-      h('span', { class: `arena-diff d-${(m.difficulty ?? 'Normal').toLowerCase()}` }, m.difficulty ?? 'Normal'),
+    return tilt(
       h(
-        'span',
-        { class: 'arena-info' },
-        h('b', null, m.name),
-        h('span', { class: 'arena-blurb' }, open ? (m.blurb ?? '') : (m.unlock?.label ?? 'Locked')),
+        'button',
+        {
+          class: `arena ${open ? '' : 'locked'} art-${m.art ?? 'shrine'}`,
+          'aria-label': m.name,
+          onclick: () => (open ? start(m.id) : toast(m.unlock?.label ?? 'Locked')),
+        },
+        preview,
+        h('span', { class: 'arena-shade' }),
+        h('span', { class: `arena-diff d-${(m.difficulty ?? 'Normal').toLowerCase()}` }, m.difficulty ?? 'Normal'),
         h(
           'span',
-          { class: 'arena-best' },
-          ...(open
-            ? cleared
-              ? [icon('star'), 'Cleared']
-              : [icon('wave'), best ? `Best wave ${best}/${WAVES.length}` : 'Not played yet']
-            : [icon('lock'), 'Locked']),
+          { class: 'arena-info' },
+          h('b', null, m.name),
+          h('span', { class: 'arena-blurb' }, open ? (m.blurb ?? '') : (m.unlock?.label ?? 'Locked')),
+          h(
+            'span',
+            { class: 'arena-best' },
+            ...(open
+              ? cleared
+                ? [icon('star'), 'Cleared']
+                : [icon('wave'), best ? `Best wave ${best}/${WAVES.length}` : 'Not played yet']
+              : [icon('lock'), 'Locked']),
+          ),
         ),
       ),
+      4,
     );
   });
   show(
@@ -284,7 +308,7 @@ export function showMapSelect(a: HomeActions, start: (mapId: string) => void): v
       'section',
       { class: 'screen list arenas' },
       topbar('Choose an arena', () => showHome(a)),
-      h('div', { class: 'screen-inner arena-grid' }, ...cards),
+      stagger(h('div', { class: 'screen-inner arena-grid pop' }, ...cards)),
     ),
   );
 }
@@ -352,7 +376,10 @@ function audioControls(): HTMLElement {
         () => !st.muted,
         (v) => (st.muted = !v),
       ),
-      toggle('Reduced motion', reducedMotion, (v) => (st.reducedMotion = v)),
+      toggle('Reduced motion', reducedMotion, (v) => {
+        st.reducedMotion = v;
+        applyCalm();
+      }),
     ),
   );
 }
@@ -377,36 +404,38 @@ function showSettings(a: HomeActions): void {
       'section',
       { class: 'screen list' },
       topbar('Settings', () => showHome(a)),
-      h(
-        'div',
-        { class: 'screen-inner settings' },
-        h('div', { class: 'label' }, 'Audio & display'),
-        h('div', { class: 'panel' }, audioControls()),
-        h('div', { class: 'label' }, 'Controls'),
+      stagger(
         h(
           'div',
-          { class: 'panel' },
-          h('p', { style: 'margin-bottom:10px' }, 'Tap a card, then tap the map to deploy. Pinch or scroll to zoom, drag to pan.'),
-          keyList(),
-        ),
-        h('div', { class: 'label' }, 'Data'),
-        h(
-          'div',
-          { class: 'panel' },
+          { class: 'screen-inner settings' },
+          h('div', { class: 'label' }, 'Audio & display'),
+          h('div', { class: 'panel' }, audioControls()),
+          h('div', { class: 'label' }, 'Controls'),
           h(
-            'p',
-            { style: 'margin-bottom:12px' },
-            'Progress is saved in this browser only. Add ?dev to the URL to unlock everything for testing.',
+            'div',
+            { class: 'panel' },
+            h('p', { style: 'margin-bottom:10px' }, 'Tap a card, then tap the map to deploy. Pinch or scroll to zoom, drag to pan.'),
+            keyList(),
           ),
+          h('div', { class: 'label' }, 'Data'),
           h(
-            'button',
-            {
-              class: 'btn danger',
-              onclick: () => {
-                if (confirm('Erase all bond levels, chats and unlocks?')) resetSave();
+            'div',
+            { class: 'panel' },
+            h(
+              'p',
+              { style: 'margin-bottom:12px' },
+              'Progress is saved in this browser only. Add ?dev to the URL to unlock everything for testing.',
+            ),
+            h(
+              'button',
+              {
+                class: 'btn danger',
+                onclick: () => {
+                  if (confirm('Erase all bond levels, chats and unlocks?')) resetSave();
+                },
               },
-            },
-            'Reset progress',
+              'Reset progress',
+            ),
           ),
         ),
       ),
@@ -419,21 +448,24 @@ function showSettings(a: HomeActions): void {
 export function showRoster(a: HomeActions): void {
   const cards = HEROINES.map((d) => {
     const unlocked = isUnlocked(d.id);
-    return h(
-      'button',
-      {
-        class: `roster-card ${unlocked ? '' : 'locked'}`,
-        style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
-        onclick: () => showProfile(d.id, a),
-      },
-      artChain([portraitFile(d.id)], d.id, d.name, true, 'roster-art'),
+    return tilt(
       h(
-        'div',
-        { class: 'roster-info' },
-        h('b', null, d.name),
-        h('span', { class: 'role' }, d.title),
-        unlocked ? bondBar(d.id) : h('em', null, icon('lock'), d.unlock?.label ?? 'Locked'),
+        'button',
+        {
+          class: `roster-card ${unlocked ? '' : 'locked'}`,
+          style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
+          onclick: () => showProfile(d.id, a),
+        },
+        artChain([portraitFile(d.id)], d.id, d.name, true, 'roster-art'),
+        h(
+          'div',
+          { class: 'roster-info' },
+          h('b', null, d.name),
+          h('span', { class: 'role' }, d.title),
+          unlocked ? bondBar(d.id) : h('em', null, icon('lock'), d.unlock?.label ?? 'Locked'),
+        ),
       ),
+      5,
     );
   });
   show(
@@ -441,7 +473,7 @@ export function showRoster(a: HomeActions): void {
       'section',
       { class: 'screen list' },
       topbar('Heroines', () => showHome(a), `${HEROINES.filter((d) => isUnlocked(d.id)).length}/${HEROINES.length} unlocked`),
-      h('div', { class: 'screen-inner roster' }, ...cards),
+      stagger(h('div', { class: 'screen-inner roster pop' }, ...cards)),
     ),
   );
 }
@@ -477,36 +509,38 @@ export function showProfile(id: string, a: HomeActions): void {
         'div',
         { class: 'screen-inner profile-body' },
         h('div', { class: 'profile-art-wrap' }, art, h('span', { class: 'profile-art-hint' }, icon('fit'), 'View full art')),
-        h(
-          'div',
-          { class: 'profile-info' },
-          h('div', { class: 'profile-role' }, d.title),
-          h('h1', { class: 'profile-name' }, d.name),
+        stagger(
           h(
             'div',
-            { class: 'tags' },
-            h('span', { class: 'tag' }, `Age ${d.age}`),
-            h('span', { class: 'tag' }, ATTACK_LABEL[d.base.attack] ?? d.base.attack),
-            h('span', { class: 'tag' }, `${d.cost} gold`),
-          ),
-          bondBar(id),
-          h('p', { class: 'profile-bio' }, d.bio),
-          h('p', { class: 'fine' }, d.archetype),
-          h('div', { class: 'label' }, 'Her story'),
-          h(
-            'div',
-            { class: 'story-list' },
-            ...(STORIES[id] ?? []).map((s) =>
-              lvl >= s.level
-                ? h('div', { class: 'story' }, h('b', null, s.title), h('p', null, s.text))
-                : h('div', { class: 'story locked' }, icon('lock'), h('span', null, `Reach Bond ${s.level} to learn more`)),
+            { class: 'profile-info' },
+            h('div', { class: 'profile-role' }, d.title),
+            h('h1', { class: 'profile-name' }, d.name),
+            h(
+              'div',
+              { class: 'tags' },
+              h('span', { class: 'tag' }, `Age ${d.age}`),
+              h('span', { class: 'tag' }, ATTACK_LABEL[d.base.attack] ?? d.base.attack),
+              h('span', { class: 'tag' }, `${d.cost} gold`),
             ),
+            bondBar(id),
+            h('p', { class: 'profile-bio' }, d.bio),
+            h('p', { class: 'fine' }, d.archetype),
+            h('div', { class: 'label' }, 'Her story'),
+            h(
+              'div',
+              { class: 'story-list' },
+              ...(STORIES[id] ?? []).map((s) =>
+                lvl >= s.level
+                  ? h('div', { class: 'story' }, h('b', null, s.title), h('p', null, s.text))
+                  : h('div', { class: 'story locked' }, icon('lock'), h('span', null, `Reach Bond ${s.level} to learn more`)),
+              ),
+            ),
+            h('div', { class: 'label' }, 'Chats'),
+            h('div', { class: 'chat-list' }, ...chats),
+            h('div', { class: 'label' }, 'Gallery'),
+            stagger(h('div', { class: 'gallery-grid small pop' }, ...gallery), 8),
+            h('p', { class: 'fine' }, 'Raise Bond by fighting alongside her and choosing your words well.'),
           ),
-          h('div', { class: 'label' }, 'Chats'),
-          h('div', { class: 'chat-list' }, ...chats),
-          h('div', { class: 'label' }, 'Gallery'),
-          h('div', { class: 'gallery-grid small' }, ...gallery),
-          h('p', { class: 'fine' }, 'Raise Bond by fighting alongside her and choosing your words well.'),
         ),
       ),
     ),
@@ -520,14 +554,14 @@ function galleryThumb(g: GalleryItem, lvl: number): HTMLElement {
   if (!open) return h('div', { class: 'thumb locked' }, h('span', null, icon('lock'), `Bond ${g.level}`));
   return h(
     'button',
-    { class: 'thumb', onclick: () => lightbox(g) },
+    { class: 'thumb', onclick: (e: Event) => lightbox(g, e.currentTarget as HTMLElement) },
     artChain([g.file], g.heroine, g.title, false, 'thumb-art'),
     h('span', null, g.title),
   );
 }
 
-function lightbox(g: GalleryItem): void {
-  openLightbox([g.file], g.heroine, `${HEROINE_BY_ID[g.heroine].name} — ${g.title}`, { portrait: false });
+function lightbox(g: GalleryItem, from?: HTMLElement): void {
+  openLightbox([g.file], g.heroine, `${HEROINE_BY_ID[g.heroine].name} — ${g.title}`, { portrait: false, from });
 }
 
 /** Tap a heroine's picture to see her whole portrait. */
@@ -537,7 +571,7 @@ function fullPortrait(img: HTMLImageElement, id: string): HTMLImageElement {
   img.title = 'Tap to view full art';
   img.onclick = (e) => {
     e.stopPropagation();
-    openLightbox([portraitFile(id)], id, `${d.name} — ${d.title}`, { tint: d.color });
+    openLightbox([portraitFile(id)], id, `${d.name} — ${d.title}`, { tint: d.color, from: img });
   };
   return img;
 }
@@ -549,22 +583,24 @@ export function showCodex(a: HomeActions): void {
       'section',
       { class: 'screen list codex' },
       topbar('Codex', () => showHome(a)),
-      h(
-        'div',
-        { class: 'screen-inner codex-body' },
-        h('div', { class: 'label' }, 'The world'),
-        ...CODEX.map((c) => h('article', { class: 'codex-entry' }, h('h3', null, c.title), h('p', null, c.text))),
-        h('div', { class: 'label' }, 'The Blight'),
-        h('p', { class: 'codex-note' }, BESTIARY_NOTE),
+      stagger(
         h(
           'div',
-          { class: 'bestiary' },
-          ...ENEMIES.map((e) =>
-            h(
-              'div',
-              { class: `beast ${e.boss ? 'boss' : ''} ${e.armored ? 'armored' : ''}`, style: `--e:${hex(e.color)}` },
-              h('span', { class: 'beast-orb' }),
-              h('div', null, h('b', null, e.name), h('p', null, BESTIARY[e.id] ?? '')),
+          { class: 'screen-inner codex-body' },
+          h('div', { class: 'label' }, 'The world'),
+          ...CODEX.map((c) => h('article', { class: 'codex-entry' }, h('h3', null, c.title), h('p', null, c.text))),
+          h('div', { class: 'label' }, 'The Blight'),
+          h('p', { class: 'codex-note' }, BESTIARY_NOTE),
+          h(
+            'div',
+            { class: 'bestiary' },
+            ...ENEMIES.map((e) =>
+              h(
+                'div',
+                { class: `beast ${e.boss ? 'boss' : ''} ${e.armored ? 'armored' : ''}`, style: `--e:${hex(e.color)}` },
+                h('span', { class: 'beast-orb' }),
+                h('div', null, h('b', null, e.name), h('p', null, BESTIARY[e.id] ?? '')),
+              ),
             ),
           ),
         ),
@@ -574,13 +610,16 @@ export function showCodex(a: HomeActions): void {
 }
 
 export function showGallery(a: HomeActions): void {
-  const sections = HEROINES.map((d) => {
+  const sections = HEROINES.map((d, si) => {
     const lvl = heroineLevel(d.id);
     return h(
       'div',
       { class: 'gallery-section', style: `--c:${hex(d.color)}` },
       h('div', { class: 'label' }, d.name),
-      h('div', { class: 'gallery-grid' }, ...GALLERY.filter((g) => g.heroine === d.id).map((g) => galleryThumb(g, lvl))),
+      stagger(
+        h('div', { class: 'gallery-grid pop' }, ...GALLERY.filter((g) => g.heroine === d.id).map((g) => galleryThumb(g, lvl))),
+        si * 2,
+      ),
     );
   });
   const total = GALLERY.length;
@@ -590,7 +629,7 @@ export function showGallery(a: HomeActions): void {
       'section',
       { class: 'screen list' },
       topbar('Gallery', () => showHome(a), `${got}/${total} unlocked`),
-      h('div', { class: 'screen-inner' }, ...sections),
+      stagger(h('div', { class: 'screen-inner' }, ...sections)),
     ),
   );
 }
@@ -625,7 +664,7 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
         'div',
         { class: 'grow' },
         h('b', null, d.name),
-        bondBar(g.id),
+        bondBar(g.id, (save.heroines[g.id]?.xp ?? 0) - g.xp),
         h('span', { class: 'gain' }, `+${g.xp} bond${g.after > g.before ? ` · Level up! ${g.before} → ${g.after}` : ''}`),
         unlocks.length ? h('div', { class: 'unlocks' }, ...unlocks) : null,
       ),
@@ -645,7 +684,7 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
           : `The Blight broke through on wave ${r.wave}/${r.total}.`,
       ),
       ...r.newlyUnlocked.map((id) => h('p', { class: 'new-hero' }, icon('sparkle'), `New heroine unlocked: ${HEROINE_BY_ID[id].name}`)),
-      h('div', { class: 'result-rows' }, ...(rows.length ? rows : [h('p', null, 'Deploy heroines to earn bond.')])),
+      stagger(h('div', { class: 'result-rows' }, ...(rows.length ? rows : [h('p', null, 'Deploy heroines to earn bond.')]))),
       h(
         'div',
         { class: 'row center' },

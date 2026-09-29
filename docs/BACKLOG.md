@@ -12,6 +12,7 @@ B-03 shipped (synth SFX + music, particles, floating gold, shake, settings). Rem
 
 - Measure 60 fps with 200 enemies at 3× on a mid phone (`npm run dev`, devtools CPU throttle 4×). Knobs: `MAX_PARTICLES` and `FX_LIFE` in `BattleScene.ts`, `GAP`/`Limiter` voices in `src/audio/sound.ts`.
 - A music track per new map (add to `TRACKS` in `src/audio/tuning.ts`); optionally swap synth SFX for small CC0 samples in `public/sfx/` if the owner wants a richer sound.
+- Motion perf: check the lobby (particles + parallax + backdrop blur) and screen transitions stay smooth on a mid Android phone; if not, drop `backdrop-filter` during transitions or halve `LOBBY_FX` particle counts.
 - Accept: owner is happy with the mix; perf measurement recorded in STATUS.
 
 ### B-04 · P1 · Floating in-battle heroine barks

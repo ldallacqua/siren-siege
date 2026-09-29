@@ -11,8 +11,10 @@ import { h, toast } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
 import { playChat } from './ui/chat.ts';
+import { applyCalm, wipe } from './ui/motion.ts';
 import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions, showMapSelect } from './ui/screens.ts';
 
+applyCalm();
 const stage = document.getElementById('stage')!;
 const side = document.getElementById('side')!;
 const scene = new BattleScene();
@@ -54,8 +56,10 @@ function openOptions(): void {
   const wasPaused = b.paused;
   b.paused = true;
   b.emit();
+  sound.duck(true);
   showOptions(() => {
     closeScreens();
+    sound.duck(false);
     b.paused = wasPaused;
     b.emit();
   });
@@ -65,7 +69,7 @@ scene.onZoom = (z) => {
   zoomOut.disabled = zoomFit.disabled = z <= scene.minZoom + 1e-6;
 };
 window.addEventListener('keydown', (e) => {
-  if (!battle || document.querySelector('#screens .screen')) return;
+  if (!battle || document.querySelector('#screens .screen:not(.leaving)')) return;
   if (e.key === '+' || e.key === '=') scene.zoomBy(1.4);
   else if (e.key === '-' || e.key === '_') scene.zoomBy(1 / 1.4);
   else if (e.key === '0') scene.resetZoom();
@@ -131,8 +135,16 @@ function setPlaying(on: boolean): void {
   requestAnimationFrame(fit);
 }
 
+/** Menu -> battle goes through a wipe that names the arena. */
 function startBattle(mapId = lastMap): void {
+  const m = MAPS.find((x) => x.id === mapId) ?? MAPS[0];
+  sound.play('whoosh');
+  wipe(() => beginBattle(mapId), m.name, m.difficulty ?? 'Arena');
+}
+
+function beginBattle(mapId: string): void {
   lastMap = mapId;
+  sound.duck(false);
   closeScreens();
   battle = new Battle(mapId);
   battle.onFinish = finishBattle;
@@ -175,17 +187,29 @@ function finishBattle(b: Battle): void {
       () => startBattle(),
       goHome,
     );
+    // Let the victory/defeat sting ring out, then ease the menu music back in.
+    window.setTimeout(() => {
+      if (!battle || battle.finished) sound.startMusic('menu');
+    }, 2600);
     if (newlyUnlocked.length) window.setTimeout(() => sound.play('unlock'), 500);
     else if (gains.some((g) => g.after > g.before)) window.setTimeout(() => sound.play('bondUp'), 500);
   }, 700);
 }
 
+/** Leaving a battle wipes back to the lobby; at boot there's nothing to wipe from. */
 function goHome(): void {
+  if (!battle && !document.body.classList.contains('in-battle')) return enterHome();
+  sound.play('whoosh');
+  wipe(enterHome);
+}
+
+function enterHome(): void {
   if (battle && !battle.finished) {
     recordWave(battle, true);
   }
   battle = null;
-  sound.stopMusic();
+  sound.duck(false);
+  sound.startMusic('menu');
   scene.setBattle(null);
   hud.attach(null);
   setPlaying(false);
@@ -197,9 +221,11 @@ hud.onMenu = () => {
   const b = battle;
   const wasPaused = b.paused;
   b.paused = true;
+  sound.duck(true);
   showPauseMenu(
     () => {
       closeScreens();
+      sound.duck(false);
       b.paused = wasPaused;
       b.emit();
     },
@@ -229,10 +255,47 @@ if (dev)
     },
   });
 
-goHome();
+showSplash();
 let interacted = false;
 window.addEventListener('pointerdown', () => (interacted = true), { capture: true, once: true });
 checkForUpdate();
+
+/**
+ * Title card: the first tap unlocks audio (browsers require a gesture), so the
+ * lobby music starts exactly as the lobby animates in.
+ */
+function showSplash(): void {
+  const el = h(
+    'button',
+    { class: 'splash', 'aria-label': 'Tap to begin', autofocus: true },
+    h('div', { class: 'splash-moon' }),
+    h('div', { class: 'splash-logo' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
+    h('div', { class: 'splash-tag' }, 'A moonlit tower defense'),
+    h('div', { class: 'splash-go' }, matchMedia('(pointer: coarse)').matches ? 'Tap to begin' : 'Click to begin'),
+    h('div', { class: 'splash-foot' }, 'All characters are adults (21+)'),
+  );
+  let gone = false;
+  const go = () => {
+    if (gone) return;
+    gone = true;
+    window.removeEventListener('keydown', onKey, true);
+    sound.unlock();
+    sound.play('whoosh');
+    enterHome();
+    el.classList.add('bye');
+    window.setTimeout(() => el.remove(), 600);
+  };
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      go();
+    }
+  };
+  el.onclick = go;
+  window.addEventListener('keydown', onKey, true);
+  document.body.append(el);
+  el.focus();
+}
 
 /**
  * GitHub Pages lets browsers cache index.html for 10 minutes, so right after a

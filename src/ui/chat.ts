@@ -20,7 +20,7 @@ export interface ChatOptions {
   noReward?: boolean;
 }
 
-type Ambient = 'snow' | 'embers' | 'steam' | 'lanterns' | 'stars' | 'dust' | 'motes' | 'petals' | 'sparkle' | 'dustmoon';
+export type Ambient = 'snow' | 'embers' | 'steam' | 'lanterns' | 'stars' | 'dust' | 'motes' | 'petals' | 'sparkle' | 'dustmoon';
 
 const AMBIENT: Record<ChatScene, Ambient> = {
   night: 'dustmoon',
@@ -41,7 +41,14 @@ const AMBIENT: Record<ChatScene, Ambient> = {
 
 const PAUSE: Record<string, number> = { '.': 170, '!': 170, '?': 170, ',': 80, ';': 90, ':': 90, '—': 120 };
 
-export function playChat(ep: ChatEpisode, onClose: () => void, opts: ChatOptions = {}): void {
+export function playChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions = {}): void {
+  // Her own theme while you talk; the previous music comes back afterwards.
+  const prevMusic = sound.music;
+  sound.startMusic(`chat-${ep.heroine}`);
+  const onClose = () => {
+    if (prevMusic) sound.startMusic(prevMusic);
+    onCloseRaw();
+  };
   const d = HEROINE_BY_ID[ep.heroine];
   const first = d.name.split(' ')[0];
   const nodes = new Map(ep.nodes.map((n) => [n.id, n]));
@@ -126,6 +133,8 @@ export function playChat(ep: ChatEpisode, onClose: () => void, opts: ChatOptions
     window.setTimeout(() => old.forEach((o) => o.remove()), 260);
   };
 
+  // The first line waits for the opening title card to part.
+  let lead = calm ? 60 : 1000;
   const render = () => {
     const speaker = node.speaker;
     if (speaker === 'her') setPortrait(node.mood ?? 'smile');
@@ -156,7 +165,8 @@ export function playChat(ep: ChatEpisode, onClose: () => void, opts: ChatOptions
       if (i >= fullText.length) return doneTyping();
       typing = window.setTimeout(step, calm ? 8 : 24 + (PAUSE[ch] ?? 0));
     };
-    typing = window.setTimeout(step, 60);
+    typing = window.setTimeout(step, lead);
+    lead = 60;
   };
 
   const doneTyping = () => {
@@ -396,12 +406,21 @@ export function playChat(ep: ChatEpisode, onClose: () => void, opts: ChatOptions
   // ---------------------------------------------------------------- ambient particles
   const stopFx = startAmbient(fx, AMBIENT[scene], d.color, calm);
 
+  if (!calm) {
+    const intro = h(
+      'div',
+      { class: 'chat-intro', 'aria-hidden': 'true' },
+      h('div', { class: 'chat-intro-card' }, h('small', null, opts.noReward ? 'Prologue' : d.name), h('b', null, ep.title)),
+    );
+    screen.append(intro);
+    window.setTimeout(() => intro.remove(), 2100);
+  }
   show(screen);
   render();
 }
 
 /** A small 2D-canvas particle loop for the chat backdrop. Returns a stop function. */
-function startAmbient(canvas: HTMLCanvasElement, kind: Ambient, tint: number, calm: boolean): () => void {
+export function startAmbient(canvas: HTMLCanvasElement, kind: Ambient, tint: number, calm: boolean): () => void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return () => {};
   const dpr = Math.min(2, window.devicePixelRatio || 1);

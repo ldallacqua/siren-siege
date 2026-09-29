@@ -70,6 +70,18 @@ const GAP: Partial<Record<SfxName, number>> = {
 /** Per-heroine voice pitch multiplier for chat text blips. */
 export const VOICE: Record<string, number> = { scarlet: 1.2, yuki: 2.1, kaede: 1.45, selene: 1.75 };
 
+interface Player {
+  id: string;
+  track: Track;
+  gain: GainNode;
+  /** Where notes connect (the lofi low-pass, or the gain directly). */
+  out: AudioNode;
+  step: number;
+  nextAt: number;
+  timer: number;
+  seed: number;
+}
+
 class Sound {
   private ctx: AudioContext | null = null;
   private master!: GainNode;
@@ -77,10 +89,11 @@ class Sound {
   private musicBus!: GainNode;
   private noiseBuf!: AudioBuffer;
   private limiter = new Limiter();
-  private track: Track | null = null;
-  private musicStep = 0;
-  private nextNoteAt = 0;
-  private timer = 0;
+  /** The music that should be playing (kept while audio is still locked). */
+  private wanted: string | null = null;
+  private player: Player | null = null;
+  private duckGain: GainNode | null = null;
+  private crackle: AudioBufferSourceNode | null = null;
 
   /**
    * Call from user gestures. Safe to call repeatedly: browsers only honour
@@ -111,7 +124,13 @@ class Sound {
       if (document.hidden) void ctx.suspend();
       else void ctx.resume();
     });
-    if (this.track) this.startScheduler();
+    this.duckGain = ctx.createGain();
+    this.duckGain.connect(this.musicBus);
+    if (this.wanted) {
+      const id = this.wanted;
+      this.wanted = null;
+      this.startMusic(id);
+    }
   }
 
   private silent: HTMLAudioElement | null = null;
@@ -156,45 +175,194 @@ class Sound {
 
   // ---------------------------------------------------------------- music
 
-  startMusic(mapId: string): void {
-    this.track = trackFor(mapId);
-    this.musicStep = 0;
-    if (this.ctx) this.startScheduler();
+  /** Id of the track playing (or queued until audio unlocks). */
+  get music(): string | null {
+    return this.player?.id ?? this.wanted;
   }
 
-  stopMusic(): void {
-    this.track = null;
-    clearInterval(this.timer);
-    this.timer = 0;
+  /**
+   * Crossfade to a track: a map id (battle), 'menu', or 'chat-<heroine>'.
+   * Calling it with the track already playing does nothing, so screens can
+   * call it freely on every visit.
+   */
+  startMusic(id: string): void {
+    if (!this.ctx) {
+      this.wanted = id;
+      return;
+    }
+    if (this.player?.id === id) return;
+    const t = this.ctx.currentTime;
+    this.fadeOut(this.player, 1.4);
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(1, t + 1.6);
+    const track = trackFor(id);
+    // Lofi tracks get a warm low-pass and a bed of vinyl crackle.
+    let out: AudioNode = gain;
+    if (track.style === 'lofi') {
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 2600;
+      lp.Q.value = 0.4;
+      lp.connect(gain);
+      out = lp;
+      this.startCrackle(gain);
+    } else this.stopCrackle();
+    gain.connect(this.duckGain!);
+    const p: Player = { id, track, gain, out, step: 0, nextAt: t + 0.15, timer: 0, seed: 7 };
+    p.timer = window.setInterval(() => this.schedule(p), 50);
+    this.player = p;
   }
 
-  private startScheduler(): void {
-    clearInterval(this.timer);
-    this.nextNoteAt = this.ctx!.currentTime + 0.1;
-    // Look-ahead scheduling: timers are jittery, audio clock is not.
-    this.timer = window.setInterval(() => this.schedule(), 50);
+  stopMusic(fade = 0.8): void {
+    this.wanted = null;
+    this.fadeOut(this.player, fade);
+    this.player = null;
+    this.stopCrackle();
   }
 
-  private schedule(): void {
+  /** Lower the music (pause menus, modals) without stopping it. */
+  duck(on: boolean): void {
+    if (!this.ctx || !this.duckGain) return;
+    this.duckGain.gain.setTargetAtTime(on ? 0.35 : 1, this.ctx.currentTime, 0.25);
+  }
+
+  private fadeOut(p: Player | null, secs: number): void {
+    if (!p || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    p.gain.gain.cancelScheduledValues(t);
+    p.gain.gain.setValueAtTime(Math.max(0.0001, p.gain.gain.value), t);
+    p.gain.gain.exponentialRampToValueAtTime(0.0001, t + secs);
+    window.setTimeout(
+      () => {
+        clearInterval(p.timer);
+        p.gain.disconnect();
+      },
+      secs * 1000 + 600,
+    );
+  }
+
+  private startCrackle(out: AudioNode): void {
+    const ctx = this.ctx!;
+    this.stopCrackle();
+    // 4 s of sparse clicks and soft hiss, looped
+    const len = ctx.sampleRate * 4;
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      d[i] = (Math.random() * 2 - 1) * 0.012;
+      if (Math.random() < 0.0004) d[i] += (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.4);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 1400;
+    const g = ctx.createGain();
+    g.gain.value = 0.35;
+    src.connect(hp).connect(g).connect(out);
+    src.start();
+    this.crackle = src;
+  }
+
+  private stopCrackle(): void {
+    try {
+      this.crackle?.stop();
+    } catch {
+      /* already stopped */
+    }
+    this.crackle = null;
+  }
+
+  private schedule(p: Player): void {
     const ctx = this.ctx;
-    const tr = this.track;
-    if (!ctx || !tr || ctx.state !== 'running') return;
+    if (!ctx || ctx.state !== 'running') return;
+    const tr = p.track;
     const eighth = 60 / tr.bpm / 2;
-    while (this.nextNoteAt < ctx.currentTime + 0.25) {
-      const t = this.nextNoteAt;
-      const step = this.musicStep++;
-      const bar = tr.bars[Math.floor(step / 8) % tr.bars.length];
-      if (step % 8 === 0) {
-        this.pad(bar, t, eighth * 8);
-        this.voice('sine', midiHz(bar[0] - 12), midiHz(bar[0] - 12), t, eighth * 7, 0.22, this.musicBus, 0.02);
-      }
-      // Leave some gaps so the arpeggio breathes.
-      if (step % 8 !== 7 || step % 16 === 15) this.pluck(midiHz(arpNote(tr, step)), t, 0.11);
-      this.nextNoteAt += eighth;
+    while (p.nextAt < ctx.currentTime + 0.3) {
+      const step = p.step++;
+      // Lofi swings the off-beats late; the battle arpeggio stays straight.
+      const swing = tr.style === 'lofi' && step % 2 === 1 ? eighth * 0.18 : 0;
+      const t = p.nextAt + swing;
+      if (tr.style === 'lofi') this.lofiStep(p, step, t, eighth);
+      else this.arpStep(p, step, t, eighth);
+      p.nextAt += eighth;
     }
   }
 
-  private pad(chord: number[], t: number, dur: number): void {
+  private arpStep(p: Player, step: number, t: number, eighth: number): void {
+    const tr = p.track;
+    const bar = tr.bars[Math.floor(step / 8) % tr.bars.length];
+    if (step % 8 === 0) {
+      this.pad(bar, t, eighth * 8, p.out);
+      this.voice('sine', midiHz(bar[0] - 12), midiHz(bar[0] - 12), t, eighth * 7, 0.22, p.out, 0.02);
+    }
+    // Leave some gaps so the arpeggio breathes.
+    if (step % 8 !== 7 || step % 16 === 15) this.pluck(midiHz(arpNote(tr, step)), t, 0.11, p.out);
+  }
+
+  /** One eighth note of lofi: e-piano comps, walking-ish bass, swung kit, sparse melody. */
+  private lofiStep(p: Player, step: number, t: number, eighth: number): void {
+    const tr = p.track;
+    const s8 = step % 8;
+    const barN = Math.floor(step / 8);
+    const bar = tr.bars[barN % tr.bars.length];
+    const rnd = () => {
+      p.seed = (p.seed * 16807) % 2147483647;
+      return p.seed / 2147483647;
+    };
+    // e-piano: chord on 1, a softer re-voicing on the "and" of 2
+    if (s8 === 0) this.epiano(bar, t, eighth * 5, 0.05, p.out);
+    if (s8 === 3 && barN % 2 === 1) this.epiano(bar.slice(1), t, eighth * 3, 0.03, p.out);
+    // bass: root on 1, fifth-ish pickup on 4-and
+    if (s8 === 0) this.voice('sine', midiHz(bar[0] - 12), midiHz(bar[0] - 12), t, eighth * 3.5, 0.16, p.out, 0.01);
+    if (s8 === 5) this.voice('sine', midiHz(bar[2] - 24), midiHz(bar[2] - 24), t, eighth * 1.6, 0.11, p.out, 0.01);
+    // drums (quiet): kick 1 and 3-and, rim on 2 and 4, swung hats
+    if (s8 === 0 || s8 === 5) this.voice('sine', 95, 42, t, 0.22, 0.2, p.out, 0.003);
+    if (s8 === 2 || s8 === 6) this.noise(t, 0.09, 0.05, 'bandpass', 1900, p.out);
+    if (rnd() < 0.8) this.noise(t, 0.035, s8 % 2 ? 0.012 : 0.02, 'highpass', 8000, p.out);
+    // melody: chord tones an octave up, with a little dropout so it never repeats exactly
+    const m = tr.melody?.[s8] ?? -1;
+    if (m >= 0 && barN % 4 !== 3 && rnd() < 0.8) {
+      const n = arpNote(tr, barN * 8 + m) + 12;
+      this.voice('triangle', midiHz(n), midiHz(n), t, eighth * 2.2, 0.035, p.out, 0.01);
+      this.voice('sine', midiHz(n + 12), midiHz(n + 12), t, eighth * 1.2, 0.012, p.out, 0.01);
+    }
+  }
+
+  /** Rhodes-ish: two slightly detuned sines per note with a soft bell attack. */
+  private epiano(chord: number[], t: number, dur: number, vol: number, out: AudioNode): void {
+    const ctx = this.ctx!;
+    for (const n of chord) {
+      for (const det of [-4, 5]) {
+        const o = ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.value = midiHz(n);
+        o.detune.value = det + (Math.random() - 0.5) * 6; // tape wobble
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(vol, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(vol * 0.35, t + 0.25);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g).connect(out);
+        o.start(t);
+        o.stop(t + dur + 0.05);
+      }
+      // bell tine
+      const b = ctx.createOscillator();
+      b.type = 'sine';
+      b.frequency.value = midiHz(n) * 4;
+      const bg = ctx.createGain();
+      bg.gain.setValueAtTime(vol * 0.18, t);
+      bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+      b.connect(bg).connect(out);
+      b.start(t);
+      b.stop(t + 0.4);
+    }
+  }
+
+  private pad(chord: number[], t: number, dur: number, out: AudioNode): void {
     const ctx = this.ctx!;
     const lp = ctx.createBiquadFilter();
     lp.type = 'lowpass';
@@ -203,7 +371,7 @@ class Sound {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.linearRampToValueAtTime(0.05, t + dur * 0.35);
     g.gain.linearRampToValueAtTime(0.0001, t + dur);
-    lp.connect(g).connect(this.musicBus);
+    lp.connect(g).connect(out);
     for (const n of chord.slice(1)) {
       for (const detune of [-7, 7]) {
         const o = ctx.createOscillator();
@@ -217,7 +385,7 @@ class Sound {
     }
   }
 
-  private pluck(f: number, t: number, vol: number): void {
+  private pluck(f: number, t: number, vol: number, out: AudioNode): void {
     const ctx = this.ctx!;
     const o = ctx.createOscillator();
     o.type = 'triangle';
@@ -229,7 +397,7 @@ class Sound {
     const g = ctx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-    o.connect(lp).connect(g).connect(this.musicBus);
+    o.connect(lp).connect(g).connect(out);
     o.start(t);
     o.stop(t + 0.95);
   }
