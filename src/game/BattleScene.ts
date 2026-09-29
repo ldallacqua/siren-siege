@@ -9,6 +9,7 @@ import type { Enemy, Fx, Tower } from './sim/BattleSim.ts';
 import { clampCam, homeCam, viewOf, zoomAt, panBy, MAX_ZOOM, MIN_ZOOM, type Cam, type Frame } from './camera.ts';
 import { chibiPose, type Facing } from './chibiPose.ts';
 import { PX, paintMap, type MapArt } from './mapArt.ts';
+import { Vfx, type VfxView } from './Vfx.ts';
 
 interface View {
   portrait: boolean;
@@ -20,23 +21,6 @@ interface View {
 /** Texture key for a heroine's optional map sprite (public/art/<id>/chibi.webp). */
 const chibiKey = (id: string) => `chibi-${id}`;
 
-interface LiveFx extends Fx {
-  age: number;
-  life: number;
-}
-
-/** Map-space particle (tiles, tiles/s). */
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  age: number;
-  life: number;
-  color: number;
-  size: number;
-}
-
 interface FloatText {
   obj: Phaser.GameObjects.Text;
   x: number;
@@ -44,19 +28,6 @@ interface FloatText {
   age: number;
   life: number;
 }
-
-/** Seconds each visual fx kind stays on screen; kinds without an entry are sound/shake only. */
-const FX_LIFE: Partial<Record<Fx['kind'], number>> = {
-  pulse: 0.45,
-  boom: 0.35,
-  leak: 0.6,
-  pop: 0.25,
-  block: 0.25,
-  place: 0.5,
-  upgrade: 0.6,
-  sell: 0.4,
-};
-const MAX_PARTICLES = 400;
 
 function mixColor(a: number, b: number, t: number): number {
   const ch = (s: number) => Math.round(((a >> s) & 255) * (1 - t) + ((b >> s) & 255) * t);
@@ -82,8 +53,11 @@ export class BattleScene extends Phaser.Scene {
   private labels = new Map<number, Phaser.GameObjects.Text>();
   private sprites = new Map<number, { img: Phaser.GameObjects.Image; facing: Facing }>();
   private ghostImg: Phaser.GameObjects.Image | null = null;
-  private fx: LiveFx[] = [];
-  private particles: Particle[] = [];
+  /** Below enemies: scorch marks, smoke, projectile shadows. */
+  private under!: Phaser.GameObjects.Graphics;
+  private vfx!: Vfx;
+  /** VfxView adapter over this scene's projection. */
+  private vv!: VfxView;
   private floats: FloatText[] = [];
   private lastLeakShake = 0;
   private flies: { x: number; y: number; s: number; p: number }[] = [];
@@ -108,8 +82,21 @@ export class BattleScene extends Phaser.Scene {
 
   create(): void {
     this.mapImg = this.add.image(0, 0, '__WHITE').setDepth(-1).setVisible(false);
+    this.under = this.add.graphics();
     this.g = this.add.graphics();
     this.glow = this.add.graphics().setDepth(3).setBlendMode(Phaser.BlendModes.ADD);
+    this.vfx = new Vfx(this.under, this.g, this.glow);
+    const scene = this;
+    this.vv = {
+      sx: (x, y) => this.sx(x, y),
+      sy: (x, y) => this.sy(x, y),
+      get tile() {
+        return scene.view.tile;
+      },
+      get portrait() {
+        return scene.view.portrait;
+      },
+    };
     this.top = this.add.graphics().setDepth(6);
     this.loadChibis();
     for (let i = 0; i < 28; i++) this.flies.push({ x: Math.random() * 20, y: Math.random() * 12, s: Math.random(), p: Math.random() * 6 });
@@ -128,8 +115,7 @@ export class BattleScene extends Phaser.Scene {
   setBattle(b: Battle | null): void {
     this.battle = b;
     this.map = b?.map ?? MAPS[0];
-    this.fx = [];
-    this.particles = [];
+    this.vfx?.clear();
     for (const f of this.floats) f.obj.destroy();
     this.floats = [];
     this.clearTowerObjects();
@@ -341,6 +327,7 @@ export class BattleScene extends Phaser.Scene {
     const b = this.battle;
     const g = this.g;
     g.clear();
+    this.under.clear();
     this.glow.clear();
     this.top.clear();
     this.clock += dt;
@@ -355,9 +342,12 @@ export class BattleScene extends Phaser.Scene {
     const T = this.view.tile;
 
     // Harvest new fx from the sim
+    this.vfx.calm = reducedMotion();
     for (const f of sim.fx) this.onFx(f);
     sim.fx.length = 0;
-    if (this.fx.length > 400) this.fx.splice(0, this.fx.length - 400);
+    const running = !b.paused;
+    const gdt = dt * b.speed * (running ? 1 : 0);
+    this.vfx.drawUnder(gdt, this.vv);
 
     // Ranges (selected + supports' auras faintly)
     const sel = b.selected;
@@ -375,40 +365,21 @@ export class BattleScene extends Phaser.Scene {
     }
     for (const e of sim.enemies) if (e.alive) this.drawEnemy(e, T);
 
-    // Projectiles: light streaks and lit bombs
-    for (const p of sim.projectiles) {
-      const x = this.sx(p.x, p.y);
-      const y = this.sy(p.x, p.y);
-      if (p.bomb) {
-        g.fillStyle(0x000000, 0.3);
-        g.fillEllipse(x, y + T * 0.18, T * 0.24, T * 0.09);
-        g.fillStyle(0x1c1016, 1);
-        g.fillCircle(x, y, T * 0.13);
-        g.fillStyle(0xffffff, 0.25);
-        g.fillCircle(x - T * 0.04, y - T * 0.04, T * 0.04);
-        this.glow.fillStyle(p.color, 0.35);
-        this.glow.fillCircle(x + T * 0.08, y - T * 0.1, T * 0.1);
-        this.glow.fillStyle(0xfff0c0, 0.9);
-        this.glow.fillCircle(x + T * 0.08, y - T * 0.1, T * 0.035);
-      } else {
-        const sp = Math.hypot(p.vx, p.vy) || 1;
-        const ux = (this.view.portrait ? p.vy : p.vx) / sp;
-        const uy = (this.view.portrait ? p.vx : p.vy) / sp;
-        const len = T * 0.42;
-        this.glow.lineStyle(T * 0.1, p.color, 0.35);
-        this.glow.lineBetween(x - ux * len, y - uy * len, x, y);
-        this.glow.lineStyle(T * 0.035, 0xffffff, 0.95);
-        this.glow.lineBetween(x - ux * len * 0.6, y - uy * len * 0.6, x, y);
-        this.glow.fillStyle(p.color, 0.5);
-        this.glow.fillCircle(x, y, T * 0.07);
-      }
-    }
+    // Projectiles: each heroine's own style (Vfx)
+    for (const p of sim.projectiles) this.vfx.projectile(p, this.vv, running);
 
     // Towers
     const seen = new Set<number>();
     for (const t of sim.towers) {
       seen.add(t.uid);
       this.drawTower(t, t === sel);
+      // Selene's blessing: allies she's empowering shed moonlight sparkles
+      if (t.eff.rate > t.stats.rate * 1.01) this.vfx.aura(t.x, t.y);
+      if (t.stats.buffRate > 0) {
+        const k = 0.5 + 0.5 * Math.sin(this.clock * 2 + t.uid);
+        this.glow.lineStyle(Math.max(1, T * 0.03), t.def.color, 0.12 + 0.12 * k);
+        this.glow.strokeCircle(this.sx(t.x, t.y), this.sy(t.x, t.y), t.stats.range * T * (0.96 + 0.04 * k));
+      }
     }
     for (const [uid, label] of this.labels) {
       if (!seen.has(uid)) {
@@ -423,57 +394,8 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // Fx
-    for (const f of this.fx) {
-      f.age += dt * b.speed * (b.paused ? 0 : 1);
-      const k = Math.min(1, f.age / f.life);
-      const x = this.sx(f.x, f.y);
-      const y = this.sy(f.x, f.y);
-      switch (f.kind) {
-        case 'pulse':
-          g.lineStyle(T * 0.12 * (1 - k) + 1, f.color, 0.8 * (1 - k));
-          g.strokeCircle(x, y, f.r * T * (0.3 + 0.7 * k));
-          g.fillStyle(f.color, 0.12 * (1 - k));
-          g.fillCircle(x, y, f.r * T * (0.3 + 0.7 * k));
-          break;
-        case 'boom':
-          g.fillStyle(0xffd23f, 0.55 * (1 - k));
-          g.fillCircle(x, y, f.r * T * (0.5 + 0.5 * k));
-          g.fillStyle(f.color, 0.7 * (1 - k));
-          g.fillCircle(x, y, f.r * T * 0.45 * (1 - k));
-          break;
-        case 'pop':
-          g.lineStyle(2, f.color, 1 - k);
-          g.strokeCircle(x, y, f.r * T * (1 + k));
-          break;
-        case 'leak':
-          g.fillStyle(0xff3355, 0.5 * (1 - k));
-          g.fillCircle(x, y, T * (0.4 + k));
-          break;
-        case 'place':
-          g.lineStyle(3, f.color, 1 - k);
-          g.strokeCircle(x, y, T * (0.3 + 0.6 * k));
-          break;
-        case 'upgrade':
-          g.lineStyle(3, 0xffd23f, 1 - k);
-          g.strokeCircle(x, y, T * (0.35 + 0.8 * k));
-          g.fillStyle(0xffd23f, 0.25 * (1 - k));
-          g.fillCircle(x, y, T * (0.35 + 0.8 * k));
-          break;
-        case 'sell':
-          g.fillStyle(0xffd23f, 0.4 * (1 - k));
-          g.fillCircle(x, y, T * 0.45 * (1 - k));
-          break;
-        case 'block':
-          g.lineStyle(2, 0xdddddd, 1 - k);
-          g.lineBetween(x - T * 0.15, y - T * 0.15, x + T * 0.15, y + T * 0.15);
-          g.lineBetween(x + T * 0.15, y - T * 0.15, x - T * 0.15, y + T * 0.15);
-          break;
-      }
-    }
-    this.fx = this.fx.filter((f) => f.age < f.life);
-    this.drawParticles(dt * b.speed * (b.paused ? 0 : 1));
-    this.drawFloats(dt * (b.paused ? 0 : 1));
+    this.vfx.update(gdt, this.vv);
+    this.drawFloats(dt * (running ? 1 : 0));
 
     // Placement ghost
     if (b.placing && b.ghost) {
@@ -504,32 +426,24 @@ export class BattleScene extends Phaser.Scene {
   /** Route one sim fx event to sound, visuals, particles, floating text and shake. */
   private onFx(f: Fx): void {
     sound.fx(f);
-    const life = FX_LIFE[f.kind];
-    if (life) this.fx.push({ ...f, age: 0, life });
+    this.vfx.onFx(f);
     const calm = reducedMotion();
     switch (f.kind) {
-      case 'pop':
-        this.burst(f.x, f.y, f.color, calm ? 2 : 5, 2.2, 0.35);
-        break;
-      case 'upgrade':
-        this.burst(f.x, f.y, 0xffd23f, calm ? 3 : (f.value ?? 1) >= 3 ? 16 : 8, 2.6, 0.6);
-        break;
       case 'bounty':
-        this.floatText(f.x, f.y, `+◆${f.value}`, '#ffd23f', 1.3);
-        this.burst(f.x, f.y, 0xffd23f, calm ? 4 : 24, 3.5, 0.8);
+        this.floatText(f.x, f.y, `+${f.value}`, '#ffd23f', 1.3);
         break;
       case 'bonus':
         // The path ends just off the map: pull the text inside so it's readable.
         this.floatText(
           Math.min(Math.max(f.x, 1.5), this.map.cols - 1.5),
           Math.min(Math.max(f.y, 1), this.map.rows - 1),
-          `+◆${f.value}`,
+          `+${f.value}`,
           '#ffd23f',
           1.1,
         );
         break;
       case 'sell':
-        this.floatText(f.x, f.y, `+◆${f.value}`, '#ffd23f', 0.8);
+        this.floatText(f.x, f.y, `+${f.value}`, '#ffd23f', 0.8);
         break;
       case 'boss':
         if (!calm) this.cameras.main.shake(450, 0.009);
@@ -541,41 +455,6 @@ export class BattleScene extends Phaser.Scene {
         }
         break;
     }
-  }
-
-  private burst(x: number, y: number, color: number, n: number, speed: number, life: number): void {
-    for (let i = 0; i < n; i++) {
-      if (this.particles.length >= MAX_PARTICLES) this.particles.shift();
-      const a = Math.random() * Math.PI * 2;
-      const v = speed * (0.4 + Math.random() * 0.6);
-      this.particles.push({
-        x,
-        y,
-        vx: Math.cos(a) * v,
-        vy: Math.sin(a) * v,
-        age: 0,
-        life: life * (0.7 + Math.random() * 0.5),
-        color,
-        size: 0.05 + Math.random() * 0.05,
-      });
-    }
-  }
-
-  private drawParticles(dt: number): void {
-    const g = this.g;
-    const T = this.view.tile;
-    for (const p of this.particles) {
-      p.age += dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vx *= 1 - 3 * dt;
-      p.vy *= 1 - 3 * dt;
-      const k = 1 - p.age / p.life;
-      if (k <= 0) continue;
-      g.fillStyle(p.color, k);
-      g.fillCircle(this.sx(p.x, p.y), this.sy(p.x, p.y), Math.max(1, p.size * T * (0.5 + 0.5 * k)));
-    }
-    this.particles = this.particles.filter((p) => p.age < p.life);
   }
 
   /** Rising, fading text anchored to a map point (so it follows zoom/pan). */
@@ -660,8 +539,11 @@ export class BattleScene extends Phaser.Scene {
     const bob = Math.sin(this.clock * 6 + e.uid) * T * 0.025;
     const y = this.sy(e.x, e.y) + bob;
     const d = e.def;
-    const r = d.radius * T;
+    const hit = this.vfx.flash(e.uid);
+    // A hit squashes the spirit for a frame or two
+    const r = d.radius * T * (1 + hit * 0.18);
     const light = mixColor(d.color, 0xffffff, 0.45);
+    this.vfx.status(e.x, e.y, e.burnT > 0, e.slowT > 0);
     const dark = mixColor(d.color, 0x000000, 0.45);
     this.glow.fillStyle(d.color, d.boss ? 0.28 : 0.18);
     this.glow.fillCircle(x, y, r * (d.boss ? 1.6 : 1.45));
@@ -703,8 +585,25 @@ export class BattleScene extends Phaser.Scene {
       g.fillCircle(x - r * 0.2, y + r * 0.01, r * 0.05);
       g.fillCircle(x + r * 0.28, y + r * 0.01, r * 0.05);
     }
-    if (e.slowT > 0) {
-      g.lineStyle(Math.max(1, r * 0.14), 0xbfefff, e.stunT > 0 ? 1 : 0.75);
+    if (hit > 0) {
+      this.glow.fillStyle(0xffffff, 0.75 * hit);
+      this.glow.fillCircle(x, y, r * 0.95);
+    }
+    if (e.stunT > 0) {
+      // frozen solid: an ice block around the spirit
+      g.fillStyle(0xcff3ff, 0.35);
+      g.lineStyle(Math.max(1, r * 0.08), 0xeafaff, 0.9);
+      const pts: Phaser.Math.Vector2[] = [];
+      for (let k = 0; k < 6; k++) {
+        const a = (k / 6) * Math.PI * 2 + Math.PI / 6;
+        pts.push(new Phaser.Math.Vector2(x + Math.cos(a) * r * 1.3, y + Math.sin(a) * r * 1.3));
+      }
+      g.fillPoints(pts, true);
+      g.strokePoints(pts, true);
+      g.fillStyle(0xffffff, 0.55);
+      g.fillTriangle(x - r * 0.9, y - r * 0.5, x - r * 0.5, y - r * 0.95, x - r * 0.6, y - r * 0.4);
+    } else if (e.slowT > 0) {
+      g.lineStyle(Math.max(1, r * 0.14), 0xbfefff, 0.75);
       g.strokeCircle(x, y, r * 1.12);
       this.glow.fillStyle(0x7fd8ff, 0.18);
       this.glow.fillCircle(x, y, r * 1.15);

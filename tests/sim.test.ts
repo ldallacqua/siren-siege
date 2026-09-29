@@ -4,7 +4,7 @@ import { ENEMY_BY_ID, rbe } from '../src/data/enemies.ts';
 import { HEROINE_BY_ID } from '../src/data/heroines.ts';
 import { MAPS, WAVES } from '../src/data/maps.ts';
 import type { Wave } from '../src/data/types.ts';
-import { BattleSim, STEP } from '../src/game/sim/BattleSim.ts';
+import { BattleSim, STEP, type Fx } from '../src/game/sim/BattleSim.ts';
 import { Path } from '../src/game/sim/path.ts';
 import { canBuyUpgrade, computeStats, sellValue } from '../src/game/sim/upgrades.ts';
 
@@ -191,6 +191,25 @@ describe('combat', () => {
     expect(sim.fx.at(-1)).toMatchObject({ kind: 'sell', value: sellValue(t.spent) });
     run(sim, 120);
     expect(sim.fx.length).toBeLessThanOrEqual(1000);
+  });
+
+  it('tags shots, hits and blasts with the heroine and her tier (for per-heroine visuals)', () => {
+    const sim = new BattleSim(map, oneWave('mote', 6), { startCash: 99999, lives: 1000 });
+    const k = sim.place('kaede', 4.5, 3.5)!;
+    sim.buyUpgrade(k, 0);
+    sim.place('scarlet', 2.5, 3.5);
+    sim.startWave();
+    const seen: Fx[] = [];
+    for (let i = 0; i < 60 * 20; i++) {
+      sim.step(STEP);
+      seen.push(...sim.fx);
+      sim.fx.length = 0;
+    }
+    const hit = seen.find((f) => f.kind === 'hit' && f.hero === 'scarlet');
+    expect(hit).toBeDefined();
+    expect(typeof hit!.value).toBe('number'); // enemy uid, for the hit flash
+    expect(seen.find((f) => f.kind === 'boom')).toMatchObject({ hero: 'kaede', tier: 1 });
+    expect(seen.find((f) => f.kind === 'shot' && f.hero === 'kaede')?.angle).toBeTypeOf('number');
   });
 
   it('is deterministic', () => {

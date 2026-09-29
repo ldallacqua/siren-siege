@@ -45,7 +45,7 @@ export interface Tower {
   flash: number; // seconds of "just attacked" glow
 }
 
-interface Projectile {
+export interface Projectile {
   x: number;
   y: number;
   vx: number;
@@ -65,10 +65,10 @@ interface Projectile {
  * output: the sim never reads them back, so they can't affect determinism.
  * shot: a tower fired (value 1 = bolt, 2 = bomb) · place / upgrade (value = new tier) / sell (value = refund)
  * wave: a wave started (value = wave number) · bonus: end-of-wave cash (value) · boss: a boss entered
- * bounty: a boss died (value = cash)
+ * bounty: a boss died (value = cash) · hit: a shot or pulse touched an enemy (at the enemy)
  */
 export type FxKind =
-  'pulse' | 'boom' | 'pop' | 'leak' | 'block' | 'shot' | 'place' | 'upgrade' | 'sell' | 'wave' | 'bonus' | 'boss' | 'bounty';
+  'pulse' | 'boom' | 'pop' | 'leak' | 'block' | 'shot' | 'hit' | 'place' | 'upgrade' | 'sell' | 'wave' | 'bonus' | 'boss' | 'bounty';
 export interface Fx {
   kind: FxKind;
   x: number;
@@ -76,6 +76,12 @@ export interface Fx {
   r: number;
   color: number;
   value?: number;
+  /** Heroine behind a shot/hit/pulse/boom, so the renderer gives each her own look and sound. */
+  hero?: string;
+  /** Her highest upgrade tier (0–3): effects grow with it. */
+  tier?: number;
+  /** Direction (radians): aim for shots, travel for hits. */
+  angle?: number;
 }
 
 /** Headless runs never drain fx; keep the backlog bounded. */
@@ -402,8 +408,22 @@ export class BattleSim {
           t.cooldown = 0.05;
           continue;
         }
-        for (const e of hits) this.damage(e, s.damage, s, t);
-        this.fx.push({ kind: 'pulse', x: t.x, y: t.y, r: s.range, color: t.def.color });
+        const tier = Math.max(...t.tiers);
+        for (const e of hits) {
+          this.fx.push({
+            kind: 'hit',
+            x: e.x,
+            y: e.y,
+            r: e.def.radius,
+            value: e.uid,
+            color: t.def.color,
+            hero: t.def.id,
+            tier,
+            angle: Math.atan2(e.y - t.y, e.x - t.x),
+          });
+          this.damage(e, s.damage, s, t);
+        }
+        this.fx.push({ kind: 'pulse', x: t.x, y: t.y, r: s.range, color: t.def.color, hero: t.def.id, tier });
         t.cooldown = 1 / s.rate;
         t.flash = 0.15;
         continue;
@@ -438,7 +458,17 @@ export class BattleSim {
           color: t.def.color,
         });
       }
-      this.fx.push({ kind: 'shot', x: t.x, y: t.y, r: 0, color: t.def.color, value: bomb ? 2 : 1 });
+      this.fx.push({
+        kind: 'shot',
+        x: t.x,
+        y: t.y,
+        r: 0,
+        color: t.def.color,
+        value: bomb ? 2 : 1,
+        hero: t.def.id,
+        tier: Math.max(...t.tiers),
+        angle: aim,
+      });
       t.cooldown = 1 / s.rate;
       t.flash = 0.12;
     }
@@ -462,6 +492,17 @@ export class BattleSim {
           break;
         }
         p.hit.add(e.uid);
+        this.fx.push({
+          kind: 'hit',
+          x: e.x,
+          y: e.y,
+          r: e.def.radius,
+          value: e.uid,
+          color: p.color,
+          hero: p.owner.def.id,
+          tier: Math.max(...p.owner.tiers),
+          angle: Math.atan2(p.vy, p.vx),
+        });
         const children = this.damage(e, p.src.damage, p.src, p.owner);
         for (const c of children) p.hit.add(c.uid); // children are immune to the bullet that spawned them
         p.pierce--;
@@ -483,7 +524,7 @@ export class BattleSim {
 
   private explode(p: Projectile): void {
     const s = p.src;
-    this.fx.push({ kind: 'boom', x: p.x, y: p.y, r: s.splash, color: p.color });
+    this.fx.push({ kind: 'boom', x: p.x, y: p.y, r: s.splash, color: p.color, hero: p.owner.def.id, tier: Math.max(...p.owner.tiers) });
     const victims = this.enemies
       .filter((e) => e.alive && (e.x - p.x) ** 2 + (e.y - p.y) ** 2 <= (s.splash + e.def.radius) ** 2)
       .slice(0, s.pierce);

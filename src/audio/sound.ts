@@ -26,10 +26,49 @@ export type SfxName =
   | 'boss'
   | 'bounty'
   | 'victory'
-  | 'defeat';
+  | 'defeat'
+  // heroine attacks
+  | 'gun'
+  | 'arrow'
+  | 'throw'
+  | 'hit'
+  // interface
+  | 'tap'
+  | 'back'
+  | 'error'
+  | 'select'
+  | 'open'
+  | 'whoosh'
+  | 'toggle'
+  // story
+  | 'blip'
+  | 'choice'
+  | 'heart'
+  | 'bondUp'
+  | 'unlock'
+  | 'waveClear'
+  | 'warn';
 
 /** Minimum seconds between two plays of the same sound. */
-const GAP: Partial<Record<SfxName, number>> = { pop: 0.035, bolt: 0.06, bomb: 0.08, boom: 0.07, pulse: 0.12, block: 0.1, leak: 0.15 };
+const GAP: Partial<Record<SfxName, number>> = {
+  pop: 0.035,
+  bolt: 0.06,
+  gun: 0.055,
+  arrow: 0.07,
+  throw: 0.08,
+  hit: 0.045,
+  bomb: 0.08,
+  boom: 0.07,
+  pulse: 0.12,
+  block: 0.1,
+  leak: 0.15,
+  blip: 0.045,
+  tap: 0.04,
+  warn: 1.2,
+};
+
+/** Per-heroine voice pitch multiplier for chat text blips. */
+export const VOICE: Record<string, number> = { scarlet: 1.2, yuki: 2.1, kaede: 1.45, selene: 1.75 };
 
 class Sound {
   private ctx: AudioContext | null = null;
@@ -203,7 +242,10 @@ class Sound {
       case 'pop':
         return this.play('pop');
       case 'shot':
-        return this.play(f.value === 2 ? 'bomb' : 'bolt');
+        if (f.value === 2) return this.play('throw');
+        return this.play(f.hero === 'scarlet' ? 'gun' : f.hero === 'selene' ? 'arrow' : 'bolt');
+      case 'hit':
+        return f.hero === 'yuki' ? undefined : this.play('hit');
       case 'boom':
         return this.play('boom');
       case 'pulse':
@@ -229,7 +271,7 @@ class Sound {
     }
   }
 
-  play(name: SfxName): void {
+  play(name: SfxName, pitch = 1): void {
     const ctx = this.ctx;
     if (!ctx || ctx.state !== 'running' || save.settings.muted) return;
     if (!this.limiter.take(name, ctx.currentTime, GAP[name] ?? 0.03)) return;
@@ -257,12 +299,16 @@ class Sound {
         v('sine', 190 * r, 80, t, 0.09, 0.2);
         break;
       case 'boom':
-        n(t, 0.32, 0.28, 'lowpass', 700);
-        v('sine', 120, 38, t, 0.32, 0.3);
+        n(t, 0.45, 0.3, 'lowpass', 900);
+        n(t, 0.12, 0.12, 'bandpass', 2500);
+        v('sine', 110, 34, t, 0.45, 0.34);
+        v('triangle', 70, 40, t + 0.02, 0.3, 0.15);
         break;
       case 'pulse':
-        v('sine', 1600 * r, 700, t, 0.28, 0.08, 0.01);
-        v('triangle', 2400 * r, 1200, t + 0.02, 0.22, 0.04, 0.01);
+        // soft whoomp + crystalline shimmer
+        v('sine', 220 * r, 110, t, 0.2, 0.08, 0.01);
+        n(t, 0.35, 0.05, 'highpass', 7000);
+        [2093, 2637, 3136].forEach((f, i) => v('sine', f * r, f * r * 0.98, t + i * 0.03, 0.3, 0.025, 0.005));
         break;
       case 'block':
         v('square', 2600, 2500, t, 0.03, 0.025);
@@ -298,6 +344,73 @@ class Sound {
         break;
       case 'victory':
         [60, 64, 67, 72, 76, 79, 84].forEach((m, i) => v('triangle', midiHz(m), midiHz(m), t + i * 0.09, 0.5, 0.12));
+        break;
+      case 'gun':
+        n(t, 0.07, 0.16, 'bandpass', 1800 * r);
+        v('sine', 160 * r, 60, t, 0.09, 0.22);
+        v('square', 900 * r, 300, t, 0.03, 0.03);
+        break;
+      case 'arrow':
+        n(t, 0.12, 0.05, 'highpass', 5000);
+        v('triangle', 1760 * r, 1320, t, 0.18, 0.05, 0.01);
+        v('sine', 2640 * r, 2640, t + 0.02, 0.2, 0.025, 0.01);
+        break;
+      case 'throw':
+        n(t, 0.16, 0.08, 'bandpass', 700 * r);
+        v('sine', 300 * r, 140, t, 0.12, 0.06, 0.02);
+        break;
+      case 'hit':
+        v('triangle', 1300 * r, 900, t, 0.03, 0.035);
+        break;
+      case 'tap':
+        v('sine', 1320 * pitch, 1100 * pitch, t, 0.05, 0.07);
+        break;
+      case 'back':
+        v('sine', 900, 600, t, 0.07, 0.07);
+        break;
+      case 'toggle':
+        v('triangle', 700, 700, t, 0.04, 0.08);
+        v('triangle', 1050, 1050, t + 0.04, 0.05, 0.08);
+        break;
+      case 'error':
+        v('square', 180, 150, t, 0.09, 0.05);
+        v('square', 150, 120, t + 0.1, 0.12, 0.05);
+        break;
+      case 'select':
+        v('sine', 880, 880, t, 0.06, 0.08);
+        v('sine', 1320, 1320, t + 0.04, 0.09, 0.06);
+        break;
+      case 'open':
+        n(t, 0.25, 0.04, 'bandpass', 2400);
+        v('sine', 520, 1040, t, 0.22, 0.05, 0.03);
+        break;
+      case 'whoosh':
+        n(t, 0.22, 0.05, 'bandpass', 1200);
+        break;
+      case 'blip':
+        v('triangle', 400 * pitch * r, 400 * pitch * r, t, 0.035, 0.035, 0.003);
+        break;
+      case 'choice':
+        v('sine', 660, 660, t, 0.08, 0.09);
+        v('sine', 990, 990, t + 0.06, 0.12, 0.08);
+        break;
+      case 'heart':
+        [76, 81, 88].forEach((m, i) => v('sine', midiHz(m), midiHz(m), t + i * 0.08, 0.3, 0.1, 0.01));
+        break;
+      case 'bondUp':
+        [72, 76, 79, 84].forEach((m, i) => v('triangle', midiHz(m), midiHz(m), t + i * 0.1, 0.45, 0.12));
+        [84, 88, 91].forEach((m) => v('sine', midiHz(m), midiHz(m), t + 0.42, 0.9, 0.06, 0.05));
+        break;
+      case 'unlock':
+        [67, 74, 79, 86].forEach((m, i) => v('triangle', midiHz(m), midiHz(m), t + i * 0.07, 0.5, 0.1));
+        n(t + 0.25, 0.6, 0.03, 'highpass', 6000);
+        break;
+      case 'waveClear':
+        [72, 79, 84].forEach((m, i) => v('triangle', midiHz(m), midiHz(m), t + i * 0.08, 0.35, 0.09));
+        break;
+      case 'warn':
+        v('square', 440, 440, t, 0.12, 0.05);
+        v('square', 440, 440, t + 0.2, 0.12, 0.05);
         break;
       case 'defeat':
         [69, 65, 62, 57].forEach((m, i) => v('triangle', midiHz(m), midiHz(m) * 0.98, t + i * 0.28, 0.6, 0.13, 0.02));
