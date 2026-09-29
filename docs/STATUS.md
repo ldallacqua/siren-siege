@@ -2,7 +2,7 @@
 
 > Living handoff document. **Every session updates this before finishing** (see AGENTS.md §3).
 
-**Version:** 0.1.0 (MVP vertical slice) · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-09-28
+**Version:** 0.2.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-09-28
 
 ## What works
 
@@ -21,6 +21,8 @@
 - **In-battle Options** (⚙ on the battlefield, above the zoom buttons): music/sound volume, mute, reduced motion; pauses while open. The ☰ pause menu has the same controls.
 - **Full portrait viewer:** tapping a heroine's picture (profile, or the round avatar in the battle panel) opens her whole portrait uncropped; in battle it pauses until closed.
 - **Update check:** GitHub Pages caches the page for 10 min; on boot the game asks for the current build and reloads once (or shows a toast mid-game) if it's running an old one.
+- **UI overhaul ("Moonlit Noir", see `docs/UI_STYLE.md`):** self-hosted fonts, SVG icons, chamfered buttons, one accent color; lobby-style home with a featured heroine (avatar picker); restyled HUD (stat chips, wave progress, icon controls, framed shop cards with hotkeys), roster/profile/gallery/chat/results/settings/pause.
+- **Painted battlefield:** moss ground, flagstone path, stone lanterns (flickering), torii exit, spawn portal, pond, sakura/shrubs, fireflies, lighting; scenery continues past the map edges on wide screens. Enemies are shaded spirits with eyes; projectiles are light streaks; towers stand on colored pads; range rings are dashed.
 - Save in localStorage; `?dev` mode.
 - Tooling: unit tests (36), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
@@ -31,7 +33,8 @@
 - Balance only validated by the naive bot (`npm run sim`: loses around wave 19–20). No human playtest data yet.
 - Upgrade tiers stop at 3 (BTD6 has 5). No camo/regrow enemies, no hero abilities.
 - Only 2 of the planned 5 chats per heroine are written; `speaker: 'you'` lines are supported but unused.
-- Fonts come from Google Fonts; offline or blocked networks fall back to Georgia/system fonts (fine, just less pretty).
+- Battlefield texture is 80 px/tile: slightly soft at 3× zoom on high-DPI phones. Scenery props are decorative only (you can place a heroine on a tree or pond).
+- Portraits have a baked-in dark background (not true alpha); the home and chat screens feather the edges with CSS masks.
 - No 18+ age gate yet (required before any public promotion — see BACKLOG B-12).
 - Saves are per-browser only; clearing site data wipes progress.
 - Phaser bundle is ~1.4 MB (≈360 KB gzip); fine for now.
@@ -39,18 +42,15 @@
 
 ## Last session
 
-**2026-09-29 — art delivered, battlefield zoom, B-03 juice (Claude, cloud session)**
+**2026-09-29 — UI overhaul (Claude, cloud session)**
 
-- Owner sent Codex's MVP art pass as a zip + git bundle (Codex couldn't push). Fast-forwarded it onto `main`, reviewed all 19 images (within the content ceiling), re-ran check + smoke, pushed. Details of that pass: `docs/ART_ASSETS.md`, D-012.
-- Zoom/pan: pure math in `src/game/camera.ts` (tests in `tests/camera.test.ts`), folded into `BattleScene`'s tile→screen transform (D-013). Input rewritten as a small gesture machine (tap / pan / pinch / done); selection moved to pointer-up. Zoom buttons in `main.ts`, styled in `style.css` (`.zoom-ctl`). Dev hook exposes `siren.scene` (`zoom`, `pagePoint()`).
-- Smoke now zooms with the buttons, selects a heroine while zoomed, drag-pans (mouse and touch), and pinches with two real touch points via CDP on the touch viewports; screenshots `*-8-zoomed.png`.
-- B-03 juice: sim now emits presentation fx (`shot`, `place`, `upgrade`, `sell`, `wave`, `bonus`, `boss`, `bounty`; capped at 1000 for headless runs, never read back so determinism holds). `BattleScene.onFx()` routes each to `sound.fx()`, visuals, particles, floating text and shake. Audio engine `src/audio/sound.ts`, pure helpers + music patterns `src/audio/tuning.ts` (tested). Settings fields added to the save (merged, so old saves load). Smoke checks the audio unlock, pause-menu controls and that settings persist.
-- Owner feedback round: saw no sound and no options. The live site was already correct, so the likely cause was the 10-min Pages cache (hence the update check). Audio unlock hardened anyway: it retries on every activation event (touchend/pointerup/click/keydown; a touch pointerdown doesn't count), and on iPhone it declares a playback audio session and plays a silent looping `<audio>` so the ring/silent switch doesn't mute the game. Not verifiable here: needs the owner's phone.
-- Added ⚙ Options on the battlefield and the tap-to-view full portrait (`openLightbox()` in `ui/art.ts`, also used by the gallery). Smoke covers both.
-- Nothing half-done.
+- Owner asked for a more polished, professional UI ("looks like old Flash games"). Audited every screen, researched modern gacha/TD UI and HUD guidance, and wrote `docs/UI_STYLE.md` (rules + checklist).
+- Design system: fonts in `public/fonts/` (OFL), `src/ui/icons.ts`, full `style.css` rewrite on tokens. New home (`showHome` in `screens.ts`, featured heroine = highest bond, switchable). HUD markup in `Hud.ts` uses icons and stat chips. Settings screen has panels, switches, slider readouts and a key list; the sfx slider is now called "Effects".
+- Battlefield: `src/game/mapArt.ts` paints the scene (seeded, cached per map, 3-tile margin); `BattleScene` shows it as an image and adds an additive `glow` layer, fireflies, lantern flicker, `drawEnemy()`, light-streak projectiles, dashed `drawRange()`, tower pads and diamond pips. The checkerboard `drawBackground` and map `theme` colors are no longer used for the ground.
+- Verified with smoke on all 3 viewports plus extra roster/gallery/results screenshots. Nothing half-done.
 
 ## Next up
 
-1. **Owner confirms sound works on his phone** (after a reload). If not: check the ⚙ Options Sound toggle, the phone volume, and on iPhone the silent switch; then debug `src/audio/sound.ts` `unlock()`/`iosPlayback()`.
-2. **Owner listening pass** (mix and music), then the **B-03b perf check**.
+1. **Owner feedback on the new look** (live site). Easy knobs: colors/tokens at the top of `style.css`; scenery in `mapArt.ts`.
+2. **Owner confirms sound on phone**, then **B-03b perf check** (the new glow layer and fireflies add draw calls; measure with 200 enemies at 3×).
 3. **B-04 heroine barks**, then **B-12 18+ age gate**, then **B-05 tiers 4–5**.

@@ -90,6 +90,10 @@ The MVP pass is complete: 19 assets (all four portraits/chibis/First Impression 
 
 ## Tech debt / nice to have
 
+- T-05 · Map art per new map: `mapArt.ts` is generic (ground, path, props from the path), but each new map (B-11) should get its own palette/props via `MapDef.theme`. Accept: second map looks distinct.
+- T-06 · Optionally make scenery props block placement (BTD6-style obstacles) so heroines can't stand on trees/ponds; needs sim support (`canPlace`) + tests.
+- T-07 · Sharper battlefield at max zoom: raise `PX` in `mapArt.ts` on large screens only, or paint a second hi-res texture on zoom > 2.
+
 - T-01 · Split `ui/screens.ts` into one file per screen when it passes ~600 lines.
 - T-02 · Lazy-load Phaser after the home screen renders to speed up first paint.
 - T-03 · Replace per-frame `Graphics.clear()` redraw with pooled sprites once real sprites exist (only if profiling shows a need).

@@ -1,6 +1,6 @@
 {
   "name": "siren-siege",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Siren Siege — browser tower defense where your towers are anime heroines.",
   "scripts": {
     "dev": "vite --host",

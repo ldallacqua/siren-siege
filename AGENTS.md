@@ -8,7 +8,7 @@ This file is the single source of truth for any AI coding agent (Claude Code, Co
 
 - Live: https://ldallacqua.github.io/siren-siege/ (served from the `gh-pages` branch, deployed by CI on every push to `main`)
 - Owner: Lucas (ldallacqua). Talks to agents in English or Portuguese.
-- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names)
+- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · **UI look: `docs/UI_STYLE.md` (read before any UI/CSS/battlefield change)** · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names)
 
 ## 2. Resume protocol (do this first, every session)
 
@@ -61,6 +61,7 @@ src/
       BattleSim.ts     Spawning, movement, targeting, projectiles, damage/pop, economy, waves
       upgrades.ts      computeStats(), BTD6 crosspath rule canBuyUpgrade(), sell value
       path.ts          Polyline distance lookup
+    mapArt.ts        Paints a map's static scenery (ground, path, props, lighting) once into a canvas texture
     camera.ts        Pure zoom/pan math (fit, zoomAt, panBy, clamping) for the battlefield
     chibiPose.ts     Pure bob/recoil/facing math for chibi sprites
     Battle.ts        One match: sim + interaction state (placing, selected, speed, pause), change events
@@ -68,7 +69,8 @@ src/
   ui/                DOM UI over the canvas
     Hud.ts           Sidebar (landscape) / dock (portrait): stats, controls, shop, placing, upgrade panel
     screens.ts       Home, roster, profile, chat player, gallery + lightbox, results, pause, settings
-    art.ts           Loads public/art files, falls back to generated SVG placeholders
+    art.ts           Loads public/art files, falls back to generated SVG placeholders; lightbox
+    icons.ts         Inline SVG icon set (use this, never emoji/unicode glyphs in UI chrome)
     dom.ts           h() hyperscript helper, toast, formatters
   audio/           sound.ts: synthesized SFX + music (Web Audio, unlocks on first gesture); tuning.ts: pure note/limiter/track data
   state/save.ts    localStorage save (versioned), bond XP, unlocks, ?dev flag
@@ -77,7 +79,8 @@ src/
 scripts/           balance-sim.ts, smoke.ts, art-import.ts, session-start.sh
 tests/             data, sim, chibi, camera and audio tests
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
-docs/              GDD, ARCHITECTURE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
+docs/              GDD, ARCHITECTURE, UI_STYLE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
+public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 ```
 
 ## 6. Common tasks — recipes
