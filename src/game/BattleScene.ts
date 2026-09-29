@@ -5,10 +5,10 @@ import { MAPS } from '../data/maps.ts';
 import type { MapDef } from '../data/types.ts';
 import { reducedMotion } from '../state/save.ts';
 import type { Battle } from './Battle.ts';
-import type { Fx, Tower } from './sim/BattleSim.ts';
+import type { Enemy, Fx, Tower } from './sim/BattleSim.ts';
 import { clampCam, homeCam, viewOf, zoomAt, panBy, MAX_ZOOM, MIN_ZOOM, type Cam, type Frame } from './camera.ts';
 import { chibiPose, type Facing } from './chibiPose.ts';
-import { Path } from './sim/path.ts';
+import { PX, paintMap, type MapArt } from './mapArt.ts';
 
 interface View {
   portrait: boolean;
@@ -58,6 +58,11 @@ const FX_LIFE: Partial<Record<Fx['kind'], number>> = {
 };
 const MAX_PARTICLES = 400;
 
+function mixColor(a: number, b: number, t: number): number {
+  const ch = (s: number) => Math.round(((a >> s) & 255) * (1 - t) + ((b >> s) & 255) * t);
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+}
+
 /**
  * Renders a Battle and forwards pointer input to it. The map is laid out in
  * tile units; in portrait stages the whole map is transposed (x<->y) so the
@@ -66,8 +71,10 @@ const MAX_PARTICLES = 400;
 export class BattleScene extends Phaser.Scene {
   private battle: Battle | null = null;
   private map: MapDef = MAPS[0];
-  private path = new Path(MAPS[0].path);
-  private bg!: Phaser.GameObjects.Graphics;
+  private mapImg!: Phaser.GameObjects.Image;
+  private mapArt: MapArt | null = null;
+  /** Additive layer: glows, light streaks, fireflies, lantern flicker. */
+  private glow!: Phaser.GameObjects.Graphics;
   private g!: Phaser.GameObjects.Graphics;
   /** Drawn above sprites: tier pips. */
   private top!: Phaser.GameObjects.Graphics;
@@ -79,7 +86,8 @@ export class BattleScene extends Phaser.Scene {
   private particles: Particle[] = [];
   private floats: FloatText[] = [];
   private lastLeakShake = 0;
-  private stars: { x: number; y: number; s: number; p: number }[] = [];
+  private flies: { x: number; y: number; s: number; p: number }[] = [];
+  private clock = 0;
   private dragging = false;
   /** Zoom/pan state; null = not laid out yet (reset per battle and on rotation). */
   private cam: Cam | null = null;
@@ -99,11 +107,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.bg = this.add.graphics();
+    this.mapImg = this.add.image(0, 0, '__WHITE').setDepth(-1).setVisible(false);
     this.g = this.add.graphics();
+    this.glow = this.add.graphics().setDepth(3).setBlendMode(Phaser.BlendModes.ADD);
     this.top = this.add.graphics().setDepth(6);
     this.loadChibis();
-    for (let i = 0; i < 70; i++) this.stars.push({ x: Math.random() * 20, y: Math.random() * 12, s: Math.random(), p: Math.random() * 6 });
+    for (let i = 0; i < 28; i++) this.flies.push({ x: Math.random() * 20, y: Math.random() * 12, s: Math.random(), p: Math.random() * 6 });
     this.scale.on('resize', () => this.layout());
     this.input.addPointer(2); // two fingers for pinch-zoom
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.onDown(p));
@@ -119,7 +128,6 @@ export class BattleScene extends Phaser.Scene {
   setBattle(b: Battle | null): void {
     this.battle = b;
     this.map = b?.map ?? MAPS[0];
-    this.path = b?.sim.path ?? new Path(this.map.path);
     this.fx = [];
     this.particles = [];
     for (const f of this.floats) f.obj.destroy();
@@ -157,7 +165,7 @@ export class BattleScene extends Phaser.Scene {
   // ---------------------------------------------------------------- layout
 
   private layout(): void {
-    if (!this.bg) return;
+    if (!this.g) return;
     const W = this.scale.width;
     const H = this.scale.height;
     this.cameras.main.setSize(W, H);
@@ -225,51 +233,24 @@ export class BattleScene extends Phaser.Scene {
     return v.portrait ? { x: b, y: a } : { x: a, y: b };
   }
 
+  /** Place the pre-painted map image (see mapArt.ts) under the current view. */
   private drawBackground(): void {
-    const g = this.bg;
     const m = this.map;
-    const T = this.view.tile;
-    g.clear();
-    g.fillStyle(0x0d0716, 1);
-    g.fillRect(0, 0, this.scale.width, this.scale.height);
-    for (let x = 0; x < m.cols; x++) {
-      for (let y = 0; y < m.rows; y++) {
-        g.fillStyle((x + y) % 2 ? m.theme.ground : m.theme.ground2, 1);
-        g.fillRect(this.sx(x, y) - (this.view.portrait ? 0 : 0), this.sy(x, y), T + 0.5, T + 0.5);
-      }
+    const key = `map-${m.id}`;
+    if (!this.textures.exists(key)) {
+      this.mapArt = paintMap(m);
+      this.textures.addCanvas(key, this.mapArt.canvas);
     }
-    // Soft vignette border
-    g.lineStyle(T * 0.12, 0xff5fa2, 0.18);
-    const x0 = this.sx(0, 0);
-    const y0 = this.sy(0, 0);
-    const x1 = this.sx(m.cols, m.rows);
-    const y1 = this.sy(m.cols, m.rows);
-    g.strokeRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0));
-
-    // Path: glow, edge, body
-    const pts = this.path.points;
-    const stroke = (w: number, color: number, alpha: number) => {
-      g.lineStyle(w, color, alpha);
-      g.beginPath();
-      g.moveTo(this.sx(pts[0].x, pts[0].y), this.sy(pts[0].x, pts[0].y));
-      for (const p of pts.slice(1)) g.lineTo(this.sx(p.x, p.y), this.sy(p.x, p.y));
-      g.strokePath();
-      g.fillStyle(color, alpha);
-      for (const p of pts) g.fillCircle(this.sx(p.x, p.y), this.sy(p.x, p.y), w / 2);
-    };
-    stroke(T * (m.pathWidth + 0.4), m.theme.pathEdge, 0.08);
-    stroke(T * (m.pathWidth + 0.1), m.theme.pathEdge, 0.55);
-    stroke(T * m.pathWidth, m.theme.path, 1);
-    stroke(T * m.pathWidth * 0.55, 0xffffff, 0.04);
-
-    // Exit gate
-    const end = pts[pts.length - 1];
-    const ex = this.sx(Math.min(end.x, m.cols - 0.3), Math.min(end.y, m.rows - 0.3));
-    const ey = this.sy(Math.min(end.x, m.cols - 0.3), Math.min(end.y, m.rows - 0.3));
-    g.fillStyle(0xff3366, 0.35);
-    g.fillCircle(ex, ey, T * 0.7);
-    g.fillStyle(0xffd6e8, 0.9);
-    g.fillCircle(ex, ey, T * 0.22);
+    this.mapArt ??= paintMap(m);
+    const v = this.view;
+    const img = this.mapImg
+      .setTexture(key)
+      .setVisible(true)
+      .setOrigin(0.5)
+      .setScale(v.tile / PX);
+    img.setPosition(this.sx(m.cols / 2, m.rows / 2), this.sy(m.cols / 2, m.rows / 2));
+    // Portrait transposes the map: flip vertically, then rotate 90° ⇒ (x, y) → (y, x).
+    img.setFlipY(v.portrait).setRotation(v.portrait ? Math.PI / 2 : 0);
   }
 
   // ---------------------------------------------------------------- input
@@ -360,8 +341,10 @@ export class BattleScene extends Phaser.Scene {
     const b = this.battle;
     const g = this.g;
     g.clear();
+    this.glow.clear();
     this.top.clear();
-    this.drawStars(dt);
+    this.clock += dt;
+    this.drawAmbient(dt);
     this.ghostImg?.setVisible(false);
     if (!b) {
       if (this.labels.size || this.sprites.size) this.clearTowerObjects();
@@ -383,58 +366,41 @@ export class BattleScene extends Phaser.Scene {
       if (t.stats.buffRate && t !== sel) this.drawRange(t.x, t.y, t.stats.range, t.def.color, 0.04);
     }
 
-    // Enemies
+    // Enemies (shadows first so bodies never sit under a neighbour's shadow)
     for (const e of sim.enemies) {
       if (!e.alive) continue;
-      const x = this.sx(e.x, e.y);
-      const y = this.sy(e.x, e.y);
       const r = e.def.radius * T;
-      if (e.def.boss) {
-        g.fillStyle(0xff5fa2, 0.25);
-        g.fillCircle(x, y, r * 1.25);
-      }
-      g.fillStyle(e.def.color, 1);
-      g.fillCircle(x, y, r);
-      g.fillStyle(0xffffff, 0.35);
-      g.fillCircle(x - r * 0.3, y - r * 0.3, r * 0.35);
-      if (e.def.armored) {
-        g.lineStyle(Math.max(1, r * 0.25), 0xc9d1dc, 1);
-        g.strokeCircle(x, y, r * 0.85);
-      }
-      if (e.slowT > 0) {
-        g.lineStyle(Math.max(1, r * 0.2), 0x9fe3ff, e.stunT > 0 ? 1 : 0.7);
-        g.strokeCircle(x, y, r * 1.12);
-      }
-      if (e.burnT > 0) {
-        g.fillStyle(0xff7a1a, 0.6);
-        g.fillCircle(x, y - r * 0.9, r * 0.3);
-      }
-      if (e.def.boss) {
-        const w = r * 2.2;
-        g.fillStyle(0x000000, 0.6);
-        g.fillRect(x - w / 2, y - r - T * 0.25, w, T * 0.12);
-        g.fillStyle(0xff5fa2, 1);
-        g.fillRect(x - w / 2, y - r - T * 0.25, (w * e.hp) / e.def.hp, T * 0.12);
-        g.fillStyle(0xffffff, 1);
-        g.fillCircle(x - r * 0.3, y - r * 0.1, r * 0.14);
-        g.fillCircle(x + r * 0.3, y - r * 0.1, r * 0.14);
-      }
+      g.fillStyle(0x000000, 0.35);
+      g.fillEllipse(this.sx(e.x, e.y), this.sy(e.x, e.y) + r * 0.7, r * 1.7, r * 0.6);
     }
+    for (const e of sim.enemies) if (e.alive) this.drawEnemy(e, T);
 
-    // Projectiles
+    // Projectiles: light streaks and lit bombs
     for (const p of sim.projectiles) {
       const x = this.sx(p.x, p.y);
       const y = this.sy(p.x, p.y);
       if (p.bomb) {
-        g.fillStyle(0x2a0d00, 1);
-        g.fillCircle(x, y, T * 0.16);
-        g.fillStyle(p.color, 1);
-        g.fillCircle(x, y, T * 0.1);
+        g.fillStyle(0x000000, 0.3);
+        g.fillEllipse(x, y + T * 0.18, T * 0.24, T * 0.09);
+        g.fillStyle(0x1c1016, 1);
+        g.fillCircle(x, y, T * 0.13);
+        g.fillStyle(0xffffff, 0.25);
+        g.fillCircle(x - T * 0.04, y - T * 0.04, T * 0.04);
+        this.glow.fillStyle(p.color, 0.35);
+        this.glow.fillCircle(x + T * 0.08, y - T * 0.1, T * 0.1);
+        this.glow.fillStyle(0xfff0c0, 0.9);
+        this.glow.fillCircle(x + T * 0.08, y - T * 0.1, T * 0.035);
       } else {
-        g.fillStyle(p.color, 0.35);
-        g.fillCircle(x, y, T * 0.12);
-        g.fillStyle(0xffffff, 1);
-        g.fillCircle(x, y, T * 0.06);
+        const sp = Math.hypot(p.vx, p.vy) || 1;
+        const ux = (this.view.portrait ? p.vy : p.vx) / sp;
+        const uy = (this.view.portrait ? p.vx : p.vy) / sp;
+        const len = T * 0.42;
+        this.glow.lineStyle(T * 0.1, p.color, 0.35);
+        this.glow.lineBetween(x - ux * len, y - uy * len, x, y);
+        this.glow.lineStyle(T * 0.035, 0xffffff, 0.95);
+        this.glow.lineBetween(x - ux * len * 0.6, y - uy * len * 0.6, x, y);
+        this.glow.fillStyle(p.color, 0.5);
+        this.glow.fillCircle(x, y, T * 0.07);
       }
     }
 
@@ -517,12 +483,13 @@ export class BattleScene extends Phaser.Scene {
       this.drawRange(b.ghost.x, b.ghost.y, def.base.range, col, 0.18);
       const x = this.sx(b.ghost.x, b.ghost.y);
       const y = this.sy(b.ghost.x, b.ghost.y);
-      g.fillStyle(def.color, 0.75);
-      g.fillCircle(x, y, T * 0.42);
-      g.lineStyle(2, col, 1);
-      g.strokeCircle(x, y, T * 0.42);
       const key = chibiKey(def.id);
-      if (this.textures.exists(key)) {
+      g.lineStyle(Math.max(2, T * 0.05), col, 1);
+      g.strokeEllipse(x, y + T * 0.3, T * 0.8, T * 0.3);
+      if (!this.textures.exists(key)) {
+        g.fillStyle(def.color, 0.75);
+        g.fillCircle(x, y, T * 0.42);
+      } else {
         if (!this.ghostImg) this.ghostImg = this.add.image(0, 0, key).setDepth(4).setOrigin(0.5, 0.82);
         this.ghostImg
           .setTexture(key)
@@ -641,22 +608,128 @@ export class BattleScene extends Phaser.Scene {
     this.floats = this.floats.filter((f) => f.age < f.life);
   }
 
-  private drawStars(dt: number): void {
-    const g = this.g;
-    for (const s of this.stars) {
-      s.p += dt * (0.5 + s.s);
-      g.fillStyle(0xffd6f0, 0.1 + 0.25 * (0.5 + 0.5 * Math.sin(s.p)));
-      g.fillCircle(this.sx(s.x, s.y), this.sy(s.x, s.y), 1 + s.s * this.view.tile * 0.05);
+  /** Fireflies drifting over the garden and the stone lanterns' flicker. */
+  private drawAmbient(dt: number): void {
+    const gl = this.glow;
+    const T = this.view.tile;
+    for (const f of this.flies) {
+      f.p += dt * (0.4 + f.s * 0.5);
+      f.x += Math.cos(f.p * 0.7 + f.s * 9) * dt * 0.12;
+      f.y += Math.sin(f.p * 0.9) * dt * 0.1;
+      if (f.x < -0.5) f.x = this.map.cols + 0.4;
+      if (f.x > this.map.cols + 0.5) f.x = -0.4;
+      const blink = Math.max(0, Math.sin(f.p * 1.7 + f.s * 20));
+      if (blink < 0.05) continue;
+      const x = this.sx(f.x, f.y);
+      const y = this.sy(f.x, f.y);
+      gl.fillStyle(0xd7ff8a, 0.12 * blink);
+      gl.fillCircle(x, y, T * 0.16);
+      gl.fillStyle(0xf4ffc9, 0.85 * blink);
+      gl.fillCircle(x, y, Math.max(1, T * 0.028));
+    }
+    for (const l of this.mapArt?.lights ?? []) {
+      const k = 0.5 + 0.5 * Math.sin(this.clock * 7 + l.x * 3) * Math.sin(this.clock * 3.1 + l.y);
+      gl.fillStyle(0xff9a4a, 0.05 + 0.05 * k);
+      gl.fillCircle(this.sx(l.x, l.y), this.sy(l.x, l.y), l.r * T * (0.55 + 0.08 * k));
     }
   }
 
+  /** Soft fill plus a dashed rim, like a tactical overlay. */
   private drawRange(x: number, y: number, r: number, color: number, alpha: number): void {
     const g = this.g;
     const T = this.view.tile;
-    g.fillStyle(color, alpha);
-    g.fillCircle(this.sx(x, y), this.sy(x, y), r * T);
-    g.lineStyle(1.5, color, Math.min(1, alpha * 4));
-    g.strokeCircle(this.sx(x, y), this.sy(x, y), r * T);
+    const cx = this.sx(x, y);
+    const cy = this.sy(x, y);
+    const R = r * T;
+    g.fillStyle(color, alpha * 0.8);
+    g.fillCircle(cx, cy, R);
+    g.lineStyle(Math.max(1.5, T * 0.035), color, Math.min(1, alpha * 5));
+    const n = Math.max(24, Math.round(R / 6));
+    const spin = this.clock * 0.25;
+    for (let i = 0; i < n; i += 2) {
+      g.beginPath();
+      g.arc(cx, cy, R, spin + (i / n) * Math.PI * 2, spin + ((i + 1.2) / n) * Math.PI * 2);
+      g.strokePath();
+    }
+  }
+
+  /** A little spirit: shaded body, rim light, eyes; armor plates; boss horns and HP bar. */
+  private drawEnemy(e: Enemy, T: number): void {
+    const g = this.g;
+    const x = this.sx(e.x, e.y);
+    const bob = Math.sin(this.clock * 6 + e.uid) * T * 0.025;
+    const y = this.sy(e.x, e.y) + bob;
+    const d = e.def;
+    const r = d.radius * T;
+    const light = mixColor(d.color, 0xffffff, 0.45);
+    const dark = mixColor(d.color, 0x000000, 0.45);
+    this.glow.fillStyle(d.color, d.boss ? 0.28 : 0.18);
+    this.glow.fillCircle(x, y, r * (d.boss ? 1.6 : 1.45));
+    if (d.boss) {
+      // horns
+      g.fillStyle(0x1a0c22, 1);
+      for (const s of [-1, 1]) {
+        g.fillTriangle(x + s * r * 0.35, y - r * 0.7, x + s * r * 0.8, y - r * 0.35, x + s * r * 0.75, y - r * 1.25);
+      }
+    }
+    g.fillStyle(dark, 1);
+    g.fillCircle(x, y, r);
+    g.fillStyle(d.color, 1);
+    g.fillCircle(x - r * 0.08, y - r * 0.1, r * 0.86);
+    g.fillStyle(light, 0.9);
+    g.fillCircle(x - r * 0.28, y - r * 0.32, r * 0.42);
+    g.fillStyle(0xffffff, 0.85);
+    g.fillCircle(x - r * 0.38, y - r * 0.44, r * 0.14);
+    if (d.armored) {
+      g.lineStyle(Math.max(1.5, r * 0.22), 0xaab3c2, 1);
+      g.strokeCircle(x, y, r * 0.84);
+      g.fillStyle(0xe8edf5, 1);
+      for (let k = 0; k < 4; k++) {
+        const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
+        g.fillCircle(x + Math.cos(a) * r * 0.84, y + Math.sin(a) * r * 0.84, r * 0.09);
+      }
+    }
+    // eyes
+    const eyeC = d.boss ? 0xff4d6d : 0x1a1024;
+    g.fillStyle(eyeC, 1);
+    g.fillEllipse(x - r * 0.24, y + r * 0.08, r * 0.2, r * 0.3);
+    g.fillEllipse(x + r * 0.24, y + r * 0.08, r * 0.2, r * 0.3);
+    if (d.boss) {
+      this.glow.fillStyle(0xff4d6d, 0.6);
+      this.glow.fillCircle(x - r * 0.24, y + r * 0.08, r * 0.2);
+      this.glow.fillCircle(x + r * 0.24, y + r * 0.08, r * 0.2);
+    } else {
+      g.fillStyle(0xffffff, 0.9);
+      g.fillCircle(x - r * 0.2, y + r * 0.01, r * 0.05);
+      g.fillCircle(x + r * 0.28, y + r * 0.01, r * 0.05);
+    }
+    if (e.slowT > 0) {
+      g.lineStyle(Math.max(1, r * 0.14), 0xbfefff, e.stunT > 0 ? 1 : 0.75);
+      g.strokeCircle(x, y, r * 1.12);
+      this.glow.fillStyle(0x7fd8ff, 0.18);
+      this.glow.fillCircle(x, y, r * 1.15);
+    }
+    if (e.burnT > 0) {
+      const f = 0.7 + 0.3 * Math.sin(this.clock * 20 + e.uid);
+      this.glow.fillStyle(0xff7a1a, 0.55 * f);
+      this.glow.fillCircle(x + r * 0.2, y - r * 0.85, r * 0.3);
+      this.glow.fillStyle(0xffd27a, 0.8 * f);
+      this.glow.fillCircle(x + r * 0.2, y - r * 0.8, r * 0.12);
+    }
+    if (d.boss) {
+      const w = Math.max(T * 1.4, r * 2.4);
+      const bh = Math.max(4, T * 0.1);
+      const by = y - r - T * 0.45;
+      g.fillStyle(0x07040b, 0.85);
+      g.fillRect(x - w / 2 - 2, by - 2, w + 4, bh + 4);
+      g.fillStyle(0x3a1020, 1);
+      g.fillRect(x - w / 2, by, w, bh);
+      const pct = Math.max(0, e.hp / d.hp);
+      g.fillStyle(0xff4f8b, 1);
+      g.fillRect(x - w / 2, by, w * pct, bh);
+      g.fillStyle(0xffffff, 0.35);
+      g.fillRect(x - w / 2, by, w * pct, bh * 0.35);
+    }
   }
 
   private drawTower(t: Tower, selected: boolean): void {
@@ -668,28 +741,42 @@ export class BattleScene extends Phaser.Scene {
     const def = t.def;
     const key = chibiKey(def.id);
     const hasChibi = this.textures.exists(key);
-    g.fillStyle(0x000000, 0.35);
-    g.fillEllipse(x, y + r * 0.75, r * 1.8, r * 0.6);
+    // Ground pad at her feet: shadow, a ring in her color, brighter when selected
+    const fy = y + r * 0.72;
+    g.fillStyle(0x000000, 0.45);
+    g.fillEllipse(x, fy, r * 1.9, r * 0.7);
+    g.lineStyle(Math.max(1.5, T * 0.04), def.color, selected ? 1 : 0.55);
+    g.strokeEllipse(x, fy, r * 1.9, r * 0.7);
+    if (selected) {
+      const k = (this.clock * 1.4) % 1;
+      g.lineStyle(Math.max(1, T * 0.03), 0xffffff, 0.8 * (1 - k));
+      g.strokeEllipse(x, fy, r * 1.9 * (1 + k * 0.5), r * 0.7 * (1 + k * 0.5));
+    }
+    this.glow.fillStyle(def.color, selected ? 0.22 : 0.1);
+    this.glow.fillEllipse(x, fy, r * 1.7, r * 0.6);
     if (t.flash > 0) {
-      g.fillStyle(def.color, 0.35);
-      g.fillCircle(x, y, r * 1.3);
+      this.glow.fillStyle(def.color, 0.35 * (t.flash / 0.15));
+      this.glow.fillCircle(x, y - r * 0.1, r * 1.1);
     }
     // Aim direction in screen space (transposed in portrait)
     const ax = Math.cos(t.aim);
     const ay = Math.sin(t.aim);
     const dx = this.view.portrait ? ay : ax;
     const dy = this.view.portrait ? ax : ay;
-    if (selected) {
-      g.lineStyle(3, 0xffffff, 1);
-      g.strokeCircle(x, y, r * 1.08);
-    }
     if (hasChibi) this.drawChibi(t, key, x, y, dx, dy);
     else this.drawDisc(t, x, y, dx, dy);
     // Tier pips (above the sprite)
     const pips = t.tiers.reduce((a, b) => a + b, 0);
+    const ps = Math.max(2.5, r * 0.13);
     for (let i = 0; i < pips; i++) {
-      this.top.fillStyle(0xffd23f, 1);
-      this.top.fillCircle(x - (pips - 1) * r * 0.2 + i * r * 0.4, y + r * 1.05, r * 0.12);
+      const px = x - (pips - 1) * ps * 1.4 + i * ps * 2.8;
+      const py = fy + r * 0.5;
+      this.top.fillStyle(0x07040b, 0.9);
+      this.top.fillTriangle(px, py - ps * 1.5, px + ps * 1.5, py, px - ps * 1.5, py);
+      this.top.fillTriangle(px, py + ps * 1.5, px + ps * 1.5, py, px - ps * 1.5, py);
+      this.top.fillStyle(0xe8c170, 1);
+      this.top.fillTriangle(px, py - ps, px + ps, py, px - ps, py);
+      this.top.fillTriangle(px, py + ps, px + ps, py, px - ps, py);
     }
   }
 

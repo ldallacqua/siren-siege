@@ -6,6 +6,7 @@ import type { ChatEpisode, ChatNode, GalleryItem } from '../data/types.ts';
 import { addXp, dev, heroineLevel, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
 import { openLightbox, placeholderArt } from './art.ts';
 import { h, hex, toast } from './dom.ts';
+import { icon } from './icons.ts';
 
 const root = () => document.getElementById('screens')!;
 
@@ -40,14 +41,20 @@ function bondBar(id: string): HTMLElement {
   return h(
     'div',
     { class: 'bond' },
-    h('span', { class: 'bond-lvl' }, `♥ Bond ${p.level}`),
+    h('span', { class: 'bond-lvl' }, icon('heart'), `Bond ${p.level}`),
     h('span', { class: 'bond-track' }, h('span', { class: 'bond-fill', style: `width:${pct}%` })),
     h('span', { class: 'bond-num' }, p.level >= MAX_BOND ? 'MAX' : `${p.into}/${p.need}`),
   );
 }
 
-function topbar(title: string, back: () => void): HTMLElement {
-  return h('header', { class: 'screen-top' }, h('button', { class: 'btn icon', onclick: back, title: 'Back' }, '←'), h('h2', null, title));
+function topbar(title: string, back: () => void, extra?: string): HTMLElement {
+  return h(
+    'header',
+    { class: 'screen-top' },
+    h('button', { class: 'btn icon', onclick: back, title: 'Back' }, icon('back')),
+    h('h2', null, title),
+    extra ? h('span', { class: 'count' }, extra) : null,
+  );
 }
 
 // ------------------------------------------------------------------ home
@@ -57,72 +64,118 @@ export interface HomeActions {
   resume?: () => void;
 }
 
+/** Which heroine the lobby features; the player can switch with the avatars. */
+let featured = '';
+
 export function showHome(a: HomeActions): void {
-  const heroes = h(
-    'div',
-    { class: 'home-heroes' },
-    ...HEROINES.map((d, i) => artChain([portraitFile(d.id)], d.id, d.name, true, `home-hero h${i}`)),
-  );
+  const unlocked = HEROINES.filter((d) => isUnlocked(d.id));
+  if (!featured || !unlocked.some((d) => d.id === featured)) {
+    // Feature the heroine the player is closest to.
+    featured = [...unlocked].sort((x, y) => (save.heroines[y.id]?.xp ?? 0) - (save.heroines[x.id]?.xp ?? 0))[0]?.id ?? HEROINES[0].id;
+  }
+  const d = HEROINE_BY_ID[featured];
+  const got = GALLERY.filter((g) => heroineLevel(g.heroine) >= g.level).length;
+  const item = (label: string, ic: Parameters<typeof icon>[0], onclick: () => void, meta?: string) =>
+    h(
+      'button',
+      { class: 'menu-item', onclick, 'aria-label': label },
+      icon(ic),
+      label,
+      meta ? h('span', { class: 'menu-meta' }, meta) : null,
+    );
+  const hero = fullPortrait(artChain([portraitFile(d.id)], d.id, d.name, true, 'home-hero'), d.id);
+  hero.title = '';
   show(
     h(
       'section',
-      { class: 'screen home' },
-      heroes,
+      { class: 'screen home', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
+      h('div', { class: 'home-bg' }),
+      h('div', { class: 'home-moon' }),
+      hero,
+      h('div', { class: 'home-shade' }),
       h(
         'div',
-        { class: 'home-panel' },
-        h('h1', { class: 'logo' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
-        h('p', { class: 'tagline' }, 'Beauty is the last line of defense.'),
+        { class: 'home-main' },
         h(
           'div',
-          { class: 'home-buttons' },
-          a.resume ? h('button', { class: 'btn primary big', onclick: a.resume }, 'Resume battle') : null,
+          null,
+          h('h1', { class: 'logo' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
+          h('p', { class: 'tagline' }, 'Beauty is the last line of defense'),
+        ),
+        h(
+          'nav',
+          { class: 'home-menu' },
+          a.resume ? h('button', { class: 'btn primary big', onclick: a.resume }, h('span', null, 'Resume battle'), icon('next')) : null,
           h(
             'button',
             { class: `btn ${a.resume ? '' : 'primary'} big`, onclick: a.play, autofocus: true },
-            a.resume ? 'New battle' : 'Play — Moonlit Shrine',
+            h('span', { style: 'text-align:left' }, a.resume ? 'New battle' : 'Play', h('small', null, 'Moonlit Shrine')),
+            icon('play'),
           ),
-          h('button', { class: 'btn big', onclick: () => showRoster(a) }, 'Heroines'),
-          h('button', { class: 'btn big', onclick: () => showGallery(a) }, 'Gallery'),
-          h('button', { class: 'btn big ghost', onclick: () => showSettings(a) }, 'Settings'),
+          item('Heroines', 'heroines', () => showRoster(a), `${unlocked.length}/${HEROINES.length}`),
+          item('Gallery', 'image', () => showGallery(a), `${got}/${GALLERY.length}`),
+          item('Settings', 'gear', () => showSettings(a)),
         ),
-        h('p', { class: 'fine' }, 'All characters are adults (21+). v0.1 MVP', dev ? ' · DEV MODE' : ''),
+        h('p', { class: 'home-foot' }, 'All characters are adults (21+) · v0.2', dev ? ' · DEV MODE' : ''),
+      ),
+      h('div', { class: 'home-name' }, h('b', null, d.name), h('span', null, d.title)),
+      h(
+        'div',
+        { class: 'home-pick', role: 'group', 'aria-label': 'Featured heroine' },
+        ...unlocked.map((u) =>
+          h(
+            'button',
+            {
+              class: `pick ${u.id === featured ? 'on' : ''}`,
+              style: `--c:${hex(u.color)};--a:${hex(u.accent)}`,
+              title: `Show ${u.name}`,
+              'aria-label': `Show ${u.name}`,
+              onclick: () => {
+                featured = u.id;
+                showHome(a);
+              },
+            },
+            artChain([portraitFile(u.id)], u.id, u.name, true),
+          ),
+        ),
       ),
     ),
   );
 }
 
-/** Music/sound volume, mute and reduced motion. Used by Settings and the pause menu. */
+/** Music/sound volume, mute and reduced motion. Used by Settings, Options and the pause menu. */
 function audioControls(): HTMLElement {
   const st = save.settings;
   const apply = () => {
     persist();
     sound.applySettings();
   };
-  const slider = (label: string, get: () => number, set: (v: number) => void) =>
-    h(
-      'label',
-      { class: 'setting-row' },
-      h('span', null, label),
-      h('input', {
-        type: 'range',
-        min: '0',
-        max: '100',
-        step: '5',
-        value: String(Math.round(get() * 100)),
-        'aria-label': label,
-        oninput: (e: Event) => {
-          set(Number((e.target as HTMLInputElement).value) / 100);
-          apply();
-        },
-        onchange: () => sound.play('place'), // preview the new sound volume
-      }),
-    );
+  const slider = (label: string, get: () => number, set: (v: number) => void) => {
+    const out = h('output', null, String(Math.round(get() * 100)));
+    const input = h('input', {
+      type: 'range',
+      min: '0',
+      max: '100',
+      step: '5',
+      value: String(Math.round(get() * 100)),
+      'aria-label': label,
+      style: `--p:${Math.round(get() * 100)}%`,
+      oninput: (e: Event) => {
+        const v = Number((e.target as HTMLInputElement).value);
+        set(v / 100);
+        out.textContent = String(v);
+        input.style.setProperty('--p', `${v}%`);
+        apply();
+      },
+      onchange: () => sound.play('place'), // preview the new sound volume
+    });
+    return h('label', { class: 'setting-row' }, h('span', null, label), input, out);
+  };
   const toggle = (label: string, get: () => boolean, set: (v: boolean) => void) => {
-    const btn = h('button', { class: 'btn toggle', role: 'switch' }, '');
+    const btn = h('button', { class: 'switch-row', role: 'switch' }, h('span', null, label), h('span', { class: 'knob' }));
     const paint = () => {
-      btn.textContent = `${label}: ${get() ? 'On' : 'Off'}`;
       btn.setAttribute('aria-checked', String(get()));
+      btn.setAttribute('aria-label', `${label}: ${get() ? 'On' : 'Off'}`);
     };
     btn.onclick = () => {
       set(!get());
@@ -141,7 +194,7 @@ function audioControls(): HTMLElement {
       (v) => (st.musicVolume = v),
     ),
     slider(
-      'Sound',
+      'Effects',
       () => st.sfxVolume,
       (v) => (st.sfxVolume = v),
     ),
@@ -158,6 +211,20 @@ function audioControls(): HTMLElement {
   );
 }
 
+function keyList(): HTMLElement {
+  const rows: [string, string][] = [
+    ['Space', 'Start next wave'],
+    ['1–4', 'Pick a heroine to deploy'],
+    ['Q W E', 'Upgrade paths of the selected heroine'],
+    ['Tab', 'Change targeting'],
+    ['Del', 'Sell'],
+    ['P / F', 'Pause / game speed'],
+    ['+ − 0', 'Zoom in, out, fit map'],
+    ['M', 'Mute'],
+  ];
+  return h('div', { class: 'keys' }, ...rows.flatMap(([k, v]) => [h('kbd', null, k), h('span', null, v)]));
+}
+
 function showSettings(a: HomeActions): void {
   show(
     h(
@@ -166,19 +233,35 @@ function showSettings(a: HomeActions): void {
       topbar('Settings', () => showHome(a)),
       h(
         'div',
-        { class: 'settings' },
-        audioControls(),
-        h('p', null, 'Progress is saved in this browser. Keys in battle: M mute · + / − zoom · 0 fit map.'),
-        h('p', null, 'Tip: add ?dev to the URL to unlock everything with 20,000 gold for testing.'),
+        { class: 'screen-inner settings' },
+        h('div', { class: 'label' }, 'Audio & display'),
+        h('div', { class: 'panel' }, audioControls()),
+        h('div', { class: 'label' }, 'Controls'),
         h(
-          'button',
-          {
-            class: 'btn danger',
-            onclick: () => {
-              if (confirm('Erase all bond levels, chats and unlocks?')) resetSave();
+          'div',
+          { class: 'panel' },
+          h('p', { style: 'margin-bottom:10px' }, 'Tap a card, then tap the map to deploy. Pinch or scroll to zoom, drag to pan.'),
+          keyList(),
+        ),
+        h('div', { class: 'label' }, 'Data'),
+        h(
+          'div',
+          { class: 'panel' },
+          h(
+            'p',
+            { style: 'margin-bottom:12px' },
+            'Progress is saved in this browser only. Add ?dev to the URL to unlock everything for testing.',
+          ),
+          h(
+            'button',
+            {
+              class: 'btn danger',
+              onclick: () => {
+                if (confirm('Erase all bond levels, chats and unlocks?')) resetSave();
+              },
             },
-          },
-          'Reset progress',
+            'Reset progress',
+          ),
         ),
       ),
     ),
@@ -202,9 +285,8 @@ export function showRoster(a: HomeActions): void {
         'div',
         { class: 'roster-info' },
         h('b', null, d.name),
-        h('span', null, d.title),
-        bondBar(d.id),
-        unlocked ? null : h('em', null, `🔒 ${d.unlock?.label}`),
+        h('span', { class: 'role' }, d.title),
+        unlocked ? bondBar(d.id) : h('em', null, icon('lock'), d.unlock?.label ?? 'Locked'),
       ),
     );
   });
@@ -212,11 +294,13 @@ export function showRoster(a: HomeActions): void {
     h(
       'section',
       { class: 'screen list' },
-      topbar('Heroines', () => showHome(a)),
-      h('div', { class: 'roster' }, ...cards),
+      topbar('Heroines', () => showHome(a), `${HEROINES.filter((d) => isUnlocked(d.id)).length}/${HEROINES.length} unlocked`),
+      h('div', { class: 'screen-inner roster' }, ...cards),
     ),
   );
 }
+
+const ATTACK_LABEL: Record<string, string> = { bolt: 'Ranged', bomb: 'Splash', pulse: 'Area pulse', none: 'Support' };
 
 export function showProfile(id: string, a: HomeActions): void {
   const d = HEROINE_BY_ID[id];
@@ -224,36 +308,47 @@ export function showProfile(id: string, a: HomeActions): void {
   const done = new Set(save.heroines[id]?.chatsDone ?? []);
   const chats = episodesFor(id).map((ep) => {
     const open = lvl >= ep.level;
+    const seen = done.has(ep.id);
     return h(
       'button',
       {
-        class: `chat-item ${open ? '' : 'locked'} ${done.has(ep.id) ? 'done' : ''}`,
+        class: `chat-item ${open ? '' : 'locked'} ${seen ? 'done' : ''}`,
         onclick: () => (open ? playChat(ep, () => showProfile(id, a)) : toast(`Reach Bond ${ep.level} with ${d.name.split(' ')[0]}`)),
       },
+      icon(open ? 'chat' : 'lock'),
       h('b', null, ep.title),
-      h('span', null, open ? (done.has(ep.id) ? 'Replay' : 'New ♥') : `🔒 Bond ${ep.level}`),
+      h('span', null, ...(open ? (seen ? ['Replay'] : [icon('sparkle'), 'New']) : [`Bond ${ep.level}`])),
     );
   });
   const gallery = GALLERY.filter((g) => g.heroine === id).map((g) => galleryThumb(g, lvl));
+  const art = fullPortrait(artChain([portraitFile(id)], id, d.name, true, 'profile-art'), id);
   show(
     h(
       'section',
       { class: 'screen profile', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
-      topbar(d.name, () => showRoster(a)),
+      topbar('Heroines', () => showRoster(a)),
       h(
         'div',
-        { class: 'profile-body' },
-        fullPortrait(artChain([portraitFile(id)], id, d.name, true, 'profile-art'), id),
+        { class: 'screen-inner profile-body' },
+        h('div', { class: 'profile-art-wrap' }, art, h('span', { class: 'profile-art-hint' }, icon('fit'), 'View full art')),
         h(
           'div',
           { class: 'profile-info' },
-          h('div', { class: 'profile-title' }, d.title),
+          h('div', { class: 'profile-role' }, d.title),
+          h('h1', { class: 'profile-name' }, d.name),
+          h(
+            'div',
+            { class: 'tags' },
+            h('span', { class: 'tag' }, `Age ${d.age}`),
+            h('span', { class: 'tag' }, ATTACK_LABEL[d.base.attack] ?? d.base.attack),
+            h('span', { class: 'tag' }, `${d.cost} gold`),
+          ),
           bondBar(id),
-          h('p', { class: 'profile-meta' }, `Age ${d.age} · ${d.archetype}`),
-          h('p', null, d.bio),
-          h('h3', null, 'Chats'),
+          h('p', { class: 'profile-bio' }, d.bio),
+          h('p', { class: 'fine' }, d.archetype),
+          h('div', { class: 'label' }, 'Chats'),
           h('div', { class: 'chat-list' }, ...chats),
-          h('h3', null, 'Gallery'),
+          h('div', { class: 'label' }, 'Gallery'),
           h('div', { class: 'gallery-grid small' }, ...gallery),
           h('p', { class: 'fine' }, 'Raise Bond by fighting alongside her and choosing your words well.'),
         ),
@@ -266,7 +361,7 @@ export function showProfile(id: string, a: HomeActions): void {
 
 function galleryThumb(g: GalleryItem, lvl: number): HTMLElement {
   const open = lvl >= g.level;
-  if (!open) return h('div', { class: 'thumb locked' }, h('span', null, `🔒 Bond ${g.level}`));
+  if (!open) return h('div', { class: 'thumb locked' }, h('span', null, icon('lock'), `Bond ${g.level}`));
   return h(
     'button',
     { class: 'thumb', onclick: () => lightbox(g) },
@@ -296,8 +391,8 @@ export function showGallery(a: HomeActions): void {
     const lvl = heroineLevel(d.id);
     return h(
       'div',
-      { class: 'gallery-section' },
-      h('h3', { style: `color:${hex(d.color)}` }, d.name),
+      { class: 'gallery-section', style: `--c:${hex(d.color)}` },
+      h('div', { class: 'label' }, d.name),
       h('div', { class: 'gallery-grid' }, ...GALLERY.filter((g) => g.heroine === d.id).map((g) => galleryThumb(g, lvl))),
     );
   });
@@ -307,8 +402,8 @@ export function showGallery(a: HomeActions): void {
     h(
       'section',
       { class: 'screen list' },
-      topbar(`Gallery ${got}/${total}`, () => showHome(a)),
-      ...sections,
+      topbar('Gallery', () => showHome(a), `${got}/${total} unlocked`),
+      h('div', { class: 'screen-inner' }, ...sections),
     ),
   );
 }
@@ -326,12 +421,12 @@ export function playChat(ep: ChatEpisode, onClose: () => void): void {
   const name = h('div', { class: 'chat-name' });
   const text = h('div', { class: 'chat-text' });
   const choices = h('div', { class: 'chat-choices' });
-  const box = h('div', { class: 'chat-box', onclick: () => advance() }, name, text, h('div', { class: 'chat-more' }, '▼'));
+  const box = h('div', { class: 'chat-box', onclick: () => advance() }, name, text, h('div', { class: 'chat-more' }, icon('next')));
   const screen = h(
     'section',
     { class: 'screen chat', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
-    h('button', { class: 'btn icon chat-close', onclick: () => finish(false), title: 'Leave' }, '✕'),
-    h('div', { class: 'chat-ep' }, ep.title),
+    h('button', { class: 'btn icon chat-close', onclick: () => finish(false), title: 'Leave' }, icon('close')),
+    h('div', { class: 'chat-ep' }, h('small', null, `${d.name.split(' ')[0]} · Bond ${ep.level}`), ep.title),
     portrait,
     h('div', { class: 'chat-bottom' }, box, choices),
   );
@@ -372,10 +467,11 @@ export function playChat(ep: ChatEpisode, onClose: () => void): void {
               onclick: (e: Event) => {
                 e.stopPropagation();
                 earned += c.affection;
-                if (c.affection >= 30) toast(`${d.name.split(' ')[0]} liked that ♥`);
+                if (c.affection >= 30) toast(`${d.name.split(' ')[0]} liked that`);
                 go(c.next);
               },
             },
+            icon('next'),
             c.text,
           ),
         ),
@@ -405,9 +501,7 @@ export function playChat(ep: ChatEpisode, onClose: () => void): void {
       prog.chatsDone.push(ep.id);
       persist();
       const { before, after } = addXp(ep.heroine, earned + 50);
-      toast(
-        after > before ? `Bond up! ${d.name.split(' ')[0]} is now Bond ${after} ♥` : `+${earned + 50} bond with ${d.name.split(' ')[0]}`,
-      );
+      toast(after > before ? `Bond up! ${d.name.split(' ')[0]} is now Bond ${after}` : `+${earned + 50} bond with ${d.name.split(' ')[0]}`);
     }
     onClose();
   };
@@ -430,10 +524,12 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
   const rows = r.gains.map((g) => {
     const d = HEROINE_BY_ID[g.id];
     const unlocks = [
-      ...GALLERY.filter((x) => x.heroine === g.id && x.level > g.before && x.level <= g.after).map((x) => `🖼 ${x.title}`),
+      ...GALLERY.filter((x) => x.heroine === g.id && x.level > g.before && x.level <= g.after).map((x) =>
+        h('span', { class: 'unlock' }, icon('image'), x.title),
+      ),
       ...episodesFor(g.id)
         .filter((e) => e.level > g.before && e.level <= g.after)
-        .map((e) => `💬 ${e.title}`),
+        .map((e) => h('span', { class: 'unlock' }, icon('chat'), e.title)),
     ];
     return h(
       'div',
@@ -445,7 +541,7 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
         h('b', null, d.name),
         bondBar(g.id),
         h('span', { class: 'gain' }, `+${g.xp} bond${g.after > g.before ? ` · Level up! ${g.before} → ${g.after}` : ''}`),
-        unlocks.length ? h('span', { class: 'unlocks' }, 'Unlocked: ' + unlocks.join(', ')) : null,
+        unlocks.length ? h('div', { class: 'unlocks' }, ...unlocks) : null,
       ),
     );
   });
@@ -453,7 +549,8 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
     h(
       'section',
       { class: `screen results ${r.won ? 'won' : 'lost'}` },
-      h('h1', null, r.won ? 'Victory!' : 'Defeated'),
+      h('p', { class: 'results-kicker' }, `Moonlit Shrine · Wave ${Math.min(r.wave, r.total)}/${r.total}`),
+      h('h1', null, r.won ? 'Victory' : 'Defeated'),
       h(
         'p',
         null,
@@ -461,12 +558,12 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
           ? 'The shrine is safe. Your heroines look... very pleased with you.'
           : `The Blight broke through on wave ${r.wave}/${r.total}.`,
       ),
-      ...r.newlyUnlocked.map((id) => h('p', { class: 'new-hero' }, `✨ New heroine unlocked: ${HEROINE_BY_ID[id].name}!`)),
+      ...r.newlyUnlocked.map((id) => h('p', { class: 'new-hero' }, icon('sparkle'), `New heroine unlocked: ${HEROINE_BY_ID[id].name}`)),
       h('div', { class: 'result-rows' }, ...(rows.length ? rows : [h('p', null, 'Deploy heroines to earn bond.')])),
       h(
         'div',
         { class: 'row center' },
-        h('button', { class: 'btn primary big', onclick: again }, 'Play again'),
+        h('button', { class: 'btn primary big', onclick: again }, icon('play'), 'Play again'),
         h('button', { class: 'btn big', onclick: home }, 'Home'),
       ),
     ),

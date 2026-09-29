@@ -6,6 +6,7 @@ import { Battle } from './game/Battle.ts';
 import { BattleScene } from './game/BattleScene.ts';
 import { addXp, dev, isUnlocked, persist, save } from './state/save.ts';
 import { h, toast } from './ui/dom.ts';
+import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
 import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions } from './ui/screens.ts';
 
@@ -17,7 +18,7 @@ const DPR = () => Math.min(2, window.devicePixelRatio || 1);
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: stage,
-  backgroundColor: '#0d0716',
+  backgroundColor: '#07040b',
   antialias: true,
   scale: { mode: Phaser.Scale.NONE, width: stage.clientWidth * DPR(), height: stage.clientHeight * DPR(), zoom: 1 / DPR() },
   scene: [scene],
@@ -36,12 +37,12 @@ new ResizeObserver(fit).observe(stage);
 window.addEventListener('orientationchange', () => setTimeout(fit, 200));
 
 // Battlefield zoom: buttons over the stage (pinch, wheel and drag-to-pan live in BattleScene).
-const zoomBtn = (label: string, title: string, fn: () => void) =>
-  h('button', { class: 'zoom-btn', title, 'aria-label': title, onclick: fn }, label);
-const zoomIn = zoomBtn('+', 'Zoom in', () => scene.zoomBy(1.4));
-const zoomOut = zoomBtn('−', 'Zoom out', () => scene.zoomBy(1 / 1.4));
-const zoomFit = zoomBtn('⤢', 'Fit map', () => scene.resetZoom());
-const optionsBtn = zoomBtn('⚙', 'Options', () => openOptions());
+const zoomBtn = (ic: IconName, title: string, fn: () => void) =>
+  h('button', { class: `btn zoom-btn ${ic === 'gear' ? 'opt' : ''}`, title, 'aria-label': title, onclick: fn }, icon(ic));
+const zoomIn = zoomBtn('plus', 'Zoom in', () => scene.zoomBy(1.4));
+const zoomOut = zoomBtn('minus', 'Zoom out', () => scene.zoomBy(1 / 1.4));
+const zoomFit = zoomBtn('fit', 'Fit map', () => scene.resetZoom());
+const optionsBtn = zoomBtn('gear', 'Options', () => openOptions());
 stage.append(h('div', { class: 'zoom-ctl' }, optionsBtn, zoomIn, zoomOut, zoomFit));
 
 function openOptions(): void {
@@ -93,7 +94,7 @@ function startBattle(): void {
   battle = new Battle();
   battle.onFinish = finishBattle;
   battle.sim.onWaveEnd = (wave, bonus) => {
-    toast(`Wave ${wave} cleared! +◆${bonus}`);
+    toast(`Wave ${wave} cleared · +${bonus} gold`);
     recordWave(battle!, false);
   };
   scene.setBattle(battle);

@@ -6,6 +6,7 @@ import { canBuyUpgrade, lockReason, sellValue } from '../game/sim/upgrades.ts';
 import { heroineLevel, isUnlocked } from '../state/save.ts';
 import { artImg, openLightbox } from './art.ts';
 import { gold, h, hex, toast } from './dom.ts';
+import { icon } from './icons.ts';
 
 const TARGET_LABEL = { first: 'First', last: 'Last', strong: 'Strong', close: 'Close' } as const;
 
@@ -19,6 +20,7 @@ export class Hud {
     lives?: HTMLElement;
     cash?: HTMLElement;
     wave?: HTMLElement;
+    waveBar?: HTMLElement;
     start?: HTMLButtonElement;
     costButtons: { el: HTMLButtonElement; cost: () => number; ok: () => boolean }[];
     placeBtn?: HTMLButtonElement;
@@ -101,6 +103,7 @@ export class Hud {
     if (r.lives) r.lives.textContent = String(Math.max(0, b.sim.lives));
     if (r.cash) r.cash.textContent = gold(b.sim.cash);
     if (r.wave) r.wave.textContent = `${b.sim.wave}/${b.sim.waves.length}`;
+    if (r.waveBar) r.waveBar.style.width = `${(100 * b.sim.wave) / b.sim.waves.length}%`;
     for (const c of r.costButtons) {
       const ok = c.ok();
       c.el.disabled = !ok;
@@ -124,29 +127,41 @@ export class Hud {
     r.lives = h('b', null, '0');
     r.cash = h('b', null, '0');
     r.wave = h('b', null, '0');
+    r.waveBar = h('i', { class: 'wave-bar' });
     const stats = h(
       'div',
       { class: 'stats' },
-      h('span', { class: 'stat lives', title: 'Lives' }, '♥ ', r.lives),
-      h('span', { class: 'stat cash', title: 'Gold' }, '◆ ', r.cash),
-      h('span', { class: 'stat wave', title: 'Wave' }, 'Wave ', r.wave),
+      h('span', { class: 'stat lives', title: 'Lives' }, icon('heart'), r.lives),
+      h('span', { class: 'stat cash', title: 'Gold' }, icon('gem'), r.cash),
+      h('span', { class: 'stat wave', title: 'Wave' }, h('small', null, 'Wave'), r.wave, r.waveBar),
     );
 
     r.start = h(
       'button',
       {
-        class: 'btn primary start',
+        class: `btn start ${sim.waveActive ? 'live' : 'primary'}`,
         disabled: sim.waveActive || sim.result !== 'playing',
         onclick: () => sim.startWave(),
         title: 'Start next wave (Space)',
       },
-      sim.waveActive ? 'Wave in progress' : sim.wave === 0 ? '▶ Start' : '▶ Next wave',
+      ...(sim.waveActive
+        ? [h('span', { class: 'live-dot' }), `Wave ${sim.wave} in progress`]
+        : [icon('play'), sim.wave === 0 ? 'Start' : 'Next wave']),
     );
     const controls = h(
       'div',
       { class: 'controls' },
       r.start,
-      h('button', { class: 'btn icon', title: 'Game speed', onclick: () => b.setSpeed(b.speed >= 3 ? 1 : b.speed + 1) }, `${b.speed}×`),
+      h(
+        'button',
+        {
+          class: `btn icon speed ${b.speed > 1 ? 'on' : ''}`,
+          title: 'Game speed (F)',
+          onclick: () => b.setSpeed(b.speed >= 3 ? 1 : b.speed + 1),
+        },
+        icon('fast'),
+        `${b.speed}×`,
+      ),
       h(
         'button',
         {
@@ -155,14 +170,14 @@ export class Hud {
           'aria-label': 'Auto-start waves',
           onclick: () => b.toggleAuto(),
         },
-        'Auto',
+        icon('auto'),
       ),
       h(
         'button',
         { class: `btn icon ${b.paused ? 'on' : ''}`, title: 'Pause (P)', 'aria-label': 'Pause (P)', onclick: () => b.togglePause() },
-        b.paused ? '▶' : '❚❚',
+        icon(b.paused ? 'play' : 'pause'),
       ),
-      h('button', { class: 'btn icon', title: 'Menu', onclick: () => this.onMenu?.() }, '☰'),
+      h('button', { class: 'btn icon', title: 'Menu', onclick: () => this.onMenu?.() }, icon('menu')),
     );
 
     let dock: HTMLElement;
@@ -189,14 +204,16 @@ export class Hud {
           },
         },
         artImg(portraitFile(def.id), def.id, def.name, true, 'card-art'),
+        h('span', { class: 'card-shade' }),
         h('span', { class: 'card-name' }, def.name.split(' ')[0]),
-        h('span', { class: 'card-cost' }, unlocked ? `◆ ${def.cost}` : '🔒'),
+        h('span', { class: 'card-cost' }, unlocked ? icon('gem') : icon('lock'), unlocked ? String(def.cost) : 'Locked'),
         h('span', { class: 'card-lvl' }, `Lv ${heroineLevel(def.id)}`),
+        unlocked ? h('span', { class: 'card-key' }, String(i + 1)) : null,
       );
       if (unlocked) this.refs.costButtons.push({ el: card, cost: () => def.cost, ok: () => b.sim.cash >= def.cost });
       return card;
     });
-    return h('div', { class: 'dock shop' }, h('div', { class: 'dock-title' }, 'Deploy a heroine'), h('div', { class: 'cards' }, ...cards));
+    return h('div', { class: 'dock shop' }, h('div', { class: 'label' }, 'Deploy a heroine'), h('div', { class: 'cards' }, ...cards));
   }
 
   private buildPlacing(b: Battle, id: string): HTMLElement {
@@ -209,12 +226,18 @@ export class Hud {
     );
     return h(
       'div',
-      { class: 'dock placing', style: `--c:${hex(def.color)}` },
+      { class: 'dock placing', style: `--c:${hex(def.color)};--a:${hex(def.accent)}` },
       h(
         'div',
         { class: 'panel-head' },
         this.headArt(b, def),
-        h('div', null, h('div', { class: 'head-name' }, def.name), h('div', { class: 'head-sub' }, `${def.title} · ◆ ${def.cost}`)),
+        h(
+          'div',
+          null,
+          h('div', { class: 'head-name' }, def.name),
+          h('div', { class: 'head-sub' }, h('em', null, def.title)),
+          h('div', { class: 'head-sub' }, `${def.cost} gold`),
+        ),
       ),
       h(
         'p',
@@ -241,7 +264,7 @@ export class Hud {
             onclick: () => (b.sim.buyUpgrade(t, i as 0 | 1 | 2) ? undefined : toast('Not enough gold')),
           },
           h('span', { class: 'up-name' }, next.name),
-          h('span', { class: 'up-cost' }, `◆ ${next.cost}`),
+          h('span', { class: 'up-cost' }, icon('gem'), String(next.cost)),
         );
         this.refs.costButtons.push({ el: btn, cost: () => next.cost, ok: () => b.sim.cash >= next.cost && canBuyUpgrade(t.tiers, i) });
         action = btn;
@@ -259,7 +282,7 @@ export class Hud {
     });
     return h(
       'div',
-      { class: 'dock tower', style: `--c:${hex(def.color)}` },
+      { class: 'dock tower', style: `--c:${hex(def.color)};--a:${hex(def.accent)}` },
       h(
         'div',
         { class: 'panel-head' },
@@ -268,18 +291,25 @@ export class Hud {
           'div',
           { class: 'grow' },
           h('div', { class: 'head-name' }, def.name),
-          h('div', { class: 'head-sub' }, `${def.title} · Bond Lv ${heroineLevel(def.id)} · ${t.pops} pops`),
+          h('div', { class: 'head-sub' }, h('em', null, def.title)),
+          h('div', { class: 'head-sub' }, `Bond ${heroineLevel(def.id)} · ${t.pops} pops`),
         ),
-        h('button', { class: 'btn icon', title: 'Close (Esc)', onclick: () => b.select(null) }, '✕'),
+        h('button', { class: 'btn icon', title: 'Close (Esc)', onclick: () => b.select(null) }, icon('close')),
       ),
       h('div', { class: 'paths' }, ...paths),
       h(
         'div',
-        { class: 'row' },
+        { class: 'row tower-actions' },
         h(
           'button',
-          { class: 'btn', title: 'Targeting (Tab)', onclick: () => b.sim.cycleTargeting(t) },
-          `Target: ${TARGET_LABEL[t.targeting]}`,
+          {
+            class: 'btn',
+            title: 'Targeting (Tab)',
+            'aria-label': `Target: ${TARGET_LABEL[t.targeting]}`,
+            onclick: () => b.sim.cycleTargeting(t),
+          },
+          icon('target'),
+          TARGET_LABEL[t.targeting],
         ),
         h(
           'button',
@@ -291,7 +321,8 @@ export class Hud {
               b.select(null);
             },
           },
-          `Sell ◆ ${sellValue(t.spent)}`,
+          icon('coin'),
+          `Sell ${sellValue(t.spent)}`,
         ),
       ),
     );

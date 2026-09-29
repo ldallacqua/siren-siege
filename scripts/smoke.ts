@@ -194,7 +194,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   // Pause menu -> home -> profile -> chat
   // Options from the battlefield gear: pauses, shows audio controls, Done resumes
   await page.getByRole('button', { name: 'Options' }).click();
-  await page.getByRole('slider', { name: 'Sound' }).waitFor();
+  await page.getByRole('slider', { name: 'Effects' }).waitFor();
   assert(await page.evaluate(() => (window as any).siren.battle.paused), 'options should pause the battle');
   await shot('11-options');
   await page.getByRole('button', { name: 'Done' }).click();

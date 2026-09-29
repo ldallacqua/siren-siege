@@ -1,3 +1,4 @@
+import { icon } from './icons.ts';
 import { HEROINE_BY_ID } from '../data/heroines.ts';
 
 const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
@@ -91,7 +92,8 @@ export function openLightbox(
   const close = document.createElement('button');
   close.className = 'btn icon lightbox-close';
   close.title = 'Close';
-  close.textContent = '✕';
+  close.setAttribute('aria-label', 'Close');
+  close.append(icon('close'));
   const cap = document.createElement('div');
   cap.className = 'lightbox-cap';
   cap.textContent = caption;
