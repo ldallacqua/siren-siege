@@ -194,22 +194,26 @@ describe('combat', () => {
   });
 
   it('tags shots, hits and blasts with the heroine and her tier (for per-heroine visuals)', () => {
-    const sim = new BattleSim(map, oneWave('mote', 6), { startCash: 99999, lives: 1000 });
-    const k = sim.place('kaede', 4.5, 3.5)!;
-    sim.buyUpgrade(k, 0);
-    sim.place('scarlet', 2.5, 3.5);
-    sim.startWave();
-    const seen: Fx[] = [];
-    for (let i = 0; i < 60 * 20; i++) {
-      sim.step(STEP);
-      seen.push(...sim.fx);
-      sim.fx.length = 0;
-    }
-    const hit = seen.find((f) => f.kind === 'hit' && f.hero === 'scarlet');
-    expect(hit).toBeDefined();
+    const collect = (hero: string, upgrade?: 0 | 1 | 2) => {
+      const sim = new BattleSim(map, oneWave('mote', 8), { startCash: 99999, lives: 1000 });
+      const t = sim.place(hero, 2.5, 3.5)!;
+      if (upgrade !== undefined) sim.buyUpgrade(t, upgrade);
+      sim.startWave();
+      const seen: Fx[] = [];
+      for (let i = 0; i < 60 * 20; i++) {
+        sim.step(STEP);
+        seen.push(...sim.fx);
+        sim.fx.length = 0;
+      }
+      return seen;
+    };
+    const scarlet = collect('scarlet');
+    const hit = scarlet.find((f) => f.kind === 'hit');
+    expect(hit).toMatchObject({ hero: 'scarlet', tier: 0 });
     expect(typeof hit!.value).toBe('number'); // enemy uid, for the hit flash
-    expect(seen.find((f) => f.kind === 'boom')).toMatchObject({ hero: 'kaede', tier: 1 });
-    expect(seen.find((f) => f.kind === 'shot' && f.hero === 'kaede')?.angle).toBeTypeOf('number');
+    expect(scarlet.find((f) => f.kind === 'shot')?.angle).toBeTypeOf('number');
+    const kaede = collect('kaede', 0);
+    expect(kaede.find((f) => f.kind === 'boom')).toMatchObject({ hero: 'kaede', tier: 1 });
   });
 
   it('is deterministic', () => {
