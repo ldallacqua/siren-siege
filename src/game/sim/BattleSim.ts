@@ -80,6 +80,8 @@ export interface Fx {
   hero?: string;
   /** Her highest upgrade tier (0–3): effects grow with it. */
   tier?: number;
+  /** Her tier per path (a live reference; read it immediately). Picks the effect style, see vfxLook.ts. */
+  tiers?: readonly number[];
   /** Direction (radians): aim for shots, travel for hits. */
   angle?: number;
 }
@@ -180,7 +182,7 @@ export class BattleSim {
     };
     this.towers.push(t);
     this.buffsDirty = true;
-    this.fx.push({ kind: 'place', x, y, r: TOWER_RADIUS, color: def.color, value: 0 });
+    this.fx.push({ kind: 'place', x, y, r: TOWER_RADIUS, color: def.color, value: 0, hero: def.id });
     this.changed();
     return t;
   }
@@ -193,7 +195,16 @@ export class BattleSim {
     tower.tiers[path]++;
     tower.stats = computeStats(tower.def, tower.tiers, this.bondLevels[tower.def.id] ?? 1);
     this.buffsDirty = true;
-    this.fx.push({ kind: 'upgrade', x: tower.x, y: tower.y, r: TOWER_RADIUS, color: tower.def.color, value: tower.tiers[path] });
+    this.fx.push({
+      kind: 'upgrade',
+      x: tower.x,
+      y: tower.y,
+      r: TOWER_RADIUS,
+      color: tower.def.color,
+      value: tower.tiers[path],
+      hero: tower.def.id,
+      tiers: tower.tiers,
+    });
     this.changed();
     return true;
   }
@@ -419,11 +430,12 @@ export class BattleSim {
             color: t.def.color,
             hero: t.def.id,
             tier,
+            tiers: t.tiers,
             angle: Math.atan2(e.y - t.y, e.x - t.x),
           });
           this.damage(e, s.damage, s, t);
         }
-        this.fx.push({ kind: 'pulse', x: t.x, y: t.y, r: s.range, color: t.def.color, hero: t.def.id, tier });
+        this.fx.push({ kind: 'pulse', x: t.x, y: t.y, r: s.range, color: t.def.color, hero: t.def.id, tier, tiers: t.tiers });
         t.cooldown = 1 / s.rate;
         t.flash = 0.15;
         continue;
@@ -467,6 +479,7 @@ export class BattleSim {
         value: bomb ? 2 : 1,
         hero: t.def.id,
         tier: Math.max(...t.tiers),
+        tiers: t.tiers,
         angle: aim,
       });
       t.cooldown = 1 / s.rate;
@@ -501,6 +514,7 @@ export class BattleSim {
           color: p.color,
           hero: p.owner.def.id,
           tier: Math.max(...p.owner.tiers),
+          tiers: p.owner.tiers,
           angle: Math.atan2(p.vy, p.vx),
         });
         const children = this.damage(e, p.src.damage, p.src, p.owner);
@@ -524,7 +538,16 @@ export class BattleSim {
 
   private explode(p: Projectile): void {
     const s = p.src;
-    this.fx.push({ kind: 'boom', x: p.x, y: p.y, r: s.splash, color: p.color, hero: p.owner.def.id, tier: Math.max(...p.owner.tiers) });
+    this.fx.push({
+      kind: 'boom',
+      x: p.x,
+      y: p.y,
+      r: s.splash,
+      color: p.color,
+      hero: p.owner.def.id,
+      tier: Math.max(...p.owner.tiers),
+      tiers: p.owner.tiers,
+    });
     const victims = this.enemies
       .filter((e) => e.alive && (e.x - p.x) ** 2 + (e.y - p.y) ** 2 <= (s.splash + e.def.radius) ** 2)
       .slice(0, s.pierce);

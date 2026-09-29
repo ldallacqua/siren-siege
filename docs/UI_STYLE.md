@@ -48,6 +48,7 @@ The visual language for every screen. Read it before touching `src/style.css`, `
 ## Battlefield
 
 - Everything is drawn by `BattleScene` (canvas). The static scene (ground, path, props, vignette) is painted once per map/orientation into a texture (`src/game/mapArt.ts`); per-frame drawing is only for live things (enemies, projectiles, fx, fireflies, lantern flicker).
+- Effects scale with the upgrade path via `lookFor()` (`src/game/vfxLook.ts`): tier 0 is deliberately modest, each path shifts colour and adds its own detail, tier 3 adds a signature. Keep additive layers from saturating to white (use the deeper `body`/`rim` colours for bulk, `core` only for small centres). Check with `npm run fx`.
 - Readability first: enemies must pop against the ground (lighter, saturated bodies with dark outlines); the path must read instantly; props never sit on the path.
 
 ## Checklist before shipping UI

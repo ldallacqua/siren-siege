@@ -30,8 +30,9 @@
 - **Lobby home (gacha style):** full-screen featured heroine (tap her for a Bond-gated idle line with voice blips), Commander badge (wins, best wave), left rail tiles Messages (new-chat badge) / Gallery / Codex, heroine picker on the right, big Heroines + Battle tiles at the bottom.
 - **Messages screen:** every chat across heroines, new first. **Arena select:** cards with painted map previews, difficulty, best wave, lock state.
 - **Second arena, Frostveil Pass (Hard):** Mount Shirahane snow palette (snowy firs, frozen pond, ice-blue lanterns), shorter path; unlocks at wave 10 on Moonlit Shrine; own music track. Bot reaches wave 15 there vs 19 on the shrine.
-- **Lofi music:** a calm menu track and one theme per heroine for her chats (swung e-piano chords, soft drums, low-pass + vinyl crackle, all synthesized); tracks crossfade, chats restore the previous track, pause/options duck the battle music.
+- **Music with song forms:** every track (menu, 4 chat themes, 2 battle maps) is a 32–40 bar song with 3–4 sections and intro/breakdown/outro feels, about 2 minutes before it repeats, plus seeded variation (melody dropouts, bass hops, drum fills) so no pass is identical. Lofi style for menus/chats (swung e-piano, soft drums, low-pass; no crackle). Chords are written by name in `src/audio/tuning.ts`. Tracks crossfade, chats restore the previous track, pause/options duck the battle music.
 - **Motion design (D-019, `docs/UI_STYLE.md` → Motion):** title card ("Tap to begin", unlocks audio); directional screen transitions (forward/back, lobby dive/surface); lobby entrance choreography, per-heroine particles, parallax, colour wash on heroine switch, glowing Battle button; staggered lists/cards, 3D tilt on arena/roster cards; springy modals; lightbox grows from the tapped picture; menu↔battle wipe naming the arena; wave and boss banners; gold count-up, affordable-card flash, dock panel slide; heroines drop in when placed and pop on upgrade; results title reveal and bond bars filling from the old value; chat letterbox + title card intro; bond-bar shine. All off with Reduced motion.
+- **Skill effects scale with the upgrade path (`src/game/vfxLook.ts`):** each heroine's shots, impacts, pulses and blasts take size, density and colour from her tiers per path, and tier 3 of each path unlocks a signature effect: Scarlet heart-burst rounds / twin muzzle flashes + brass casings / blood-moon sniper beam + crescent; Yuki frost rune + ice crystals / shatter shards + frost ground / ripples + ice vortex; Kaede flame lotus + burning ground / firework shells + crackle / purple oni meteor + ground cracks + shake; Selene halo + light pillars on allies / gold coins / falling-star arrows. Upgraded heroines stand on a glowing sigil that gains detail per tier. Sounds scale too (deeper booms, sniper crack, shatter, chime, crackle). `npm run fx` renders a side-by-side comparison per heroine.
 - Save in localStorage; `?dev` mode.
 - Tooling: unit tests (40), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
@@ -51,16 +52,16 @@
 
 ## Last session
 
-**2026-09-29 — lofi music + motion design pass (Claude, cloud session)**
+**2026-09-29 — longer music, path-based skill effects (Claude, cloud session)**
 
-- Owner asked for faint lofi music in menus and chats, and "motion everywhere".
-- Audio: `tuning.ts` tracks gained `style: 'lofi'` + `melody`; `sound.ts` now runs crossfading `Player`s with `startMusic(id)`, `stopMusic()`, `duck()`. Hooks in `main.ts` (menu/battle/duck) and `chat.ts` (heroine theme, restores previous).
-- Motion: new `src/ui/motion.ts`; `common.ts` `show()` does directional transitions (`goingBack()`), `closeScreens()` fades out; motion CSS block at the end of `style.css`; wiring in `screens.ts`, `Hud.ts` (banners, gold tween, afford flash), `art.ts` (lightbox FLIP), `chat.ts` (intro), `main.ts` (splash, wipe), `BattleScene.ts` (`towerPresence`). `body.calm` = reduced motion.
-- Smoke now dismisses the title card first (and screenshots it as `*-0-title.png`).
+- Owner: remove the lofi crackle, music repeats too often (extend all tracks), then make skill effects scale with the upgrade path (small fireball at low level, huge one at max).
+- Music: `Track` now has `sections` (chords by name) + `form`; `songPlan()`/`songBar()` in `tuning.ts`; `sound.ts` plays feels (full/soft/bare), fills and seeded variation. Crackle removed.
+- Effects: `vfxLook.ts` (pure, tested in `tests/vfx.test.ts`) maps hero + tiers → scale, density, palette, signature; sim fx carry `tiers`; `Vfx.ts` rewritten around it (new ring styles glyph/beam/crescent/burst/crystal/lotus, particles casing/heart/spark/coin, fire and crack decals, `sigil()` under towers); `BattleScene` wires sigils, blessing aura and shake; `sound.fx` scales pitch/adds signature sounds.
+- New dev tool `npm run fx` (`scripts/fx-preview.ts`).
 - Nothing half-done.
 
 ## Next up
 
-1. **Owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+1. **Owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
 2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
 3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

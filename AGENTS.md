@@ -39,6 +39,7 @@ The next agent has **no memory of your session** — if it isn't in the repo, it
 | `npm test`       | Vitest unit tests (`tests/`): data integrity + simulation behavior                                     |
 | `npm run sim`    | Headless balance bot plays all 20 waves and prints per-wave lives/cash (`npm run sim -- scarlet yuki`) |
 | `npm run smoke`  | Build + real-browser test at 1280×720, 390×844 touch, 844×390 touch; screenshots → `artifacts/smoke/`  |
+| `npm run fx`     | Build + fires each heroine's effects for 5 upgrade builds side by side; screenshots → `artifacts/fx/`  |
 | `npm run format` | Prettier write                                                                                         |
 | `npm run art`    | Convert PNG/JPG in `public/art/<id>/` to correctly sized WebP, delete sources, list misnamed files     |
 | `npm run build`  | Typecheck + Vite build to `dist/`                                                                      |
@@ -62,7 +63,8 @@ src/
       BattleSim.ts     Spawning, movement, targeting, projectiles, damage/pop, economy, waves
       upgrades.ts      computeStats(), BTD6 crosspath rule canBuyUpgrade(), sell value
       path.ts          Polyline distance lookup
-    Vfx.ts           Battle particles/rings/decals/trails/hit flashes, per-heroine styles scaled by tier
+    Vfx.ts           Battle particles/rings/decals/trails/hit flashes, per-heroine styles
+    vfxLook.ts       Pure: hero + tiers per path → effect scale, palette, tier-3 signature
     mapArt.ts        Paints a map's static scenery (ground, path, props, lighting) once into a canvas texture
     camera.ts        Pure zoom/pan math (fit, zoomAt, panBy, clamping) for the battlefield
     chibiPose.ts     Pure bob/recoil/facing math for chibi sprites

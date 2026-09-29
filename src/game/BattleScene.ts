@@ -90,6 +90,11 @@ export class BattleScene extends Phaser.Scene {
     this.g = this.add.graphics();
     this.glow = this.add.graphics().setDepth(3).setBlendMode(Phaser.BlendModes.ADD);
     this.vfx = new Vfx(this.under, this.g, this.glow);
+    this.vfx.onShake = (ms, amt) => {
+      if (reducedMotion() || this.time.now - this.lastLeakShake < 250) return;
+      this.lastLeakShake = this.time.now;
+      this.cameras.main.shake(ms, amt);
+    };
     const scene = this;
     this.vv = {
       sx: (x, y) => this.sx(x, y),
@@ -375,11 +380,13 @@ export class BattleScene extends Phaser.Scene {
 
     // Towers
     const seen = new Set<number>();
+    const blesser = sim.towers.find((t) => t.stats.buffRate > 0);
     for (const t of sim.towers) {
       seen.add(t.uid);
+      this.vfx.sigil(t.x, t.y, t.def.id, t.tiers, this.vv, running);
       this.drawTower(t, t === sel);
       // Selene's blessing: allies she's empowering shed moonlight sparkles
-      if (t.eff.rate > t.stats.rate * 1.01) this.vfx.aura(t.x, t.y);
+      if (blesser && t.eff.rate > t.stats.rate * 1.01) this.vfx.aura(t.x, t.y, blesser.tiers);
       if (t.stats.buffRate > 0) {
         const k = 0.5 + 0.5 * Math.sin(this.clock * 2 + t.uid);
         this.glow.lineStyle(Math.max(1, T * 0.03), t.def.color, 0.12 + 0.12 * k);

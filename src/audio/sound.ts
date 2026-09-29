@@ -1,6 +1,7 @@
 import type { Fx } from '../game/sim/BattleSim.ts';
 import { save } from '../state/save.ts';
-import { Limiter, arpNote, midiHz, trackFor, type Track } from './tuning.ts';
+import { lookFor } from '../game/vfxLook.ts';
+import { Limiter, arpNote, midiHz, songBar, tone, trackFor, type Track } from './tuning.ts';
 
 /**
  * All game audio, synthesized with Web Audio (no files to license or download).
@@ -47,10 +48,18 @@ export type SfxName =
   | 'bondUp'
   | 'unlock'
   | 'waveClear'
-  | 'warn';
+  | 'warn'
+  | 'crackle'
+  | 'shatter'
+  | 'sniper'
+  | 'chime';
 
 /** Minimum seconds between two plays of the same sound. */
 const GAP: Partial<Record<SfxName, number>> = {
+  crackle: 0.12,
+  shatter: 0.08,
+  sniper: 0.05,
+  chime: 0.06,
   pop: 0.035,
   bolt: 0.06,
   gun: 0.055,
@@ -93,7 +102,6 @@ class Sound {
   private wanted: string | null = null;
   private player: Player | null = null;
   private duckGain: GainNode | null = null;
-  private crackle: AudioBufferSourceNode | null = null;
 
   /**
    * Call from user gestures. Safe to call repeatedly: browsers only honour
@@ -197,7 +205,7 @@ class Sound {
     gain.gain.setValueAtTime(0.0001, t);
     gain.gain.exponentialRampToValueAtTime(1, t + 1.6);
     const track = trackFor(id);
-    // Lofi tracks get a warm low-pass and a bed of vinyl crackle.
+    // Lofi tracks get a warm low-pass.
     let out: AudioNode = gain;
     if (track.style === 'lofi') {
       const lp = this.ctx.createBiquadFilter();
@@ -206,8 +214,7 @@ class Sound {
       lp.Q.value = 0.4;
       lp.connect(gain);
       out = lp;
-      this.startCrackle(gain);
-    } else this.stopCrackle();
+    }
     gain.connect(this.duckGain!);
     const p: Player = { id, track, gain, out, step: 0, nextAt: t + 0.15, timer: 0, seed: 7 };
     p.timer = window.setInterval(() => this.schedule(p), 50);
@@ -218,7 +225,6 @@ class Sound {
     this.wanted = null;
     this.fadeOut(this.player, fade);
     this.player = null;
-    this.stopCrackle();
   }
 
   /** Lower the music (pause menus, modals) without stopping it. */
@@ -242,39 +248,6 @@ class Sound {
     );
   }
 
-  private startCrackle(out: AudioNode): void {
-    const ctx = this.ctx!;
-    this.stopCrackle();
-    // 4 s of sparse clicks and soft hiss, looped
-    const len = ctx.sampleRate * 4;
-    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) {
-      d[i] = (Math.random() * 2 - 1) * 0.012;
-      if (Math.random() < 0.0004) d[i] += (Math.random() < 0.5 ? -1 : 1) * (0.25 + Math.random() * 0.4);
-    }
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.loop = true;
-    const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 1400;
-    const g = ctx.createGain();
-    g.gain.value = 0.35;
-    src.connect(hp).connect(g).connect(out);
-    src.start();
-    this.crackle = src;
-  }
-
-  private stopCrackle(): void {
-    try {
-      this.crackle?.stop();
-    } catch {
-      /* already stopped */
-    }
-    this.crackle = null;
-  }
-
   private schedule(p: Player): void {
     const ctx = this.ctx;
     if (!ctx || ctx.state !== 'running') return;
@@ -291,41 +264,63 @@ class Sound {
     }
   }
 
-  private arpStep(p: Player, step: number, t: number, eighth: number): void {
-    const tr = p.track;
-    const bar = tr.bars[Math.floor(step / 8) % tr.bars.length];
-    if (step % 8 === 0) {
-      this.pad(bar, t, eighth * 8, p.out);
-      this.voice('sine', midiHz(bar[0] - 12), midiHz(bar[0] - 12), t, eighth * 7, 0.22, p.out, 0.02);
-    }
-    // Leave some gaps so the arpeggio breathes.
-    if (step % 8 !== 7 || step % 16 === 15) this.pluck(midiHz(arpNote(tr, step)), t, 0.11, p.out);
+  private rnd(p: Player): number {
+    p.seed = (p.seed * 16807) % 2147483647;
+    return p.seed / 2147483647;
   }
 
-  /** One eighth note of lofi: e-piano comps, walking-ish bass, swung kit, sparse melody. */
-  private lofiStep(p: Player, step: number, t: number, eighth: number): void {
+  /** One eighth note of a battle track: pad + bass per bar, plucked arpeggio. */
+  private arpStep(p: Player, step: number, t: number, eighth: number): void {
     const tr = p.track;
     const s8 = step % 8;
+    const bar = songBar(tr, Math.floor(step / 8));
+    const c = bar.chord;
+    if (s8 === 0) {
+      this.pad(c, t, eighth * 8, p.out);
+      if (bar.feel !== 'bare') this.voice('sine', midiHz(c[0] - 12), midiHz(c[0] - 12), t, eighth * 7, 0.22, p.out, 0.02);
+    }
+    if (bar.feel === 'full' && (s8 === 4 || (bar.last && s8 === 6))) {
+      // a soft low pulse under the full sections
+      this.voice('sine', 80, 40, t, 0.18, 0.12, p.out, 0.004);
+    }
+    // bare: every other note; soft: leave gaps; full: nearly every note, with a lift at section ends
+    const play = bar.feel === 'bare' ? s8 % 2 === 0 : bar.feel === 'soft' ? s8 !== 3 && s8 !== 7 : s8 !== 7 || bar.last;
+    if (play) this.pluck(midiHz(arpNote(tr, step) + (bar.last && s8 >= 6 ? 12 : 0)), t, 0.11, p.out);
+  }
+
+  /** One eighth note of lofi: e-piano comps, bass, swung kit and a lead that follows the song form. */
+  private lofiStep(p: Player, step: number, t: number, eighth: number): void {
+    const s8 = step % 8;
     const barN = Math.floor(step / 8);
-    const bar = tr.bars[barN % tr.bars.length];
-    const rnd = () => {
-      p.seed = (p.seed * 16807) % 2147483647;
-      return p.seed / 2147483647;
-    };
-    // e-piano: chord on 1, a softer re-voicing on the "and" of 2
-    if (s8 === 0) this.epiano(bar, t, eighth * 5, 0.05, p.out);
-    if (s8 === 3 && barN % 2 === 1) this.epiano(bar.slice(1), t, eighth * 3, 0.03, p.out);
-    // bass: root on 1, fifth-ish pickup on 4-and
-    if (s8 === 0) this.voice('sine', midiHz(bar[0] - 12), midiHz(bar[0] - 12), t, eighth * 3.5, 0.16, p.out, 0.01);
-    if (s8 === 5) this.voice('sine', midiHz(bar[2] - 24), midiHz(bar[2] - 24), t, eighth * 1.6, 0.11, p.out, 0.01);
-    // drums (quiet): kick 1 and 3-and, rim on 2 and 4, swung hats
-    if (s8 === 0 || s8 === 5) this.voice('sine', 95, 42, t, 0.22, 0.2, p.out, 0.003);
-    if (s8 === 2 || s8 === 6) this.noise(t, 0.09, 0.05, 'bandpass', 1900, p.out);
-    if (rnd() < 0.8) this.noise(t, 0.035, s8 % 2 ? 0.012 : 0.02, 'highpass', 8000, p.out);
-    // melody: chord tones an octave up, with a little dropout so it never repeats exactly
-    const m = tr.melody?.[s8] ?? -1;
-    if (m >= 0 && barN % 4 !== 3 && rnd() < 0.8) {
-      const n = arpNote(tr, barN * 8 + m) + 12;
+    const bar = songBar(p.track, barN);
+    const c = bar.chord;
+    const r = () => this.rnd(p);
+    // e-piano: chord on 1; a softer re-voicing on the "and" of 2 (varies bar to bar)
+    if (s8 === 0) this.epiano(c, t, eighth * 5, 0.05, p.out);
+    if (s8 === 3 && (barN % 2 === 1 || r() < 0.3)) this.epiano(c.slice(1), t, eighth * 3, 0.03, p.out);
+    if (bar.feel === 'bare') {
+      if (s8 === 0) this.voice('sine', midiHz(c[0] - 12), midiHz(c[0] - 12), t, eighth * 6, 0.1, p.out, 0.05);
+    } else {
+      // bass: root on 1, a passing tone on 4-and, sometimes an octave hop
+      if (s8 === 0) this.voice('sine', midiHz(c[0] - 12), midiHz(c[0] - 12), t, eighth * 3.5, 0.16, p.out, 0.01);
+      if (s8 === 5) {
+        const n = (r() < 0.5 ? c[2] : c[1]) - 24;
+        this.voice('sine', midiHz(n), midiHz(n), t, eighth * 1.6, 0.11, p.out, 0.01);
+      }
+      if (s8 === 7 && r() < 0.25) this.voice('sine', midiHz(c[0]), midiHz(c[0]), t, eighth * 0.8, 0.07, p.out, 0.01);
+      // drums (quiet): kick + rim only in full sections, swung hats always, a fill at section ends
+      if (bar.feel === 'full') {
+        if (s8 === 0 || s8 === 5 || (s8 === 3 && r() < 0.15)) this.voice('sine', 95, 42, t, 0.22, 0.2, p.out, 0.003);
+        if (s8 === 2 || s8 === 6) this.noise(t, 0.09, 0.05, 'bandpass', 1900, p.out);
+        if (bar.last && s8 === 7) this.noise(t, 0.07, 0.04, 'bandpass', 2300, p.out);
+      }
+      const hat = bar.last && s8 >= 4 ? 1 : 0.8;
+      if (r() < hat) this.noise(t, 0.035, s8 % 2 ? 0.012 : 0.02, 'highpass', 8000, p.out);
+    }
+    // lead: chord tones from the section's patterns, with small random dropouts so no pass is identical
+    const m = bar.melody?.[s8] ?? -1;
+    if (m >= 0 && bar.feel !== 'bare' && r() < 0.88) {
+      const n = tone(c, m) + 12;
       this.voice('triangle', midiHz(n), midiHz(n), t, eighth * 2.2, 0.035, p.out, 0.01);
       this.voice('sine', midiHz(n + 12), midiHz(n + 12), t, eighth * 1.2, 0.012, p.out, 0.01);
     }
@@ -411,13 +406,27 @@ class Sound {
         return this.play('pop');
       case 'shot':
         if (f.value === 2) return this.play('throw');
-        return this.play(f.hero === 'scarlet' ? 'gun' : f.hero === 'selene' ? 'arrow' : 'bolt');
+        {
+          const L = lookFor(f.hero ?? '', f.tiers);
+          if (L.sig === 'sniper') return this.play('sniper');
+          if (L.sig === 'starfall') this.play('chime');
+          return this.play(f.hero === 'scarlet' ? 'gun' : f.hero === 'selene' ? 'arrow' : 'bolt', 1.1 - L.power * 0.2);
+        }
       case 'hit':
         return f.hero === 'yuki' ? undefined : this.play('hit');
-      case 'boom':
-        return this.play('boom');
-      case 'pulse':
-        return this.play('pulse');
+      case 'boom': {
+        // bigger, deeper blasts as she's upgraded; signatures add their own layer
+        const L = lookFor(f.hero ?? '', f.tiers);
+        this.play('boom', L.sig === 'oni' ? 0.6 : 1.3 - L.power * 0.5);
+        if (L.sig === 'fireworks') this.play('crackle');
+        return;
+      }
+      case 'pulse': {
+        const L = lookFor(f.hero ?? '', f.tiers);
+        this.play('pulse', 1.2 - L.power * 0.35);
+        if (L.sig === 'zero' || L.sig === 'shatter') this.play('shatter');
+        return;
+      }
       case 'block':
         return this.play('block');
       case 'place':
@@ -466,15 +475,35 @@ class Sound {
       case 'bomb':
         v('sine', 190 * r, 80, t, 0.09, 0.2);
         break;
-      case 'boom':
-        n(t, 0.45, 0.3, 'lowpass', 900);
-        n(t, 0.12, 0.12, 'bandpass', 2500);
-        v('sine', 110, 34, t, 0.45, 0.34);
-        v('triangle', 70, 40, t + 0.02, 0.3, 0.15);
+      case 'boom': {
+        // pitch < 1 = a bigger blast: lower, longer, louder
+        const big = 1 / pitch;
+        n(t, 0.45 * big, 0.3 * Math.min(1.4, big), 'lowpass', 900 * pitch);
+        n(t, 0.12, 0.12, 'bandpass', 2500 * pitch);
+        v('sine', 110 * pitch, 34 * pitch, t, 0.45 * big, 0.34);
+        v('triangle', 70 * pitch, 40 * pitch, t + 0.02, 0.3 * big, 0.15);
+        break;
+      }
+      case 'crackle':
+        // firework crackle: a scatter of tiny pops after the shell
+        for (let i = 0; i < 7; i++) n(t + 0.25 + Math.random() * 0.45, 0.02, 0.06, 'highpass', 4000 + Math.random() * 3000);
+        break;
+      case 'shatter':
+        n(t, 0.15, 0.05, 'highpass', 6000);
+        [3520, 4186, 2794, 4699].forEach((f, i) => v('triangle', f * r, f * r * 0.9, t + i * 0.025, 0.12, 0.018, 0.002));
+        break;
+      case 'sniper':
+        n(t, 0.05, 0.2, 'bandpass', 2400 * r);
+        v('sine', 140 * r, 45, t, 0.2, 0.3);
+        v('square', 1200 * r, 200, t, 0.05, 0.03);
+        n(t + 0.03, 0.5, 0.04, 'bandpass', 900); // tail rolling off the hills
+        break;
+      case 'chime':
+        [2637, 3136, 3951].forEach((f, i) => v('sine', f * r, f * r, t + i * 0.04, 0.35, 0.02, 0.005));
         break;
       case 'pulse':
-        // soft whoomp + crystalline shimmer
-        v('sine', 220 * r, 110, t, 0.2, 0.08, 0.01);
+        // soft whoomp + crystalline shimmer (lower and fuller when upgraded)
+        v('sine', 220 * r * pitch, 110 * pitch, t, 0.2 / pitch, 0.08, 0.01);
         n(t, 0.35, 0.05, 'highpass', 7000);
         [2093, 2637, 3136].forEach((f, i) => v('sine', f * r, f * r * 0.98, t + i * 0.03, 0.3, 0.025, 0.005));
         break;
@@ -514,13 +543,13 @@ class Sound {
         [60, 64, 67, 72, 76, 79, 84].forEach((m, i) => v('triangle', midiHz(m), midiHz(m), t + i * 0.09, 0.5, 0.12));
         break;
       case 'gun':
-        n(t, 0.07, 0.16, 'bandpass', 1800 * r);
-        v('sine', 160 * r, 60, t, 0.09, 0.22);
-        v('square', 900 * r, 300, t, 0.03, 0.03);
+        n(t, 0.07, 0.16, 'bandpass', 1800 * r * pitch);
+        v('sine', 160 * r * pitch, 60, t, 0.09, 0.22);
+        v('square', 900 * r * pitch, 300, t, 0.03, 0.03);
         break;
       case 'arrow':
         n(t, 0.12, 0.05, 'highpass', 5000);
-        v('triangle', 1760 * r, 1320, t, 0.18, 0.05, 0.01);
+        v('triangle', 1760 * r * pitch, 1320 * pitch, t, 0.18, 0.05, 0.01);
         v('sine', 2640 * r, 2640, t + 0.02, 0.2, 0.025, 0.01);
         break;
       case 'throw':

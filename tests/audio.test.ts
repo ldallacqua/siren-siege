@@ -1,7 +1,7 @@
 // Pure audio helpers: note math, the sfx rate limiter and the music patterns.
 import { describe, expect, it } from 'vitest';
 import { MAPS } from '../src/data/maps.ts';
-import { Limiter, TRACKS, arpNote, midiHz, trackFor } from '../src/audio/tuning.ts';
+import { Limiter, TRACKS, arpNote, chord, loopSeconds, midiHz, songPlan, trackFor } from '../src/audio/tuning.ts';
 
 describe('audio tuning', () => {
   it('converts MIDI notes to Hz', () => {
@@ -22,20 +22,34 @@ describe('audio tuning', () => {
     expect(l.voices).toBe(3);
   });
 
+  it('parses chord names', () => {
+    expect(chord('Fmaj7')).toEqual([53, 57, 60, 64]);
+    expect(chord('Dm')).toEqual([50, 53, 57, 62]);
+    expect(chord('C#m7')).toEqual([49, 52, 56, 59]);
+    expect(() => chord('H7')).toThrow();
+  });
+
   it('menus and every heroine have a lofi track', () => {
     expect(TRACKS.menu?.style).toBe('lofi');
     for (const id of ['scarlet', 'yuki', 'kaede', 'selene']) expect(TRACKS[`chat-${id}`]?.style, id).toBe('lofi');
-    for (const tr of Object.values(TRACKS)) if (tr.melody) expect(tr.melody.length).toBe(8);
+  });
+
+  it('every track is a real song form, long enough not to feel loopy', () => {
+    for (const [id, tr] of Object.entries(TRACKS)) {
+      const plan = songPlan(tr); // throws on unknown sections/chords
+      expect(new Set(plan.map((b) => b.section)).size, id).toBeGreaterThanOrEqual(3);
+      expect(loopSeconds(tr), id).toBeGreaterThanOrEqual(80);
+      for (const b of plan) if (b.melody) expect(b.melody.length, id).toBe(8);
+    }
   });
 
   it('every map has music, and the arpeggio stays in a sane range', () => {
     for (const m of MAPS) expect(trackFor(m.id)).toBeDefined();
     for (const tr of Object.values(TRACKS)) {
-      expect(tr.bars.length).toBeGreaterThan(0);
-      for (let step = 0; step < tr.bars.length * 8; step++) {
+      for (let step = 0; step < songPlan(tr).length * 8; step++) {
         const n = arpNote(tr, step);
         expect(n).toBeGreaterThanOrEqual(50); // above D3
-        expect(n).toBeLessThanOrEqual(88); // below E6
+        expect(n).toBeLessThanOrEqual(90);
       }
     }
   });

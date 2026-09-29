@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "sim": "node --experimental-strip-types --no-warnings scripts/balance-sim.ts",
+    "fx": "npm run build && node --experimental-strip-types --no-warnings scripts/fx-preview.ts",
     "smoke": "npm run build && node --experimental-strip-types --no-warnings scripts/smoke.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
