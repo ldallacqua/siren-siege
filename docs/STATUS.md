@@ -43,7 +43,7 @@
 - **Installable PWA:** `public/manifest.webmanifest` (fullscreen, PNG + maskable icons from `scripts/make-icons.ts`), `public/sw.js` (network-first pages, stale-while-revalidate assets → offline play), registered in production builds only.
 - **Battlefield readability:** chibis are drawn 30% larger (1.5 tiles tall) with a baked "sticker" outline (dark edge + a rim in her colour), on a solid coloured base; enemies drawn 15% larger with a dark outline; tapping a heroine's head selects her.
 - Save in localStorage; `?dev` mode.
-- Tooling: unit tests (40), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
+- Tooling: unit tests (53), balance bot, real-browser smoke test (3 viewports) in a pre-push hook, Prettier, CI on PRs, auto-deploy to GitHub Pages from `main` (~1 min). README images regenerate with `npm run shots`.
 
 ## Known issues / limitations
 
@@ -61,14 +61,11 @@
 
 ## Last session
 
-**2026-09-29 — Messages redesign + gift system, iOS PWA band (Claude, cloud session)**
+**2026-09-29 — Focus-ring and locked-chat fixes, pre-push smoke hook, README (Claude, local session)**
 
-- Owner (iPhone 17 Pro Max, installed PWA): a band of a different color at the bottom of the app; Messages mixed every heroine's chats in one list with no order. Asked for a character select then her messages in order (NIKKE Advise), and a gift system.
-- Done: `fitStandalone()` + `html.fullh` CSS; `data/gifts.ts` (+ `tests/gifts.test.ts`); save `gifts` inventory + `gifted` per heroine (`giftCount/addGifts/giveGift` in `save.ts`); drops in `finishBattle` + results strip; `ui/giftArt.ts` badges; `ui/bond.ts` (`showMessages(back)`, `showBond(id, back)`, diary + gift sheets inside the screen, updated in place). Smoke: 4 cards, gift raises XP without re-render, diary has 5 rows (`1c`–`1g` screenshots).
-- Follow-up (owner feedback): the title card now preloads every portrait + chibi with a loading bar before "Tap to begin" (capped 8 s); home heroine centered in portrait; chat name plate is solid (the box line showed through); diary restyled as our own dark journal (moon clasp) and "Rank" renamed "Bond" so the Bond screen doesn't echo NIKKE's look; `show()` resets any stray page scroll.
-- Owner confirmed: the iOS bottom band is gone.
-- Previously unverified: the iOS band fix could only be reasoned about (no iOS device in CI); if the band remains, check `--app-h` in Safari Web Inspector.
-- Earlier today: heroine panel over the map, preloading, PWA, bigger outlined heroines, upgrade tree.
+- Owner: a white border on the title card on phones and a bluish one around the lobby heroine (after tapping her); a locked heroine's chats could be opened from her profile; the 10-minute CI smoke test on every deploy; a proper README.
+- Done: `.splash` / `.lobby-hero` never draw the browser's focus ring (both are full-screen buttons that get focused). Profile chats stay locked until the heroine is recruited (the toast names her unlock condition); Messages already gated this. `.githooks/pre-push` (D-024) + `prepare` script; deploy and branch CI run `npm run check` only, PRs keep the smoke test; smoke runs viewports in parallel on 4+ cores (1:41 vs 2:36 locally). New README with generated images (`npm run shots`, D-025).
+- Previously: Messages redesign + gifts, iOS PWA band fix (owner confirmed), title card preloads art.
 
 ## Next up
 
