@@ -4,6 +4,7 @@ import { MAPS } from '../data/maps.ts';
 import type { MapDef } from '../data/types.ts';
 import type { Battle } from './Battle.ts';
 import type { Fx, Tower } from './sim/BattleSim.ts';
+import { clampCam, homeCam, viewOf, zoomAt, panBy, MAX_ZOOM, MIN_ZOOM, type Cam, type Frame } from './camera.ts';
 import { chibiPose, type Facing } from './chibiPose.ts';
 import { Path } from './sim/path.ts';
 
@@ -42,7 +43,18 @@ export class BattleScene extends Phaser.Scene {
   private fx: LiveFx[] = [];
   private stars: { x: number; y: number; s: number; p: number }[] = [];
   private dragging = false;
+  /** Zoom/pan state; null = not laid out yet (reset per battle and on rotation). */
+  private cam: Cam | null = null;
+  private frame: Frame = { W: 1, H: 1, cols: 1, rows: 1 };
+  /** Active pointers (mouse while pressed, each touch finger) in game pixels. */
+  private touches = new Map<number, { x: number; y: number }>();
+  /** tap: pressed, not moved yet · pan: dragging the map · pinch: two fingers · done: wait for all fingers up */
+  private gesture: 'none' | 'tap' | 'pan' | 'pinch' | 'done' = 'none';
+  private downAt = { x: 0, y: 0 };
+  private pinch = { dist: 1, mx: 0, my: 0 };
   onToast: ((msg: string) => void) | null = null;
+  /** Called whenever the zoom level changes (HUD buttons update their state). */
+  onZoom: ((zoom: number) => void) | null = null;
 
   constructor() {
     super('battle');
@@ -55,9 +67,14 @@ export class BattleScene extends Phaser.Scene {
     this.loadChibis();
     for (let i = 0; i < 70; i++) this.stars.push({ x: Math.random() * 20, y: Math.random() * 12, s: Math.random(), p: Math.random() * 6 });
     this.scale.on('resize', () => this.layout());
+    this.input.addPointer(2); // two fingers for pinch-zoom
     this.input.on('pointerdown', (p: Phaser.Input.Pointer) => this.onDown(p));
     this.input.on('pointermove', (p: Phaser.Input.Pointer) => this.onMove(p));
-    this.input.on('pointerup', () => (this.dragging = false));
+    this.input.on('pointerup', (p: Phaser.Input.Pointer) => this.onUp(p));
+    this.input.on('pointerupoutside', (p: Phaser.Input.Pointer) => this.onUp(p));
+    this.input.on('wheel', (p: Phaser.Input.Pointer, _o: unknown, _dx: number, dy: number) => {
+      if (this.battle) this.setCam(zoomAt(this.cam!, Math.exp(-dy * 0.0015), p.x, p.y, this.frame));
+    });
     this.layout();
   }
 
@@ -66,6 +83,10 @@ export class BattleScene extends Phaser.Scene {
     this.map = b?.map ?? MAPS[0];
     this.path = b?.sim.path ?? new Path(this.map.path);
     this.fx = [];
+    this.clearTowerObjects();
+    this.cam = null;
+    this.touches.clear();
+    this.gesture = 'none';
     this.layout();
   }
 
@@ -102,10 +123,50 @@ export class BattleScene extends Phaser.Scene {
     const portrait = H > W * 1.05;
     const cols = portrait ? this.map.rows : this.map.cols;
     const rows = portrait ? this.map.cols : this.map.rows;
-    const tile = Math.max(8, Math.min(W / cols, H / rows));
-    this.view = { portrait, tile, ox: (W - cols * tile) / 2, oy: (H - rows * tile) / 2 };
+    this.frame = { W, H, cols, rows };
+    // Rotation swaps the axes, so the old camera center means nothing: start over.
+    const cam = !this.cam || portrait !== this.view.portrait ? homeCam(this.frame) : clampCam(this.cam, this.frame);
+    this.view.portrait = portrait;
+    this.cam = null;
+    this.setCam(cam);
+  }
+
+  private setCam(cam: Cam): void {
+    const prevZoom = this.cam?.zoom;
+    const prevTile = this.view.tile;
+    this.cam = cam;
+    this.view = { portrait: this.view.portrait, ...viewOf(cam, this.frame) };
     this.drawBackground();
-    this.clearTowerObjects();
+    // Initials are rasterized at a fixed font size: rebuild them when the scale changes.
+    if (this.view.tile !== prevTile) {
+      for (const t of this.labels.values()) t.destroy();
+      this.labels.clear();
+    }
+    if (cam.zoom !== prevZoom) this.onZoom?.(cam.zoom);
+  }
+
+  // ---------------------------------------------------------------- zoom API (HUD buttons, keys)
+
+  get zoom(): number {
+    return this.cam?.zoom ?? 1;
+  }
+  readonly minZoom = MIN_ZOOM;
+  readonly maxZoom = MAX_ZOOM;
+
+  /** Zoom around the stage center. */
+  zoomBy(factor: number): void {
+    if (this.cam) this.setCam(zoomAt(this.cam, factor, this.frame.W / 2, this.frame.H / 2, this.frame));
+  }
+
+  resetZoom(): void {
+    this.setCam(homeCam(this.frame));
+  }
+
+  /** Page (CSS pixel) position of a map point — used by the smoke test to tap towers at any zoom. */
+  pagePoint(x: number, y: number): { x: number; y: number } {
+    const r = this.game.canvas.getBoundingClientRect();
+    const k = r.width / this.scale.width;
+    return { x: r.left + this.sx(x, y) * k, y: r.top + this.sy(x, y) * k };
   }
 
   private sx(x: number, y: number): number {
@@ -175,31 +236,74 @@ export class BattleScene extends Phaser.Scene {
   private onDown(p: Phaser.Input.Pointer): void {
     const b = this.battle;
     if (!b) return;
-    const w = this.toWorld(p.x, p.y);
-    if (b.placing) {
-      const touch = p.wasTouch;
-      const prev = b.ghost;
-      b.ghost = { x: w.x, y: w.y };
-      if (!touch) {
-        if (!b.confirmPlace()) this.onToast?.(this.placeError(b));
-      } else if (prev && Math.hypot(prev.x - w.x, prev.y - w.y) < 0.6) {
-        if (!b.confirmPlace()) this.onToast?.(this.placeError(b));
-      } else {
-        this.dragging = true;
-        b.emit();
-      }
+    this.touches.set(p.id, { x: p.x, y: p.y });
+    if (this.touches.size >= 2) {
+      // Second finger: switch to pinch-zoom (cancels any tap/drag in progress).
+      this.gesture = 'pinch';
+      this.dragging = false;
+      this.pinch = this.pinchState();
       return;
     }
-    b.select(b.sim.towerAt(w.x, w.y));
+    this.gesture = 'tap';
+    this.downAt = { x: p.x, y: p.y };
+    if (!b.placing) return; // selection happens on release, so a drag can pan instead
+    const w = this.toWorld(p.x, p.y);
+    const touch = p.wasTouch;
+    const prev = b.ghost;
+    b.ghost = { x: w.x, y: w.y };
+    if (!touch) {
+      if (!b.confirmPlace()) this.onToast?.(this.placeError(b));
+    } else if (prev && Math.hypot(prev.x - w.x, prev.y - w.y) < 0.6) {
+      if (!b.confirmPlace()) this.onToast?.(this.placeError(b));
+    } else {
+      this.dragging = true;
+      b.emit();
+    }
   }
 
   private onMove(p: Phaser.Input.Pointer): void {
     const b = this.battle;
-    if (!b?.placing) return;
-    if (!p.wasTouch || (this.dragging && p.isDown)) {
-      const w = this.toWorld(p.x, p.y);
-      b.ghost = { x: w.x, y: w.y };
+    if (!b) return;
+    const last = this.touches.get(p.id);
+    if (last) this.touches.set(p.id, { x: p.x, y: p.y });
+    if (this.gesture === 'pinch') {
+      if (this.touches.size < 2) return;
+      const now = this.pinchState();
+      const zoomed = zoomAt(this.cam!, now.dist / this.pinch.dist, now.mx, now.my, this.frame);
+      this.setCam(panBy(zoomed, now.mx - this.pinch.mx, now.my - this.pinch.my, this.frame));
+      this.pinch = now;
+      return;
     }
+    if (b.placing) {
+      if (!p.wasTouch || (this.dragging && p.isDown)) {
+        const w = this.toWorld(p.x, p.y);
+        b.ghost = { x: w.x, y: w.y };
+      }
+      return;
+    }
+    if (!last || !p.isDown) return;
+    if (this.gesture === 'tap') {
+      const slop = 10 * Math.min(2, window.devicePixelRatio || 1);
+      if (Math.hypot(p.x - this.downAt.x, p.y - this.downAt.y) < slop) return;
+      this.gesture = 'pan';
+    }
+    if (this.gesture === 'pan') this.setCam(panBy(this.cam!, p.x - last.x, p.y - last.y, this.frame));
+  }
+
+  private onUp(p: Phaser.Input.Pointer): void {
+    const b = this.battle;
+    this.touches.delete(p.id);
+    this.dragging = false;
+    if (b && this.gesture === 'tap' && !b.placing) {
+      const w = this.toWorld(p.x, p.y);
+      b.select(b.sim.towerAt(w.x, w.y));
+    }
+    this.gesture = this.touches.size ? 'done' : 'none';
+  }
+
+  private pinchState(): { dist: number; mx: number; my: number } {
+    const [a, c] = [...this.touches.values()];
+    return { dist: Math.max(1, Math.hypot(a.x - c.x, a.y - c.y)), mx: (a.x + c.x) / 2, my: (a.y + c.y) / 2 };
   }
 
   private placeError(b: Battle): string {

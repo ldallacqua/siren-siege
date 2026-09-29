@@ -61,8 +61,10 @@ src/
       BattleSim.ts     Spawning, movement, targeting, projectiles, damage/pop, economy, waves
       upgrades.ts      computeStats(), BTD6 crosspath rule canBuyUpgrade(), sell value
       path.ts          Polyline distance lookup
+    camera.ts        Pure zoom/pan math (fit, zoomAt, panBy, clamping) for the battlefield
+    chibiPose.ts     Pure bob/recoil/facing math for chibi sprites
     Battle.ts        One match: sim + interaction state (placing, selected, speed, pause), change events
-    BattleScene.ts   Phaser scene: draws a Battle, maps pointer input; transposes map in portrait
+    BattleScene.ts   Phaser scene: draws a Battle, maps pointer input (tap, drag-pan, pinch, wheel); transposes map in portrait
   ui/                DOM UI over the canvas
     Hud.ts           Sidebar (landscape) / dock (portrait): stats, controls, shop, placing, upgrade panel
     screens.ts       Home, roster, profile, chat player, gallery + lightbox, results, pause, settings
@@ -72,7 +74,7 @@ src/
   main.ts          Boot, DPR-aware resize, app flow (home ↔ battle ↔ results), match XP awards
   style.css        All styling; orientation handled with aspect-ratio media queries
 scripts/           balance-sim.ts, smoke.ts, art-import.ts, session-start.sh
-tests/             data.test.ts, sim.test.ts
+tests/             data, sim, chibi and camera tests
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
 docs/              GDD, ARCHITECTURE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
 ```

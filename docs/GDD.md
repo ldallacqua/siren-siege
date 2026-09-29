@@ -176,7 +176,9 @@ Unlocked by Bond level. Files are loaded from `public/art/<heroine>/gallery-<n>.
 
 **Placing:** mouse = click to place (ghost follows cursor). Touch = tap/drag to position the ghost, tap again (or press _Place_) to confirm. Invalid spots show a red ghost.
 
-**Keyboard:** Space next wave · 1–4 pick heroine · Q/W/E upgrade paths · Tab targeting · Delete sell · P pause · F speed · Esc cancel.
+**Keyboard:** Space next wave · 1–4 pick heroine · Q/W/E upgrade paths · Tab targeting · Delete sell · P pause · F speed · Esc cancel · +/− zoom · 0 fit map.
+
+**Zoom:** pinch (touch), mouse wheel, or the +/−/⤢ buttons in the battlefield corner (1×–3×). When zoomed, drag the map to pan; a short tap still selects.
 
 ---
 

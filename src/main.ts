@@ -4,7 +4,7 @@ import { HEROINES } from './data/heroines.ts';
 import { Battle } from './game/Battle.ts';
 import { BattleScene } from './game/BattleScene.ts';
 import { addXp, dev, isUnlocked, persist, save } from './state/save.ts';
-import { toast } from './ui/dom.ts';
+import { h, toast } from './ui/dom.ts';
 import { Hud } from './ui/Hud.ts';
 import { closeScreens, showHome, showPauseMenu, showResults, type HomeActions } from './ui/screens.ts';
 
@@ -33,6 +33,24 @@ function fit(): void {
 }
 new ResizeObserver(fit).observe(stage);
 window.addEventListener('orientationchange', () => setTimeout(fit, 200));
+
+// Battlefield zoom: buttons over the stage (pinch, wheel and drag-to-pan live in BattleScene).
+const zoomBtn = (label: string, title: string, fn: () => void) =>
+  h('button', { class: 'zoom-btn', title, 'aria-label': title, onclick: fn }, label);
+const zoomIn = zoomBtn('+', 'Zoom in', () => scene.zoomBy(1.4));
+const zoomOut = zoomBtn('−', 'Zoom out', () => scene.zoomBy(1 / 1.4));
+const zoomFit = zoomBtn('⤢', 'Fit map', () => scene.resetZoom());
+stage.append(h('div', { class: 'zoom-ctl' }, zoomIn, zoomOut, zoomFit));
+scene.onZoom = (z) => {
+  zoomIn.disabled = z >= scene.maxZoom - 1e-6;
+  zoomOut.disabled = zoomFit.disabled = z <= scene.minZoom + 1e-6;
+};
+window.addEventListener('keydown', (e) => {
+  if (!battle || document.querySelector('#screens .screen')) return;
+  if (e.key === '+' || e.key === '=') scene.zoomBy(1.4);
+  else if (e.key === '-' || e.key === '_') scene.zoomBy(1 / 1.4);
+  else if (e.key === '0') scene.resetZoom();
+});
 
 const hud = new Hud(side);
 scene.onToast = toast;
@@ -126,6 +144,7 @@ if (dev)
         return battle;
       },
       save,
+      scene,
     },
   });
 

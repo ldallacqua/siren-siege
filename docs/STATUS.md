@@ -16,8 +16,9 @@
 - Battlefield chibi sprites: drop `public/art/<id>/chibi.webp` and towers render it (idle bob, recoil on attack, flips toward the target); falls back to colored discs per heroine when missing.
 - **MVP art shipped:** 19 generated WebP assets: portraits, right-facing transparent chibis and First Impression gallery scenes for all four heroines; seven expression variants. See `docs/ART_ASSETS.md` for inventory and prompts.
 - Art pipeline for the owner: `docs/ART_GUIDE.md` (ChatGPT workflow, copy-paste prompts per heroine and asset, naming, phone upload); `npm run art` converts PNG/JPG uploads to sized WebP and lists misnamed files; assets live in `public/art/<id>/`.
+- **Battlefield zoom (1×–3×):** pinch, mouse wheel, +/−/fit buttons in the map's empty corner, keys `+` `-` `0`; drag to pan when zoomed (clamped so the map never leaves the screen); tap still selects. Resets per battle and on rotation.
 - Save in localStorage; `?dev` mode.
-- Tooling: unit tests (27), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
+- Tooling: unit tests (32), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
 ## Known issues / limitations
 
@@ -34,16 +35,12 @@
 
 ## Last session
 
-**2026-09-28 — B-01 MVP art pass (Codex)**
+**2026-09-29 — art delivered + battlefield zoom (Claude, cloud session)**
 
-- Generated 19 final assets with the built-in image tool, using each main portrait as the identity reference. Four portraits, four chibis, four First Impression gallery scenes; smile for everyone plus Scarlet tease, Yuki shy and Kaede laugh.
-- Owner reduced scope from 64 images to the most important MVP assets. Remaining expressions and gallery scenes are intentionally deferred, not unfinished MVP work.
-- Selene's final design uses a covered embroidered bodice consistently in portrait, smile, chibi and gallery. Yuki's design includes an ice staff.
-- Imported with `npm run art` (WebP quality 85); preserved alpha; 256×256 chibis, 1086×1448 portraits and 1448×1086 gallery scenes. No game code or player progression changed.
-- Improved smoke captures to finish finite screen fades and decode images before screenshots; added each heroine's first gallery lightbox, requiring shipped files to load as real WebP rather than silently falling back.
-- Asset inventory and production prompt set: `docs/ART_ASSETS.md`.
-- Validation: `npm run check` passed (27 tests, typechecks, balance sim and build). 19 WebP files inspected for dimensions/alpha; smoke passed at 1280×720, 390×844 touch and 844×390 touch. Reviewed battlefield, shop, profile, chat and gallery screenshots; no crop or layout adjustments required.
-- Delivered by Claude (2026-09-29): the owner sent this work as a zip + git bundle; fast-forwarded onto `main`, re-ran check + smoke, reviewed the art and pushed.
+- Owner sent Codex's MVP art pass as a zip + git bundle (Codex couldn't push). Fast-forwarded it onto `main`, reviewed all 19 images (within the content ceiling), re-ran check + smoke, pushed. Details of that pass: `docs/ART_ASSETS.md`, D-012.
+- Zoom/pan: pure math in `src/game/camera.ts` (tests in `tests/camera.test.ts`), folded into `BattleScene`'s tile→screen transform (D-013). Input rewritten as a small gesture machine (tap / pan / pinch / done); selection moved to pointer-up. Zoom buttons in `main.ts`, styled in `style.css` (`.zoom-ctl`). Dev hook exposes `siren.scene` (`zoom`, `pagePoint()`).
+- Smoke now zooms with the buttons, selects a heroine while zoomed, drag-pans (mouse and touch), and pinches with two real touch points via CDP on the touch viewports; screenshots `*-8-zoomed.png`.
+- Nothing half-done.
 
 ## Next up
 

@@ -49,3 +49,7 @@ Phaser's loader logs `console.error` for every missing file, and the smoke test 
 ### D-012 · 2026-09-28 · Prioritize a 19-image MVP art set
 
 The owner reduced the 64-image production brief to the most important assets per heroine: main portrait, battlefield chibi and first gallery unlock, retaining seven completed expressions. Missing moods continue to use the existing portrait fallback; later gallery slots keep placeholders. No unlock thresholds or game data changed. The committed portraits are the visual references for future art; inventory and prompt set live in `docs/ART_ASSETS.md`. Selene uses a covered embroidered ceremonial bodice across her final set, and Yuki uses the ice staff established by her portrait.
+
+### D-013 · 2026-09-29 · Battlefield zoom via our own view transform, not Phaser's camera
+
+Zoom/pan is folded into the existing `sx/sy/toWorld` tile→screen mapping (`src/game/camera.ts`, pure and unit-tested) instead of `cameras.main.setZoom/scroll`. Reasons: the portrait transposition already lives in that mapping, so one transform serves both; text (tower initials) is re-rasterized at the new size rather than blown up blurry; and the smoke test can compute exact tap positions via `siren.scene.pagePoint()`. Zoom range 1×–3×; at 1× the view is exactly the old fitted layout, and the camera is clamped so the map never pans off-screen. Tapping to select now happens on pointer-up so a drag can pan instead; placement input is unchanged.

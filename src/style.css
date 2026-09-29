@@ -59,6 +59,47 @@ button {
 }
 #stage canvas {
   display: block;
+  touch-action: none; /* pinch and drag go to the game, not the page */
+}
+
+.zoom-ctl {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 2;
+}
+body.in-battle .zoom-ctl {
+  display: flex;
+}
+.zoom-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 10, 31, 0.72);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+/* Anchor over the map's emptiest corner (world bottom-left, away from entrance and exit):
+   bottom-left in landscape, top-right in portrait where the map is transposed. */
+@media (min-aspect-ratio: 1/1) {
+  .zoom-ctl {
+    top: auto;
+    right: auto;
+    bottom: 8px;
+    left: 8px;
+  }
+}
+.zoom-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 #side {

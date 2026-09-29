@@ -122,6 +122,59 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.locator('.btn.buy').first().click();
   await shot('4-upgrade');
 
+  // Battlefield zoom: buttons, selecting while zoomed, drag-to-pan, and (touch) two-finger pinch
+  const cam = () =>
+    page.evaluate(() => {
+      const sc = (window as any).siren.scene;
+      return { zoom: sc.zoom as number, p: sc.pagePoint(5.5, 5.5) as { x: number; y: number } };
+    });
+  const cdp = v.touch ? await ctx.newCDPSession(page) : null;
+  const touch = (type: string, points: { x: number; y: number }[]) =>
+    cdp!.send('Input.dispatchTouchEvent', { type, touchPoints: points.map((p, id) => ({ ...p, id })) } as any);
+  await page.keyboard.press('Escape');
+  await page.locator('.dock.shop').waitFor();
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  await page.getByRole('button', { name: 'Zoom in' }).click();
+  const z1 = await cam();
+  assert(z1.zoom > 1.9, `zoom-in buttons did nothing (zoom ${z1.zoom})`);
+  await tap(page, v.touch, z1.p);
+  await page.locator('.dock.tower').waitFor({ timeout: 3000 }); // tap still hits the right heroine when zoomed
+  await shot('8-zoomed');
+  await page.keyboard.press('Escape');
+  const box = (await page.locator('#stage').boundingBox())!;
+  const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const to = { x: from.x - 60, y: from.y - 60 };
+  if (v.touch) {
+    await touch('touchStart', [from]);
+    for (let i = 1; i <= 6; i++) await touch('touchMove', [{ x: from.x - i * 10, y: from.y - i * 10 }]);
+    await touch('touchEnd', []);
+  } else {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(to.x, to.y, { steps: 6 });
+    await page.mouse.up();
+  }
+  const z2 = await cam();
+  assert(Math.hypot(z2.p.x - z1.p.x, z2.p.y - z1.p.y) > 20, 'dragging did not pan the zoomed map');
+  assert(await page.locator('.dock.shop').isVisible(), 'a pan drag must not select a heroine');
+  await page.getByRole('button', { name: 'Fit map' }).click();
+  assert((await cam()).zoom === 1, 'fit button did not reset zoom');
+  if (v.touch) {
+    await touch('touchStart', [
+      { x: from.x - 20, y: from.y },
+      { x: from.x + 20, y: from.y },
+    ]);
+    for (let i = 1; i <= 8; i++)
+      await touch('touchMove', [
+        { x: from.x - 20 - i * 12, y: from.y },
+        { x: from.x + 20 + i * 12, y: from.y },
+      ]);
+    await touch('touchEnd', []);
+    const z3 = await cam();
+    assert(z3.zoom > 1.5, `pinch did not zoom (zoom ${z3.zoom})`);
+    await page.getByRole('button', { name: 'Fit map' }).click();
+  }
+
   // Pause menu -> home -> profile -> chat
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('button', { name: 'Quit to home' }).click();
