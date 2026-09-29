@@ -3,7 +3,7 @@ import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
 import { portraitFile } from '../data/progression.ts';
 import type { Battle } from '../game/Battle.ts';
 import type { Tower } from '../game/sim/BattleSim.ts';
-import { canBuyUpgrade, lockReason, sellValue } from '../game/sim/upgrades.ts';
+import { canBuyUpgrade, sellValue } from '../game/sim/upgrades.ts';
 import { ENEMY_BY_ID } from '../data/enemies.ts';
 import { heroineLevel, isUnlocked } from '../state/save.ts';
 import { artImg, openLightbox } from './art.ts';
@@ -16,6 +16,8 @@ import { showUpgradeTree } from './upgradeTree.ts';
 interface DockRefs {
   costButtons: { el: HTMLButtonElement; cost: () => number; ok: () => boolean; was?: boolean }[];
   placeBtn?: HTMLButtonElement;
+  /** The Upgrades button and how many upgrades she can afford right now. */
+  tree?: { el: HTMLButtonElement; count: HTMLElement; t: Tower; was?: number };
 }
 
 const TARGET_LABEL = { first: 'First', last: 'Last', strong: 'Strong', close: 'Close' } as const;
@@ -192,6 +194,20 @@ export class Hud {
       }
       c.was = ok;
     }
+    const tr = this.dockRefs.tree;
+    if (tr) {
+      const n = tr.t.def.paths.filter((p, i) => canBuyUpgrade(tr.t.tiers, i) && sim.cash >= p.tiers[tr.t.tiers[i]].cost).length;
+      if (n !== tr.was) {
+        tr.count.textContent = n ? String(n) : '';
+        tr.el.classList.toggle('ready', n > 0);
+        if (n > (tr.was ?? n) && !calm()) {
+          tr.el.classList.remove('afford-now');
+          void tr.el.offsetWidth;
+          tr.el.classList.add('afford-now');
+        }
+        tr.was = n;
+      }
+    }
   }
 
   /** Gold counts up/down toward the real value instead of jumping. */
@@ -358,38 +374,33 @@ export class Hud {
     );
   }
 
+  /**
+   * The selected heroine: who she is, her build, and one way in to her
+   * upgrades (the full-screen tree, like BTD6). Kept small so the map gets
+   * the screen.
+   */
   private buildTower(b: Battle, t: Tower): HTMLElement {
     const def = t.def;
-    const paths = def.paths.map((p, i) => {
-      const tier = t.tiers[i];
-      const next = p.tiers[tier];
-      const reason = lockReason(t.tiers, i);
-      const pips = h('span', { class: 'pips' }, ...p.tiers.map((_, k) => h('i', { class: k < tier ? 'on' : '' })));
-      let action: HTMLElement;
-      if (next && !reason) {
-        const btn = h(
-          'button',
-          {
-            class: 'btn buy',
-            onclick: () => (b.sim.buyUpgrade(t, i as 0 | 1 | 2) ? undefined : toast('Not enough gold')),
-          },
-          h('span', { class: 'up-name' }, next.name),
-          h('span', { class: 'up-cost' }, icon('gem'), String(next.cost)),
-        );
-        this.dockRefs.costButtons.push({ el: btn, cost: () => next.cost, ok: () => b.sim.cash >= next.cost && canBuyUpgrade(t.tiers, i) });
-        action = btn;
-      } else {
-        action = h('div', { class: 'btn buy disabled' }, h('span', { class: 'up-name' }, reason ?? 'Maxed'));
-      }
-      const last = tier > 0 ? p.tiers[tier - 1] : null;
-      return h(
-        'div',
-        { class: 'path' },
-        h('div', { class: 'path-head' }, h('span', { class: 'path-name' }, p.name), pips),
-        h('div', { class: 'path-desc' }, next && !reason ? next.desc : last ? `${last.name}: ${last.desc}` : ''),
-        action,
-      );
-    });
+    const count = h('span', { class: 'tree-count' });
+    const tree = h(
+      'button',
+      { class: 'btn primary big tree-btn', title: 'Upgrades (U)', onclick: () => this.openTree(b, t) },
+      icon('upgrade'),
+      'Upgrades',
+      count,
+    );
+    this.dockRefs.tree = { el: tree, count, t };
+    const build = h(
+      'span',
+      { class: 'build' },
+      ...t.tiers.map((n, i) =>
+        h(
+          'span',
+          { class: 'build-path', title: def.paths[i].name },
+          ...def.paths[i].tiers.map((_, k) => h('i', { class: k < n ? 'on' : '' })),
+        ),
+      ),
+    );
     return h(
       'div',
       { class: 'dock tower', style: `--c:${hex(def.color)};--a:${hex(def.accent)}` },
@@ -402,20 +413,14 @@ export class Hud {
           { class: 'grow' },
           h('div', { class: 'head-name' }, def.name),
           h('div', { class: 'head-sub' }, h('em', null, def.title)),
-          h('div', { class: 'head-sub' }, `Bond ${heroineLevel(def.id)} · ${t.pops} pops`),
+          h('div', { class: 'head-sub build-line' }, h('b', { class: 'build-code' }, t.tiers.join('-')), build, `${t.pops} pops`),
         ),
-        h('button', { class: 'btn icon', title: 'Close (Esc)', onclick: () => b.select(null) }, icon('close')),
+        h('button', { class: 'btn icon', title: 'Close (Esc)', 'aria-label': 'Close', onclick: () => b.select(null) }, icon('close')),
       ),
-      h('div', { class: 'paths' }, ...paths),
       h(
         'div',
-        { class: 'row tower-actions' },
-        h(
-          'button',
-          { class: 'btn primary tree-btn', title: 'Upgrade tree (U)', onclick: () => this.openTree(b, t) },
-          icon('upgrade'),
-          'Upgrades',
-        ),
+        { class: 'tower-actions' },
+        tree,
         h(
           'button',
           {
@@ -438,7 +443,8 @@ export class Hud {
             },
           },
           icon('coin'),
-          `Sell ${sellValue(t.spent)}`,
+          h('span', { class: 'sell-label' }, 'Sell '),
+          String(sellValue(t.spent)),
         ),
       ),
     );
@@ -481,8 +487,6 @@ export class Hud {
     } else if (b.selected && k === 'Tab') {
       e.preventDefault();
       b.sim.cycleTargeting(b.selected);
-    } else if (b.selected && ['q', 'w', 'e'].includes(k.toLowerCase())) {
-      b.sim.buyUpgrade(b.selected, ['q', 'w', 'e'].indexOf(k.toLowerCase()) as 0 | 1 | 2);
     }
   }
 }

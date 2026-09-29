@@ -165,7 +165,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   // Upgrade panel
   await tap(page, v.touch, await tileToPage(page, 5.5, 5.5));
   await page.locator('.dock.tower').waitFor();
-  await page.locator('.btn.buy').first().click();
+  assert((await page.locator('.dock.tower .btn.buy').count()) === 0, 'the battle panel should have no quick-buy buttons');
   await shot('4-upgrade');
 
   // Tapping her avatar pauses and shows the whole portrait

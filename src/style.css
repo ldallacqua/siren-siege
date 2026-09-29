@@ -4607,3 +4607,152 @@ body.calm .home-wash {
     min-height: 40px;
   }
 }
+
+/* ------------------------------------------------------------------ compact battle panel: the map gets the screen */
+
+@media (min-aspect-ratio: 1/1) {
+  body.in-battle #app {
+    grid-template-columns: 1fr clamp(220px, 19vw, 264px);
+  }
+}
+@media (max-aspect-ratio: 1/1) {
+  body.in-battle #side {
+    max-height: 34dvh;
+  }
+  .hud {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .hud .btn {
+    min-height: 40px;
+  }
+  .hud .stat {
+    font-size: 15px;
+    padding: 4px 8px 4px 6px;
+  }
+  .dock {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .card {
+    aspect-ratio: 1 / 1;
+  }
+}
+
+.tower-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tower-actions .tree-btn {
+  grid-column: 1 / -1;
+}
+.tower-actions .btn {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.build-code {
+  white-space: nowrap;
+}
+@media (min-aspect-ratio: 1/1) and (max-height: 520px) {
+  .dock.tower .head-sub em {
+    display: none;
+  }
+  .dock.tower .head-name {
+    font-size: 15px;
+  }
+}
+@media (max-aspect-ratio: 1/1) {
+  /* one row under her name: Upgrades | Target | Sell */
+  .tower-actions {
+    grid-template-columns: 1.5fr 1fr 1fr;
+  }
+  .tower-actions .tree-btn {
+    grid-column: auto;
+  }
+}
+.tree-btn.big {
+  min-height: 48px;
+  font-size: 15px;
+}
+.tree-count {
+  display: none;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--rose-2);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 20px;
+  text-shadow: none;
+  letter-spacing: 0;
+}
+.tree-btn.ready .tree-count {
+  display: inline-block;
+}
+.tree-btn:not(.ready) {
+  --edge: var(--hair-2);
+  --fill: var(--glass-2);
+  filter: none;
+  text-shadow: none;
+}
+.tree-btn.afford-now {
+  animation: afford 0.7s var(--ease);
+}
+.build-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.build-code {
+  padding: 0 6px;
+  border: 1px solid rgba(232, 193, 112, 0.5);
+  border-radius: 3px;
+  color: var(--gold-hi);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+.build {
+  display: flex;
+  gap: 5px;
+}
+.build-path {
+  display: flex;
+  gap: 2px;
+}
+.build-path i {
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  background: rgba(255, 255, 255, 0.16);
+}
+.build-path i.on {
+  background: var(--gold);
+  box-shadow: 0 0 5px rgba(232, 193, 112, 0.7);
+}
+@media (min-aspect-ratio: 1/1) {
+  /* the sidebar is narrow: the build code says it all */
+  .build {
+    display: none;
+  }
+}
+.build-line {
+  flex-wrap: wrap;
+}
+@media (min-aspect-ratio: 1/1) and (max-height: 520px) {
+  .tree-btn.big {
+    min-height: 40px;
+  }
+}
+@media (max-aspect-ratio: 1/1) and (max-width: 440px) {
+  /* narrow phones: "◎ 154" is enough on the sell button */
+  .dock.tower .sell-label {
+    display: none;
+  }
+  .tower-actions .btn {
+    padding: 8px 10px;
+  }
+}
