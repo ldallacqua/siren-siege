@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import './style.css';
+import { sound } from './audio/sound.ts';
 import { HEROINES } from './data/heroines.ts';
 import { Battle } from './game/Battle.ts';
 import { BattleScene } from './game/BattleScene.ts';
@@ -50,7 +51,17 @@ window.addEventListener('keydown', (e) => {
   if (e.key === '+' || e.key === '=') scene.zoomBy(1.4);
   else if (e.key === '-' || e.key === '_') scene.zoomBy(1 / 1.4);
   else if (e.key === '0') scene.resetZoom();
+  else if (e.key === 'm' || e.key === 'M') {
+    save.settings.muted = !save.settings.muted;
+    persist();
+    sound.applySettings();
+    toast(save.settings.muted ? 'Sound off (M)' : 'Sound on (M)');
+  }
 });
+
+// Browsers only allow audio after a user gesture; unlock on the first one.
+for (const ev of ['pointerdown', 'keydown', 'touchend'])
+  window.addEventListener(ev, () => sound.unlock(), { capture: true, passive: true });
 
 const hud = new Hud(side);
 scene.onToast = toast;
@@ -73,6 +84,7 @@ function startBattle(): void {
   };
   scene.setBattle(battle);
   hud.attach(battle);
+  sound.startMusic(battle.map.id);
   setPlaying(true);
 }
 
@@ -86,6 +98,8 @@ function recordWave(b: Battle, final: boolean): string[] {
 
 function finishBattle(b: Battle): void {
   const won = b.sim.result === 'won';
+  sound.stopMusic();
+  sound.play(won ? 'victory' : 'defeat');
   const newlyUnlocked = recordWave(b, true);
   if (won) save.wins++;
   // Bond XP: fighting earns affection; winning earns a lot more.
@@ -106,6 +120,7 @@ function goHome(): void {
     recordWave(battle, true);
   }
   battle = null;
+  sound.stopMusic();
   scene.setBattle(null);
   hud.attach(null);
   setPlaying(false);
@@ -145,6 +160,7 @@ if (dev)
       },
       save,
       scene,
+      sound,
     },
   });
 

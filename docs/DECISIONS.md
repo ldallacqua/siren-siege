@@ -53,3 +53,7 @@ The owner reduced the 64-image production brief to the most important assets per
 ### D-013 · 2026-09-29 · Battlefield zoom via our own view transform, not Phaser's camera
 
 Zoom/pan is folded into the existing `sx/sy/toWorld` tile→screen mapping (`src/game/camera.ts`, pure and unit-tested) instead of `cameras.main.setZoom/scroll`. Reasons: the portrait transposition already lives in that mapping, so one transform serves both; text (tower initials) is re-rasterized at the new size rather than blown up blurry; and the smoke test can compute exact tap positions via `siren.scene.pagePoint()`. Zoom range 1×–3×; at 1× the view is exactly the old fitted layout, and the camera is clamped so the map never pans off-screen. Tapping to select now happens on pointer-up so a drag can pan instead; placement input is unchanged.
+
+### D-014 · 2026-09-29 · Synthesized audio; sim emits presentation events
+
+All SFX and music are generated with Web Audio (`src/audio/sound.ts`): zero asset downloads, no licensing, tiny bundle, and instantly tweakable by agents. Recorded CC0 samples can replace individual sounds later without changing callers. Sound and visual feedback are driven by one channel: `BattleSim.fx` events (now also `shot`, `place`, `upgrade`, `sell`, `wave`, `bonus`, `boss`, `bounty`), so key presses, HUD buttons and the bot all produce the same feedback, and the sim stays free of DOM/audio. Sim fx are write-only (determinism unaffected) and capped at 1000 because headless runs never drain them.

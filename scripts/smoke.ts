@@ -88,6 +88,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.getByRole('button', { name: /Play/ }).click();
   await page.locator('.dock.shop').waitFor();
   assert((await sim(page))?.towers === 0, 'battle did not start');
+  assert(await page.evaluate(() => (window as any).siren.sound.unlocked), 'audio did not unlock on the Play tap');
 
   const spots: [string, number, number][] = [
     ['Scarlet', 5.5, 5.5],
@@ -177,6 +178,8 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
 
   // Pause menu -> home -> profile -> chat
   await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('slider', { name: 'Music' }).waitFor();
+  await shot('9-pause');
   await page.getByRole('button', { name: 'Quit to home' }).click();
   await page.getByRole('button', { name: 'Heroines' }).click();
   await page.locator('.roster-card').first().click();
@@ -212,6 +215,15 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     await shot(`7-gallery-${id}`);
     await page.locator('.lightbox').click();
   }
+
+  // Settings: audio sliders and toggles persist in the save
+  await page.getByTitle('Back', { exact: true }).click();
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('switch', { name: /^Sound:/ }).click();
+  assert(await page.evaluate(() => (window as any).siren.save.settings.muted === true), 'mute toggle did not save');
+  await page.getByRole('slider', { name: 'Music' }).fill('20');
+  assert(await page.evaluate(() => (window as any).siren.save.settings.musicVolume === 0.2), 'music slider did not save');
+  await shot('10-settings');
 
   await ctx.close();
   assert(errors.length === 0, `page errors:\n${errors.join('\n')}`);

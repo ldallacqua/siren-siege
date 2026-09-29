@@ -1,8 +1,9 @@
+import { sound } from '../audio/sound.ts';
 import { episodesFor } from '../data/dialogues.ts';
 import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
 import { GALLERY, MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode, ChatNode, GalleryItem } from '../data/types.ts';
-import { addXp, dev, heroineLevel, isUnlocked, resetSave, save, persist } from '../state/save.ts';
+import { addXp, dev, heroineLevel, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
 import { placeholderArt } from './art.ts';
 import { h, hex, toast } from './dom.ts';
 
@@ -91,6 +92,72 @@ export function showHome(a: HomeActions): void {
   );
 }
 
+/** Music/sound volume, mute and reduced motion. Used by Settings and the pause menu. */
+function audioControls(): HTMLElement {
+  const st = save.settings;
+  const apply = () => {
+    persist();
+    sound.applySettings();
+  };
+  const slider = (label: string, get: () => number, set: (v: number) => void) =>
+    h(
+      'label',
+      { class: 'setting-row' },
+      h('span', null, label),
+      h('input', {
+        type: 'range',
+        min: '0',
+        max: '100',
+        step: '5',
+        value: String(Math.round(get() * 100)),
+        'aria-label': label,
+        oninput: (e: Event) => {
+          set(Number((e.target as HTMLInputElement).value) / 100);
+          apply();
+        },
+        onchange: () => sound.play('place'), // preview the new sound volume
+      }),
+    );
+  const toggle = (label: string, get: () => boolean, set: (v: boolean) => void) => {
+    const btn = h('button', { class: 'btn toggle', role: 'switch' }, '');
+    const paint = () => {
+      btn.textContent = `${label}: ${get() ? 'On' : 'Off'}`;
+      btn.setAttribute('aria-checked', String(get()));
+    };
+    btn.onclick = () => {
+      set(!get());
+      apply();
+      paint();
+    };
+    paint();
+    return btn;
+  };
+  return h(
+    'div',
+    { class: 'audio-controls' },
+    slider(
+      'Music',
+      () => st.musicVolume,
+      (v) => (st.musicVolume = v),
+    ),
+    slider(
+      'Sound',
+      () => st.sfxVolume,
+      (v) => (st.sfxVolume = v),
+    ),
+    h(
+      'div',
+      { class: 'setting-toggles' },
+      toggle(
+        'Sound',
+        () => !st.muted,
+        (v) => (st.muted = !v),
+      ),
+      toggle('Reduced motion', reducedMotion, (v) => (st.reducedMotion = v)),
+    ),
+  );
+}
+
 function showSettings(a: HomeActions): void {
   show(
     h(
@@ -100,7 +167,8 @@ function showSettings(a: HomeActions): void {
       h(
         'div',
         { class: 'settings' },
-        h('p', null, 'Progress is saved in this browser.'),
+        audioControls(),
+        h('p', null, 'Progress is saved in this browser. Keys in battle: M mute · + / − zoom · 0 fit map.'),
         h('p', null, 'Tip: add ?dev to the URL to unlock everything with 20,000 gold for testing.'),
         h(
           'button',
@@ -413,6 +481,7 @@ export function showPauseMenu(resume: () => void, restart: () => void, quit: () 
         h('button', { class: 'btn primary big', onclick: resume, autofocus: true }, 'Resume'),
         h('button', { class: 'btn big', onclick: restart }, 'Restart'),
         h('button', { class: 'btn big', onclick: quit }, 'Quit to home'),
+        audioControls(),
       ),
     ),
   );

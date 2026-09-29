@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
+import { sound } from '../audio/sound.ts';
 import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
 import { MAPS } from '../data/maps.ts';
 import type { MapDef } from '../data/types.ts';
+import { reducedMotion } from '../state/save.ts';
 import type { Battle } from './Battle.ts';
 import type { Fx, Tower } from './sim/BattleSim.ts';
 import { clampCam, homeCam, viewOf, zoomAt, panBy, MAX_ZOOM, MIN_ZOOM, type Cam, type Frame } from './camera.ts';
@@ -23,6 +25,39 @@ interface LiveFx extends Fx {
   life: number;
 }
 
+/** Map-space particle (tiles, tiles/s). */
+interface Particle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  age: number;
+  life: number;
+  color: number;
+  size: number;
+}
+
+interface FloatText {
+  obj: Phaser.GameObjects.Text;
+  x: number;
+  y: number;
+  age: number;
+  life: number;
+}
+
+/** Seconds each visual fx kind stays on screen; kinds without an entry are sound/shake only. */
+const FX_LIFE: Partial<Record<Fx['kind'], number>> = {
+  pulse: 0.45,
+  boom: 0.35,
+  leak: 0.6,
+  pop: 0.25,
+  block: 0.25,
+  place: 0.5,
+  upgrade: 0.6,
+  sell: 0.4,
+};
+const MAX_PARTICLES = 400;
+
 /**
  * Renders a Battle and forwards pointer input to it. The map is laid out in
  * tile units; in portrait stages the whole map is transposed (x<->y) so the
@@ -41,6 +76,9 @@ export class BattleScene extends Phaser.Scene {
   private sprites = new Map<number, { img: Phaser.GameObjects.Image; facing: Facing }>();
   private ghostImg: Phaser.GameObjects.Image | null = null;
   private fx: LiveFx[] = [];
+  private particles: Particle[] = [];
+  private floats: FloatText[] = [];
+  private lastLeakShake = 0;
   private stars: { x: number; y: number; s: number; p: number }[] = [];
   private dragging = false;
   /** Zoom/pan state; null = not laid out yet (reset per battle and on rotation). */
@@ -83,6 +121,9 @@ export class BattleScene extends Phaser.Scene {
     this.map = b?.map ?? MAPS[0];
     this.path = b?.sim.path ?? new Path(this.map.path);
     this.fx = [];
+    this.particles = [];
+    for (const f of this.floats) f.obj.destroy();
+    this.floats = [];
     this.clearTowerObjects();
     this.cam = null;
     this.touches.clear();
@@ -331,10 +372,7 @@ export class BattleScene extends Phaser.Scene {
     const T = this.view.tile;
 
     // Harvest new fx from the sim
-    for (const f of sim.fx) {
-      const life = f.kind === 'pulse' ? 0.45 : f.kind === 'boom' ? 0.35 : f.kind === 'leak' ? 0.6 : 0.25;
-      this.fx.push({ ...f, age: 0, life });
-    }
+    for (const f of sim.fx) this.onFx(f);
     sim.fx.length = 0;
     if (this.fx.length > 400) this.fx.splice(0, this.fx.length - 400);
 
@@ -446,6 +484,20 @@ export class BattleScene extends Phaser.Scene {
           g.fillStyle(0xff3355, 0.5 * (1 - k));
           g.fillCircle(x, y, T * (0.4 + k));
           break;
+        case 'place':
+          g.lineStyle(3, f.color, 1 - k);
+          g.strokeCircle(x, y, T * (0.3 + 0.6 * k));
+          break;
+        case 'upgrade':
+          g.lineStyle(3, 0xffd23f, 1 - k);
+          g.strokeCircle(x, y, T * (0.35 + 0.8 * k));
+          g.fillStyle(0xffd23f, 0.25 * (1 - k));
+          g.fillCircle(x, y, T * (0.35 + 0.8 * k));
+          break;
+        case 'sell':
+          g.fillStyle(0xffd23f, 0.4 * (1 - k));
+          g.fillCircle(x, y, T * 0.45 * (1 - k));
+          break;
         case 'block':
           g.lineStyle(2, 0xdddddd, 1 - k);
           g.lineBetween(x - T * 0.15, y - T * 0.15, x + T * 0.15, y + T * 0.15);
@@ -454,6 +506,8 @@ export class BattleScene extends Phaser.Scene {
       }
     }
     this.fx = this.fx.filter((f) => f.age < f.life);
+    this.drawParticles(dt * b.speed * (b.paused ? 0 : 1));
+    this.drawFloats(dt * (b.paused ? 0 : 1));
 
     // Placement ghost
     if (b.placing && b.ghost) {
@@ -478,6 +532,113 @@ export class BattleScene extends Phaser.Scene {
         this.ghostImg.setScale((T * 1.15) / this.ghostImg.height);
       }
     }
+  }
+
+  /** Route one sim fx event to sound, visuals, particles, floating text and shake. */
+  private onFx(f: Fx): void {
+    sound.fx(f);
+    const life = FX_LIFE[f.kind];
+    if (life) this.fx.push({ ...f, age: 0, life });
+    const calm = reducedMotion();
+    switch (f.kind) {
+      case 'pop':
+        this.burst(f.x, f.y, f.color, calm ? 2 : 5, 2.2, 0.35);
+        break;
+      case 'upgrade':
+        this.burst(f.x, f.y, 0xffd23f, calm ? 3 : (f.value ?? 1) >= 3 ? 16 : 8, 2.6, 0.6);
+        break;
+      case 'bounty':
+        this.floatText(f.x, f.y, `+◆${f.value}`, '#ffd23f', 1.3);
+        this.burst(f.x, f.y, 0xffd23f, calm ? 4 : 24, 3.5, 0.8);
+        break;
+      case 'bonus':
+        // The path ends just off the map: pull the text inside so it's readable.
+        this.floatText(
+          Math.min(Math.max(f.x, 1.5), this.map.cols - 1.5),
+          Math.min(Math.max(f.y, 1), this.map.rows - 1),
+          `+◆${f.value}`,
+          '#ffd23f',
+          1.1,
+        );
+        break;
+      case 'sell':
+        this.floatText(f.x, f.y, `+◆${f.value}`, '#ffd23f', 0.8);
+        break;
+      case 'boss':
+        if (!calm) this.cameras.main.shake(450, 0.009);
+        break;
+      case 'leak':
+        if (!calm && this.time.now - this.lastLeakShake > 500) {
+          this.lastLeakShake = this.time.now;
+          this.cameras.main.shake(140, 0.004);
+        }
+        break;
+    }
+  }
+
+  private burst(x: number, y: number, color: number, n: number, speed: number, life: number): void {
+    for (let i = 0; i < n; i++) {
+      if (this.particles.length >= MAX_PARTICLES) this.particles.shift();
+      const a = Math.random() * Math.PI * 2;
+      const v = speed * (0.4 + Math.random() * 0.6);
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * v,
+        vy: Math.sin(a) * v,
+        age: 0,
+        life: life * (0.7 + Math.random() * 0.5),
+        color,
+        size: 0.05 + Math.random() * 0.05,
+      });
+    }
+  }
+
+  private drawParticles(dt: number): void {
+    const g = this.g;
+    const T = this.view.tile;
+    for (const p of this.particles) {
+      p.age += dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 1 - 3 * dt;
+      p.vy *= 1 - 3 * dt;
+      const k = 1 - p.age / p.life;
+      if (k <= 0) continue;
+      g.fillStyle(p.color, k);
+      g.fillCircle(this.sx(p.x, p.y), this.sy(p.x, p.y), Math.max(1, p.size * T * (0.5 + 0.5 * k)));
+    }
+    this.particles = this.particles.filter((p) => p.age < p.life);
+  }
+
+  /** Rising, fading text anchored to a map point (so it follows zoom/pan). */
+  private floatText(x: number, y: number, text: string, color: string, scale: number): void {
+    const T = this.view.tile;
+    const obj = this.add
+      .text(0, 0, text, {
+        fontFamily: 'system-ui, sans-serif',
+        fontStyle: '800',
+        fontSize: `${Math.round(T * 0.42 * scale)}px`,
+        color,
+        stroke: '#1a0a14',
+        strokeThickness: Math.max(3, T * 0.08),
+      })
+      .setOrigin(0.5)
+      .setDepth(8);
+    this.floats.push({ obj, x, y, age: 0, life: 1.2 });
+    if (this.floats.length > 20) this.floats.shift()!.obj.destroy();
+  }
+
+  private drawFloats(dt: number): void {
+    const T = this.view.tile;
+    for (const f of this.floats) {
+      f.age += dt;
+      const k = f.age / f.life;
+      f.obj.setPosition(this.sx(f.x, f.y), this.sy(f.x, f.y) - T * 0.9 * Math.min(1, k * 1.5));
+      f.obj.setAlpha(k < 0.6 ? 1 : Math.max(0, 1 - (k - 0.6) / 0.4));
+    }
+    for (const f of this.floats) if (f.age >= f.life) f.obj.destroy();
+    this.floats = this.floats.filter((f) => f.age < f.life);
   }
 
   private drawStars(dt: number): void {
@@ -545,7 +706,7 @@ export class BattleScene extends Phaser.Scene {
       s = { img: this.add.image(x, y, key).setOrigin(0.5, 0.82).setDepth(4), facing: 1 };
       this.sprites.set(t.uid, s);
     }
-    const pose = chibiPose(this.time.now / 1000, t.uid * 1.7, dx, dy, t.flash, s.facing);
+    const pose = chibiPose(reducedMotion() ? 0 : this.time.now / 1000, t.uid * 1.7, dx, dy, t.flash, s.facing);
     s.facing = pose.facing;
     const scale = (T * 1.15) / s.img.height;
     // Feet sit on the shadow ellipse; squash keeps the feet planted.

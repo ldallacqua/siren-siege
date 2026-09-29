@@ -60,14 +60,26 @@ interface Projectile {
   color: number;
 }
 
-export type FxKind = 'pulse' | 'boom' | 'pop' | 'leak' | 'block';
+/**
+ * Presentation events the renderer turns into visuals and sound. Purely
+ * output: the sim never reads them back, so they can't affect determinism.
+ * shot: a tower fired (value 1 = bolt, 2 = bomb) · place / upgrade (value = new tier) / sell (value = refund)
+ * wave: a wave started (value = wave number) · bonus: end-of-wave cash (value) · boss: a boss entered
+ * bounty: a boss died (value = cash)
+ */
+export type FxKind =
+  'pulse' | 'boom' | 'pop' | 'leak' | 'block' | 'shot' | 'place' | 'upgrade' | 'sell' | 'wave' | 'bonus' | 'boss' | 'bounty';
 export interface Fx {
   kind: FxKind;
   x: number;
   y: number;
   r: number;
   color: number;
+  value?: number;
 }
+
+/** Headless runs never drain fx; keep the backlog bounded. */
+const MAX_FX = 1000;
 
 export type Result = 'playing' | 'won' | 'lost';
 
@@ -124,6 +136,8 @@ export class BattleSim {
       for (let i = 0; i < g.count; i++) this.spawnQueue.push({ t: this.time + (g.delay ?? 0) + i * g.interval, id: g.enemy });
     }
     this.spawnQueue.sort((a, b) => a.t - b.t);
+    const start = this.path.at(0);
+    this.fx.push({ kind: 'wave', x: start.x, y: start.y, r: 1, color: 0xffffff, value: this.wave });
     this.changed();
     return true;
   }
@@ -160,6 +174,7 @@ export class BattleSim {
     };
     this.towers.push(t);
     this.buffsDirty = true;
+    this.fx.push({ kind: 'place', x, y, r: TOWER_RADIUS, color: def.color, value: 0 });
     this.changed();
     return t;
   }
@@ -172,6 +187,7 @@ export class BattleSim {
     tower.tiers[path]++;
     tower.stats = computeStats(tower.def, tower.tiers, this.bondLevels[tower.def.id] ?? 1);
     this.buffsDirty = true;
+    this.fx.push({ kind: 'upgrade', x: tower.x, y: tower.y, r: TOWER_RADIUS, color: tower.def.color, value: tower.tiers[path] });
     this.changed();
     return true;
   }
@@ -180,8 +196,10 @@ export class BattleSim {
     const i = this.towers.indexOf(tower);
     if (i < 0) return;
     this.towers.splice(i, 1);
-    this.cash += sellValue(tower.spent);
+    const refund = sellValue(tower.spent);
+    this.cash += refund;
     this.buffsDirty = true;
+    this.fx.push({ kind: 'sell', x: tower.x, y: tower.y, r: TOWER_RADIUS, color: 0xffd23f, value: refund });
     this.changed();
   }
 
@@ -220,6 +238,7 @@ export class BattleSim {
     this.updateTowers(dt);
     this.updateProjectiles(dt);
 
+    if (this.fx.length > MAX_FX) this.fx.splice(0, this.fx.length - MAX_FX);
     if (this.enemies.length > 200) this.enemies = this.enemies.filter((e) => e.alive);
     else if (this.enemies.some((e) => !e.alive)) this.enemies = this.enemies.filter((e) => e.alive);
 
@@ -239,6 +258,8 @@ export class BattleSim {
     const income = this.towers.reduce((s, t) => s + t.stats.income, 0);
     const bonus = 70 + this.wave * 3 + income;
     this.cash += bonus;
+    const end = this.path.at(this.path.length);
+    this.fx.push({ kind: 'bonus', x: end.x, y: end.y, r: 1, color: 0xffd23f, value: bonus });
     this.onWaveEnd?.(this.wave, bonus);
     if (this.wave >= this.waves.length) {
       this.result = 'won';
@@ -268,6 +289,7 @@ export class BattleSim {
       alive: true,
     };
     this.enemies.push(e);
+    if (def.boss) this.fx.push({ kind: 'boss', x: e.x, y: e.y, r: def.radius, color: def.color });
     return e;
   }
 
@@ -416,6 +438,7 @@ export class BattleSim {
           color: t.def.color,
         });
       }
+      this.fx.push({ kind: 'shot', x: t.x, y: t.y, r: 0, color: t.def.color, value: bomb ? 2 : 1 });
       t.cooldown = 1 / s.rate;
       t.flash = 0.12;
     }
@@ -524,6 +547,7 @@ export class BattleSim {
     this.cash += reward;
     if (owner) owner.pops += e.def.boss ? 25 : 1;
     this.fx.push({ kind: 'pop', x: e.x, y: e.y, r: e.def.radius, color: e.def.color });
+    if (e.def.boss) this.fx.push({ kind: 'bounty', x: e.x, y: e.y, r: e.def.radius, color: 0xffd23f, value: reward });
     const kids: Enemy[] = [];
     let i = 0;
     for (const c of e.def.children) {

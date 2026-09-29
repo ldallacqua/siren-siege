@@ -70,11 +70,12 @@ src/
     screens.ts       Home, roster, profile, chat player, gallery + lightbox, results, pause, settings
     art.ts           Loads public/art files, falls back to generated SVG placeholders
     dom.ts           h() hyperscript helper, toast, formatters
+  audio/           sound.ts: synthesized SFX + music (Web Audio, unlocks on first gesture); tuning.ts: pure note/limiter/track data
   state/save.ts    localStorage save (versioned), bond XP, unlocks, ?dev flag
   main.ts          Boot, DPR-aware resize, app flow (home ↔ battle ↔ results), match XP awards
   style.css        All styling; orientation handled with aspect-ratio media queries
 scripts/           balance-sim.ts, smoke.ts, art-import.ts, session-start.sh
-tests/             data, sim, chibi and camera tests
+tests/             data, sim, chibi, camera and audio tests
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
 docs/              GDD, ARCHITECTURE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
 ```

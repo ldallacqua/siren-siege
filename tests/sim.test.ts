@@ -170,6 +170,29 @@ describe('combat', () => {
     expect(sim.enemies.length + sim.towers[0].pops).toBeGreaterThanOrEqual(kids);
   });
 
+  it('emits presentation fx for audio/visual feedback (and caps the backlog)', () => {
+    const sim = new BattleSim(map, oneWave('colossus'), { startCash: 99999, lives: 10000 });
+    const kinds = () => new Set(sim.fx.map((f) => f.kind));
+    const t = sim.place('scarlet', 4.5, 4.5)!;
+    sim.buyUpgrade(t, 1);
+    expect([...kinds()]).toEqual(['place', 'upgrade']);
+    expect(sim.fx[1].value).toBe(1); // new tier
+    sim.startWave();
+    sim.step(STEP);
+    expect(kinds().has('wave')).toBe(true);
+    expect(kinds().has('boss')).toBe(true);
+    const boss = sim.enemies.find((e) => e.def.boss)!;
+    boss.hp = 1;
+    boss.dist = 3;
+    run(sim, 3);
+    expect(kinds().has('shot')).toBe(true);
+    expect(sim.fx.find((f) => f.kind === 'bounty')?.value).toBe(60);
+    sim.sell(t);
+    expect(sim.fx.at(-1)).toMatchObject({ kind: 'sell', value: sellValue(t.spent) });
+    run(sim, 120);
+    expect(sim.fx.length).toBeLessThanOrEqual(1000);
+  });
+
   it('is deterministic', () => {
     const play = () => {
       const sim = new BattleSim(map, WAVES.slice(0, 5), { startCash: 2000 });

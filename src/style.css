@@ -1021,6 +1021,8 @@ body.in-battle #side {
 }
 .modal-card {
   width: min(320px, 90vw);
+  max-height: 94dvh;
+  overflow-y: auto;
   padding: 20px;
   border-radius: 20px;
   background: var(--panel);
@@ -1036,4 +1038,54 @@ body.in-battle #side {
 }
 .settings {
   max-width: 520px;
+}
+.audio-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  margin: 4px 0 8px;
+}
+.setting-row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  font-weight: 700;
+}
+.setting-row input[type='range'] {
+  width: 100%;
+  height: 40px;
+  accent-color: var(--pink, #ff5fa2);
+}
+.setting-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.setting-toggles .btn {
+  flex: 1 1 auto;
+}
+.btn.toggle[aria-checked='true'] {
+  border-color: rgba(255, 95, 162, 0.7);
+}
+
+/* Short landscape: pause menu buttons on the left, audio controls on the right */
+@media (min-aspect-ratio: 1/1) and (max-height: 520px) {
+  .modal-card:has(.audio-controls) {
+    width: min(640px, 94vw);
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    column-gap: 18px;
+    align-content: start;
+  }
+  .modal-card:has(.audio-controls) h2 {
+    grid-column: 1 / -1;
+  }
+  .modal-card .audio-controls {
+    grid-column: 2;
+    grid-row: 2 / span 3;
+    margin: 0;
+  }
 }

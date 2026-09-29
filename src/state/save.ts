@@ -13,7 +13,19 @@ export interface SaveData {
   heroines: Record<string, HeroineProgress>;
   bestWave: Record<string, number>; // per map
   wins: number;
-  settings: { autoStart: boolean; speed: number };
+  settings: Settings;
+}
+
+export interface Settings {
+  autoStart: boolean;
+  speed: number;
+  /** 0–1 */
+  musicVolume: number;
+  /** 0–1 */
+  sfxVolume: number;
+  muted: boolean;
+  /** null = follow the OS "reduce motion" preference */
+  reducedMotion: boolean | null;
 }
 
 function fresh(): SaveData {
@@ -22,7 +34,7 @@ function fresh(): SaveData {
     heroines: Object.fromEntries(HEROINES.map((h) => [h.id, { xp: 0, chatsDone: [] }])),
     bestWave: {},
     wins: 0,
-    settings: { autoStart: false, speed: 1 },
+    settings: { autoStart: false, speed: 1, musicVolume: 0.5, sfxVolume: 0.7, muted: false, reducedMotion: null },
   };
 }
 
@@ -61,6 +73,17 @@ export function resetSave(): void {
     /* ignore */
   }
   location.reload();
+}
+
+/** Fewer particles, no screen shake, no idle bob. */
+export function reducedMotion(): boolean {
+  const s = save.settings.reducedMotion;
+  if (s !== null && s !== undefined) return s;
+  try {
+    return matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch {
+    return false;
+  }
 }
 
 export function heroineLevel(id: string): number {

@@ -6,13 +6,13 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ---
 
-### B-03 · P1 · Juice: audio + feedback
+### B-03b · P1 · Juice follow-ups
 
-- Web Audio SFX (generated or small CC0 files in `public/sfx/`): pop, shot, bomb, freeze pulse, upgrade, place, wave start, leak, boss spawn, victory/defeat.
-- Music loop per map + mute/volume toggle in Settings and HUD (persist in `save.settings`).
-- Particles on pops, floating `+◆` text for boss kills and wave bonus, screen shake on boss spawn/leak.
-- Respect a `reducedMotion` setting (default from `prefers-reduced-motion`).
-- Accept: audio starts only after a user gesture (mobile autoplay rules); 60 fps holds with 200 enemies on a mid phone (use `npm run dev` + devtools throttling).
+B-03 shipped (synth SFX + music, particles, floating gold, shake, settings). Remaining:
+
+- Measure 60 fps with 200 enemies at 3× on a mid phone (`npm run dev`, devtools CPU throttle 4×). Knobs: `MAX_PARTICLES` and `FX_LIFE` in `BattleScene.ts`, `GAP`/`Limiter` voices in `src/audio/sound.ts`.
+- A music track per new map (add to `TRACKS` in `src/audio/tuning.ts`); optionally swap synth SFX for small CC0 samples in `public/sfx/` if the owner wants a richer sound.
+- Accept: owner is happy with the mix; perf measurement recorded in STATUS.
 
 ### B-04 · P1 · Floating in-battle heroine barks
 
