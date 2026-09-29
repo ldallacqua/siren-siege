@@ -42,7 +42,8 @@
 - Imported with `npm run art` (WebP quality 85); preserved alpha; 256×256 chibis, 1086×1448 portraits and 1448×1086 gallery scenes. No game code or player progression changed.
 - Improved smoke captures to finish finite screen fades and decode images before screenshots; added each heroine's first gallery lightbox, requiring shipped files to load as real WebP rather than silently falling back.
 - Asset inventory and production prompt set: `docs/ART_ASSETS.md`.
-- Validation: 19 WebP files inspected for dimensions/alpha; smoke passed at 1280×720, 390×844 touch and 844×390 touch. Reviewed battlefield, shop, profile, chat and gallery screenshots; no crop or layout adjustments required.
+- Validation: `npm run check` passed (27 tests, typechecks, balance sim and build). 19 WebP files inspected for dimensions/alpha; smoke passed at 1280×720, 390×844 touch and 844×390 touch. Reviewed battlefield, shop, profile, chat and gallery screenshots; no crop or layout adjustments required.
+- **Delivery blocked:** local implementation is complete, but terminal push lacks credentials and the GitHub connector returns HTTP 403 `Resource not accessible by integration`. Grant the connected GitHub app access to `ldallacqua/siren-siege`, then push this commit. The live site has not received these assets yet.
 - Environment note: Chromium's bundled tar extraction failed on `chown`. Unpacked the existing npm-bundled Chromium/fonts/SwiftShader without ownership changes into a scratch TMPDIR, then ran the normal importer and smoke command. No dependency or repo workaround needed.
 
 ## Next up
