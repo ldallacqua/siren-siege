@@ -220,9 +220,10 @@ export class BattleSim {
     this.changed();
   }
 
-  cycleTargeting(tower: Tower): void {
+  /** Next (dir 1) or previous (dir -1) targeting mode. */
+  cycleTargeting(tower: Tower, dir: 1 | -1 = 1): void {
     const order: Targeting[] = ['first', 'last', 'strong', 'close'];
-    tower.targeting = order[(order.indexOf(tower.targeting) + 1) % order.length];
+    tower.targeting = order[(order.indexOf(tower.targeting) + dir + order.length) % order.length];
     this.changed();
   }
 

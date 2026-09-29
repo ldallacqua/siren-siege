@@ -4,7 +4,7 @@ import { portraitFile } from '../data/progression.ts';
 import type { Stats } from '../data/types.ts';
 import type { Battle } from '../game/Battle.ts';
 import type { Tower } from '../game/sim/BattleSim.ts';
-import { MAX_TIER, canBuyUpgrade, computeStats, lockReason, sellValue } from '../game/sim/upgrades.ts';
+import { MAX_TIER, canBuyUpgrade, computeStats, lockReason } from '../game/sim/upgrades.ts';
 import { heroineLevel } from '../state/save.ts';
 import { artChain, goingBack, show } from './common.ts';
 import { gold, h, hex, toast } from './dom.ts';
@@ -29,7 +29,6 @@ const SIGNATURE: Record<string, [string, string, string]> = {
 };
 
 const ROMAN = ['I', 'II', 'III'];
-const TARGET_LABEL = { first: 'First', last: 'Last', strong: 'Strong', close: 'Close' } as const;
 
 /** What the stat block shows, in order; only lines that apply to her. */
 function statLines(s: Stats): [string, number, (v: number) => string][] {
@@ -97,7 +96,7 @@ export function showUpgradeTree(id: string, opts: TreeOptions): void {
           class: `ut-tile ${k === 2 ? 'sig' : ''}`,
           'aria-label': `${path.name} tier ${k + 1}: ${up.name}`,
           onclick: () => {
-            if (focus[0] === p && focus[1] === k && state(p, k) === 'next') return buy(p);
+            // Selecting only: buying is always the Upgrade button (no accidental buys).
             focus = [p, k];
             sound.play('tap');
             update();
@@ -121,37 +120,12 @@ export function showUpgradeTree(id: string, opts: TreeOptions): void {
   // ---- side: portrait, build, stats
   const build = h('div', { class: 'ut-build' });
   const stats = h('div', { class: 'ut-stats' });
-  const target = live
-    ? h('button', {
-        class: 'btn',
-        onclick: () => {
-          live.b.sim.cycleTargeting(live.t);
-          update();
-        },
-      })
-    : null;
-  const sell = live
-    ? h(
-        'button',
-        {
-          class: 'btn danger',
-          onclick: () => {
-            live.b.sim.sell(live.t);
-            live.b.select(null);
-            close();
-          },
-        },
-        icon('coin'),
-        h('span', null),
-      )
-    : null;
   const side = h(
     'aside',
     { class: 'ut-hero' },
     h('div', { class: 'ut-art' }, artChain([portraitFile(id)], id, d.name, true, 'ut-art-img')),
     h('div', { class: 'ut-id' }, h('div', { class: 'ut-role' }, d.title), h('h2', null, d.name), build),
     stats,
-    live ? h('div', { class: 'row ut-actions' }, target, sell) : null,
   );
 
   // ---- detail pane
@@ -229,8 +203,6 @@ export function showUpgradeTree(id: string, opts: TreeOptions): void {
     );
     if (live) {
       gem.querySelector('b')!.textContent = gold(live.b.sim.cash);
-      target!.replaceChildren(icon('target'), TARGET_LABEL[live.t.targeting]);
-      sell!.querySelector('span')!.textContent = `Sell ${sellValue(live.t.spent)}`;
     }
 
     // Stats, with the focused upgrade's effect previewed when it's the next one on its path.
@@ -298,11 +270,16 @@ export function showUpgradeTree(id: string, opts: TreeOptions): void {
       e.stopPropagation();
       goingBack();
       close();
-    } else if (live && ['q', 'w', 'e'].includes(k)) {
+    } else if (['q', 'w', 'e'].includes(k)) {
+      // Q/W/E pick a path's next upgrade; Enter buys it.
       e.stopPropagation();
       const p = ['q', 'w', 'e'].indexOf(k);
-      focus = [p, Math.min(MAX_TIER - 1, live.t.tiers[p])];
-      buy(p);
+      focus = [p, Math.min(MAX_TIER - 1, tiers()[p])];
+      update();
+    } else if (live && k === 'enter' && !(e.target instanceof HTMLButtonElement)) {
+      e.stopPropagation();
+      e.preventDefault();
+      if (state(focus[0], focus[1]) === 'next') buy(focus[0]);
     }
   }
   window.addEventListener('keydown', onKey, true);

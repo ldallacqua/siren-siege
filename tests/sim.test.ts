@@ -216,6 +216,16 @@ describe('combat', () => {
     expect(kaede.find((f) => f.kind === 'boom')).toMatchObject({ hero: 'kaede', tier: 1 });
   });
 
+  it('cycles targeting both ways', () => {
+    const sim = new BattleSim(map, WAVES.slice(0, 1), { startCash: 2000 });
+    const t = sim.place('scarlet', 5.5, 5.5)!;
+    sim.cycleTargeting(t);
+    expect(t.targeting).toBe('last');
+    sim.cycleTargeting(t, -1);
+    sim.cycleTargeting(t, -1);
+    expect(t.targeting).toBe('close');
+  });
+
   it('is deterministic', () => {
     const play = () => {
       const sim = new BattleSim(map, WAVES.slice(0, 5), { startCash: 2000 });

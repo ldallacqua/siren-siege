@@ -1,5 +1,6 @@
 import { icon } from './icons.ts';
 import { calm, flipFrom } from './motion.ts';
+import { present } from './preload.ts';
 import { HEROINE_BY_ID } from '../data/heroines.ts';
 
 const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
@@ -75,6 +76,7 @@ export function openLightbox(
   img.className = 'lightbox-art';
   img.alt = caption;
   img.draggable = false;
+  files = present(files);
   let i = 0;
   const next = () => {
     if (i < files.length) img.src = files[i++];

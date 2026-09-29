@@ -71,8 +71,9 @@ src/
     Battle.ts        One match: sim + interaction state (placing, selected, speed, pause), change events
     BattleScene.ts   Phaser scene: draws a Battle, maps pointer input (tap, drag-pan, pinch, wheel); transposes map in portrait
   ui/                DOM UI over the canvas
-    Hud.ts           Sidebar (landscape) / dock (portrait): stats, controls, shop, placing, upgrade panel
+    Hud.ts           Sidebar (landscape) / dock (portrait): stats, controls, shop, placing; heroine panel floating over the map
     upgradeTree.ts   Full-screen BTD6-style upgrade tree (battle: buys, pauses; profile: preview); emblems.ts draws its badges
+    preload.ts       Image preloading + known-missing art (chats wait for their moods)
     screens.ts       Home, roster, profile, codex, gallery, results, pause, options, settings
     chat.ts          Visual-novel chat player (scenes, ambient canvas, voice blips, log/auto/skip, end card)
     common.ts        show(), artChain(), bondBar(), topbar() shared by screens
@@ -83,7 +84,8 @@ src/
   state/save.ts    localStorage save (versioned), bond XP, unlocks, ?dev flag
   main.ts          Boot, DPR-aware resize, app flow (home ↔ battle ↔ results), match XP awards
   style.css        All styling; orientation handled with aspect-ratio media queries
-scripts/           balance-sim.ts, smoke.ts, art-import.ts, session-start.sh
+scripts/           balance-sim.ts, smoke.ts, art-import.ts, make-icons.ts (PWA icons), session-start.sh
+public/sw.js       Service worker (installable PWA, offline); public/manifest.webmanifest
 tests/             data, sim, chibi, camera and audio tests
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
 docs/              GDD, ARCHITECTURE, UI_STYLE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS

@@ -1,6 +1,7 @@
 import { MAX_BOND, bondProgress } from '../data/progression.ts';
 import { save } from '../state/save.ts';
 import { placeholderArt } from './art.ts';
+import { present } from './preload.ts';
 import { h } from './dom.ts';
 import { icon } from './icons.ts';
 import { calm, countTo } from './motion.ts';
@@ -55,6 +56,7 @@ export function show(el: HTMLElement): void {
 /** Image with a chain of candidate files, ending in the generated placeholder. */
 export function artChain(files: string[], heroine: string, label: string, portrait = true, className = ''): HTMLImageElement {
   const img = h('img', { class: className, alt: label, draggable: false, decoding: 'async' });
+  files = present(files);
   let i = 0;
   const next = () => {
     if (i < files.length) img.src = files[i++];

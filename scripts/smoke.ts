@@ -90,6 +90,17 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   };
 
   await page.goto(`${base}?dev`, { waitUntil: 'load' });
+  if (v.name === 'desktop') {
+    // Installable: manifest with PNG icons, and the service worker registers.
+    const pwa = await page.evaluate(async () => {
+      const href = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')!.href;
+      const m = await (await fetch(href)).json();
+      const icon = await fetch(new URL(m.icons.find((i: { sizes: string }) => i.sizes === '512x512').src, href));
+      const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((r) => setTimeout(() => r(null), 8000))]);
+      return { display: m.display, icon: icon.ok, sw: !!reg };
+    });
+    assert(pwa.icon && pwa.sw && pwa.display, `PWA not installable: ${JSON.stringify(pwa)}`);
+  }
   // Title card: the first tap unlocks audio and reveals the lobby
   await page.getByRole('button', { name: 'Tap to begin' }).waitFor();
   await shot('0-title');
@@ -144,10 +155,17 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     await page.locator('.card', { hasText: name }).click();
     const p = await tileToPage(page, gx, gy);
     await tap(page, v.touch, p);
-    if (v.touch) await tap(page, true, p); // second tap confirms on touch
-    await page.locator('.dock.tower').waitFor({ timeout: 3000 });
+    if (v.touch) {
+      // Touch never places on a tap (fine-tuning): only the Place button does.
+      const n = (await sim(page))!.towers;
+      await tap(page, true, p);
+      assert((await sim(page))!.towers === n, 'a second tap must not place on touch');
+      await page.getByRole('button', { name: 'Place', exact: true }).click();
+    }
+    await page.locator('.hpanel').waitFor({ timeout: 3000 });
+    assert(await page.locator('.dock.shop').isVisible(), 'selecting a heroine must keep the shop in the dock');
     await page.keyboard.press('Escape');
-    await page.locator('.dock.shop').waitFor();
+    await page.locator('.hpanel').waitFor({ state: 'detached' });
   }
   assert((await sim(page))?.towers === spots.length, `expected ${spots.length} heroines placed`);
   await shot('2-placed');
@@ -172,8 +190,9 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
 
   // Upgrade panel
   await tap(page, v.touch, await tileToPage(page, 5.5, 5.5));
-  await page.locator('.dock.tower').waitFor();
-  assert((await page.locator('.dock.tower .btn.buy').count()) === 0, 'the battle panel should have no quick-buy buttons');
+  await page.locator('.hpanel').waitFor();
+  await page.locator('.hpanel .btn.buy').first().click(); // quick upgrade
+  await page.waitForTimeout(300);
   await shot('4-upgrade');
 
   // Tapping her avatar pauses and shows the whole portrait
@@ -186,7 +205,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     await page.getByTitle('Close', { exact: true }).click();
     await page.locator('.lightbox').waitFor({ state: 'detached' });
   };
-  await page.locator('.dock.tower .head-btn').click();
+  await page.locator('.hpanel .head-btn').click();
   assert(await page.evaluate(() => (window as any).siren.battle.paused), 'viewing her portrait should pause');
   await fullArt('scarlet', '4b-portrait');
   assert(!(await page.evaluate(() => (window as any).siren.battle.paused)), 'closing the portrait should resume');
@@ -196,6 +215,11 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   const t0 = await tiers();
   await page.getByRole('button', { name: 'Upgrades' }).click();
   await page.locator('.utree .ut-buy').waitFor();
+  const tBefore = await tiers();
+  await page.locator('.utree .ut-tile').nth(1).click();
+  await page.locator('.utree .ut-tile').nth(1).click();
+  assert((await tiers()) === tBefore, 'tapping an upgrade badge must only select it, never buy');
+  assert((await page.locator('.utree').getByRole('button', { name: /Sell/ }).count()) === 0, 'no sell button in the upgrade screen');
   assert(await page.evaluate(() => (window as any).siren.battle.paused), 'the upgrade tree should pause the battle');
   await page.locator('.utree .ut-buy').click();
   assert((await tiers()) !== t0, 'buying from the upgrade tree did nothing');
@@ -215,13 +239,13 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   const touch = (type: string, points: { x: number; y: number }[]) =>
     cdp!.send('Input.dispatchTouchEvent', { type, touchPoints: points.map((p, id) => ({ ...p, id })) } as any);
   await page.keyboard.press('Escape');
-  await page.locator('.dock.shop').waitFor();
+  await page.locator('.hpanel').waitFor({ state: 'detached' });
   await page.getByRole('button', { name: 'Zoom in' }).click();
   await page.getByRole('button', { name: 'Zoom in' }).click();
   const z1 = await cam();
   assert(z1.zoom > 1.9, `zoom-in buttons did nothing (zoom ${z1.zoom})`);
   await tap(page, v.touch, z1.p);
-  await page.locator('.dock.tower').waitFor({ timeout: 3000 }); // tap still hits the right heroine when zoomed
+  await page.locator('.hpanel').waitFor({ timeout: 3000 }); // tap still hits the right heroine when zoomed
   await shot('8-zoomed');
   await page.keyboard.press('Escape');
   const box = (await page.locator('#stage').boundingBox())!;
@@ -239,7 +263,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   }
   const z2 = await cam();
   assert(Math.hypot(z2.p.x - z1.p.x, z2.p.y - z1.p.y) > 20, 'dragging did not pan the zoomed map');
-  assert(await page.locator('.dock.shop').isVisible(), 'a pan drag must not select a heroine');
+  assert((await page.locator('.hpanel').count()) === 0, 'a pan drag must not select a heroine');
   await page.getByRole('button', { name: 'Fit map' }).click();
   assert((await cam()).zoom === 1, 'fit button did not reset zoom');
   if (v.touch) {

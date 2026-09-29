@@ -12,9 +12,17 @@ import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
 import { playChat } from './ui/chat.ts';
 import { applyCalm, wipe } from './ui/motion.ts';
+import { warmArt } from './ui/preload.ts';
 import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions, showMapSelect } from './ui/screens.ts';
 
 applyCalm();
+warmArt();
+
+// Installable app (PWA) + offline play: see public/sw.js. Production builds only,
+// so the dev server's hot reload never fights a cached copy.
+if ('serviceWorker' in navigator && document.querySelector('script[type="module"][src*="assets/index-"]')) {
+  window.addEventListener('load', () => void navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
 const stage = document.getElementById('stage')!;
 const side = document.getElementById('side')!;
 const scene = new BattleScene();
@@ -108,7 +116,12 @@ document.addEventListener(
   true,
 );
 
-const hud = new Hud(side);
+const hud = new Hud(side, stage);
+hud.locate = (t) => {
+  const p = scene.pagePoint(t.x, t.y);
+  const r = stage.getBoundingClientRect();
+  return { x: p.x - r.left, y: p.y - r.top };
+};
 scene.onToast = toast;
 let battle: Battle | null = null;
 

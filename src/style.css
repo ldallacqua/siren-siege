@@ -4756,3 +4756,297 @@ body.calm .home-wash {
     padding: 8px 10px;
   }
 }
+
+/* ------------------------------------------------------------------ heroine panel over the map (BTD6's tower panel) */
+
+.hpanel {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 262px;
+  top: 10px;
+  max-height: calc(100% - 20px);
+  padding: 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 12%, rgba(14, 9, 20, 0.94)), rgba(14, 9, 20, 0.94) 40%);
+  border: 1px solid var(--hair-2);
+  border-top: 2px solid var(--c);
+  border-radius: var(--r);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+}
+.hpanel.at-left {
+  left: 10px;
+}
+.hpanel.at-right {
+  right: 10px;
+}
+.hpanel.at-top,
+.hpanel.at-bottom {
+  left: 8px;
+  right: 8px;
+  width: auto;
+  max-height: calc(100% - 16px);
+}
+.hpanel.at-top {
+  top: 8px;
+}
+.hpanel.at-bottom {
+  top: auto;
+  bottom: 8px;
+}
+/* keep the zoom buttons clear of the panel */
+#stage[data-hp='left'] .zoom-ctl {
+  left: auto;
+  right: 10px;
+}
+#stage[data-hp='top'] .zoom-ctl {
+  top: auto;
+  bottom: 10px;
+}
+.hpanel.hp-in.at-left {
+  animation: hp-in-left 0.22s var(--ease);
+}
+.hpanel.hp-in.at-right {
+  animation: hp-in-right 0.22s var(--ease);
+}
+.hpanel.hp-in.at-top {
+  animation: hp-in-top 0.22s var(--ease);
+}
+.hpanel.hp-in.at-bottom {
+  animation: hp-in-bottom 0.22s var(--ease);
+}
+.hpanel.hp-out {
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.16s;
+}
+@keyframes hp-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+@keyframes hp-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes hp-in-top {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+@keyframes hp-in-bottom {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+.hpanel .head-art {
+  width: 46px;
+  height: 46px;
+}
+.hpanel .head-name {
+  font-size: 16px;
+}
+.hpanel .panel-head .grow {
+  min-width: 0;
+}
+.hp-paths {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.btn.hp-path {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'em head head'
+    'em name cost';
+  align-items: center;
+  gap: 2px 8px;
+  width: 100%;
+  min-height: 56px;
+  padding: 6px 10px 6px 6px;
+  text-align: left;
+}
+.hp-path .emblem {
+  grid-area: em;
+  width: 40px;
+  height: 40px;
+}
+.hp-path-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.hp-path-head .pips i {
+  width: 10px;
+}
+.hp-path .up-name {
+  grid-area: name;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.hp-path .up-cost {
+  grid-area: cost;
+}
+.hp-path.disabled {
+  opacity: 0.55;
+}
+.hp-foot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.hp-target {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px;
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.hp-target > span {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+.hp-target small {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.hp-target b {
+  font-size: 15px;
+}
+.hp-foot > .btn {
+  font-size: 13px;
+  white-space: nowrap;
+  padding: 8px 10px;
+}
+
+/* portrait: a sheet across the map, paths side by side, one footer row */
+@media (max-aspect-ratio: 1/1) {
+  .hp-paths {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .btn.hp-path {
+    grid-template-columns: 30px minmax(0, 1fr);
+    grid-template-areas:
+      'head head'
+      'em name'
+      'em cost';
+    padding: 6px;
+    min-height: 0;
+  }
+  .hp-path .emblem {
+    width: 30px;
+    height: 30px;
+  }
+  .hp-path .up-name {
+    font-size: 12px;
+  }
+  .hp-path .up-cost {
+    font-size: 12px;
+  }
+  .hp-path-head .path-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .hp-path-head .pips {
+    display: none;
+  }
+  .hp-foot {
+    grid-template-columns: 1.3fr 1.2fr 0.9fr;
+  }
+  .hp-target {
+    grid-column: auto;
+  }
+  .hp-target .btn.icon {
+    min-width: 32px;
+    padding: 4px;
+  }
+  .hpanel .sell-label {
+    display: none;
+  }
+}
+/* phones sideways: tighter */
+@media (min-aspect-ratio: 1/1) and (max-height: 520px) {
+  .hpanel {
+    width: 236px;
+    gap: 6px;
+    padding: 8px;
+    top: 6px;
+    max-height: calc(100% - 12px);
+  }
+  .hpanel.at-left {
+    left: 6px;
+  }
+  .hpanel.at-right {
+    right: 6px;
+  }
+  .hpanel .head-art {
+    width: 36px;
+    height: 36px;
+  }
+  .hpanel .head-sub {
+    font-size: 12px;
+  }
+  .btn.hp-path {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    min-height: 46px;
+    padding: 4px 8px 4px 4px;
+  }
+  .hp-path .emblem {
+    width: 32px;
+    height: 32px;
+  }
+  .hp-target b {
+    font-size: 13px;
+  }
+}
+/* panel footer: never wider than the panel */
+.hp-foot {
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+}
+.hp-foot > * {
+  min-width: 0;
+}
+.hp-foot > .btn {
+  letter-spacing: 0.04em;
+  overflow: hidden;
+}
+.hp-target .btn.icon {
+  flex: none;
+  min-width: 34px;
+  width: 34px;
+  padding: 4px;
+}
+@media (max-aspect-ratio: 1/1) {
+  .hp-foot {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 0.9fr);
+  }
+}

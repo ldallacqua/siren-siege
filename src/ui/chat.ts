@@ -7,6 +7,7 @@ import { addXp, persist, reducedMotion, save } from '../state/save.ts';
 import { artChain, show } from './common.ts';
 import { h, hex } from './dom.ts';
 import { icon } from './icons.ts';
+import { chatFiles, preloadAll } from './preload.ts';
 
 /**
  * Visual-novel chat player: painted scene + ambient particles, breathing
@@ -41,7 +42,19 @@ const AMBIENT: Record<ChatScene, Ambient> = {
 
 const PAUSE: Record<string, number> = { '.': 170, '!': 170, '?': 170, ',': 80, ';': 90, ':': 90, '—': 120 };
 
+let opening = false;
+
+/** Opens a chat once her portraits are decoded, so mood changes never flash. */
 export function playChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions = {}): void {
+  if (opening) return;
+  opening = true;
+  void preloadAll(chatFiles(ep), 1500).then(() => {
+    opening = false;
+    openChat(ep, onCloseRaw, opts);
+  });
+}
+
+function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): void {
   // Her own theme while you talk; the previous music comes back afterwards.
   const prevMusic = sound.music;
   sound.startMusic(`chat-${ep.heroine}`);
@@ -128,9 +141,15 @@ export function playChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOpti
     if (m === mood && portrait.firstChild) return;
     mood = m;
     const img = artChain([portraitFile(ep.heroine, m), portraitFile(ep.heroine)], ep.heroine, d.name, true, 'chat-art enter');
-    const old = [...portrait.children];
-    portrait.append(img);
-    window.setTimeout(() => old.forEach((o) => o.remove()), 260);
+    // Swap only once the new face is decoded, so the old one never blinks out first.
+    const swap = () => {
+      if (mood !== m) return;
+      const old = [...portrait.children];
+      portrait.append(img);
+      window.setTimeout(() => old.forEach((o) => o.remove()), 260);
+    };
+    if (!portrait.firstChild) swap();
+    else img.decode().then(swap, swap);
   };
 
   // The first line waits for the opening title card to part.

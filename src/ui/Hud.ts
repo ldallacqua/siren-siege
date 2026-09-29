@@ -3,13 +3,14 @@ import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
 import { portraitFile } from '../data/progression.ts';
 import type { Battle } from '../game/Battle.ts';
 import type { Tower } from '../game/sim/BattleSim.ts';
-import { canBuyUpgrade, sellValue } from '../game/sim/upgrades.ts';
+import { canBuyUpgrade, lockReason, sellValue } from '../game/sim/upgrades.ts';
 import { ENEMY_BY_ID } from '../data/enemies.ts';
 import { heroineLevel, isUnlocked } from '../state/save.ts';
 import { artImg, openLightbox } from './art.ts';
 import { gold, h, hex, toast } from './dom.ts';
 import { icon } from './icons.ts';
 import { closeScreens } from './common.ts';
+import { emblem } from './emblems.ts';
 import { calm } from './motion.ts';
 import { showUpgradeTree } from './upgradeTree.ts';
 
@@ -19,6 +20,8 @@ interface DockRefs {
   /** The Upgrades button and how many upgrades she can afford right now. */
   tree?: { el: HTMLButtonElement; count: HTMLElement; t: Tower; was?: number };
 }
+
+type Side = 'left' | 'right' | 'top' | 'bottom';
 
 const TARGET_LABEL = { first: 'First', last: 'Last', strong: 'Strong', close: 'Close' } as const;
 
@@ -49,11 +52,24 @@ export class Hud {
   private top: HTMLElement | null = null;
   private dockSlot: HTMLElement | null = null;
   private shop: { el: HTMLElement; refs: DockRefs } | null = null;
+  /** The selected heroine's panel, floating over the map (BTD6's tower panel). */
+  private panel: { el: HTMLElement; refs: DockRefs; key: string; uid: number; side: Side } | null = null;
+  private stage: HTMLElement;
   onMenu: (() => void) | null = null;
+  /** Where a heroine is on screen, in CSS px relative to the stage (set by main.ts). */
+  locate: ((t: Tower) => { x: number; y: number }) | null = null;
 
-  constructor(root: HTMLElement) {
+  constructor(root: HTMLElement, stage: HTMLElement) {
     this.root = root;
+    this.stage = stage;
     window.addEventListener('keydown', (e) => this.onKey(e));
+    // Rotating the phone moves the panel to the matching edge.
+    window.addEventListener('resize', () => {
+      if (!this.panel || !this.battle) return;
+      this.panel.key = '';
+      this.panel.side = this.sideFor(this.battle.selected);
+      this.refresh();
+    });
     // Poll the ghost validity for the Place button (ghost moves without emits)
     const loop = () => {
       this.updatePlaceBtn();
@@ -71,6 +87,9 @@ export class Hud {
     this.dockRefs = { costButtons: [] };
     this.top = this.dockSlot = this.shop = null;
     this.root.replaceChildren();
+    this.panel?.el.remove();
+    this.panel = null;
+    delete this.stage.dataset.hp;
     if (b) {
       this.unsub = b.subscribe(() => this.refresh());
       this.refresh();
@@ -102,10 +121,9 @@ export class Hud {
     );
   }
 
-  /** Only the lower panel is rebuilt, and only when what it shows changes. */
+  /** The dock only changes between the shop and placing; a selected heroine gets her own panel. */
   private key(b: Battle): string {
-    const s = b.selected;
-    return [b.placing ?? '-', s ? `${s.uid}:${s.tiers.join('')}:${s.targeting}` : '-'].join('|');
+    return b.placing ?? '-';
   }
 
   private refresh(): void {
@@ -117,6 +135,7 @@ export class Hud {
       this.structKey = k;
       this.buildDock(b);
     }
+    this.syncPanel(b);
     this.update(b);
   }
 
@@ -182,7 +201,14 @@ export class Hud {
       r.pause.classList.toggle('on', b.paused);
       r.pause.replaceChildren(icon(b.paused ? 'play' : 'pause'));
     }
-    for (const c of this.dockRefs.costButtons) {
+    this.updateRefs(this.dockRefs, b);
+    if (this.panel) this.updateRefs(this.panel.refs, b);
+  }
+
+  /** Enable/disable cost buttons for the gold on hand, flash the ones that just became affordable. */
+  private updateRefs(refs: DockRefs, b: Battle): void {
+    const sim = b.sim;
+    for (const c of refs.costButtons) {
       const ok = c.ok();
       c.el.disabled = !ok;
       c.el.classList.toggle('poor', ok === false && sim.cash < c.cost());
@@ -194,7 +220,7 @@ export class Hud {
       }
       c.was = ok;
     }
-    const tr = this.dockRefs.tree;
+    const tr = refs.tree;
     if (tr) {
       const n = tr.t.def.paths.filter((p, i) => canBuyUpgrade(tr.t.tiers, i) && sim.cash >= p.tiers[tr.t.tiers[i]].cost).length;
       if (n !== tr.was) {
@@ -293,9 +319,6 @@ export class Hud {
     if (b.placing) {
       this.dockRefs = { costButtons: [] };
       dock = this.buildPlacing(b, b.placing);
-    } else if (b.selected) {
-      this.dockRefs = { costButtons: [] };
-      dock = this.buildTower(b, b.selected);
     } else {
       if (!this.shop) {
         this.dockRefs = { costButtons: [] };
@@ -368,42 +391,123 @@ export class Hud {
       h(
         'p',
         { class: 'hint' },
-        touch ? 'Tap or drag on the map to position her, then tap again or press Place.' : 'Click the map to place her. Esc to cancel.',
+        touch ? 'Tap or drag on the map to position her, then press Place.' : 'Click the map to place her. Esc to cancel.',
       ),
       h('div', { class: 'row' }, this.dockRefs.placeBtn, h('button', { class: 'btn', onclick: () => b.cancel() }, 'Cancel')),
     );
   }
 
+  /** Which edge of the stage her panel goes to: away from her, like BTD6. */
+  private sideFor(t: Tower | null): Side {
+    const W = this.stage.clientWidth;
+    const H = this.stage.clientHeight;
+    const p = t && this.locate ? this.locate(t) : null;
+    if (H > W * 1.05) return p && p.y > H * 0.5 ? 'top' : 'bottom';
+    return p && p.x < W * 0.45 ? 'right' : 'left';
+  }
+
+  /** Show, rebuild (on upgrade/targeting change) or hide the selected heroine's panel. */
+  private syncPanel(b: Battle): void {
+    const t = b.placing ? null : b.selected;
+    const key = t ? `${t.uid}:${t.tiers.join('')}:${t.targeting}` : '';
+    const was = this.panel;
+    if (key === (was?.key ?? '')) return;
+    if (!t) {
+      if (was) {
+        const el = was.el;
+        if (calm()) el.remove();
+        else {
+          el.classList.add('hp-out');
+          window.setTimeout(() => el.remove(), 180);
+        }
+      }
+      this.panel = null;
+      delete this.stage.dataset.hp;
+      return;
+    }
+    const refs: DockRefs = { costButtons: [] };
+    const side = was && was.uid === t.uid && was.side ? was.side : this.sideFor(t);
+    const el = this.buildPanel(b, t, refs);
+    el.classList.add(`at-${side}`);
+    this.stage.dataset.hp = side;
+    if (was && was.uid === t.uid) was.el.replaceWith(el);
+    else {
+      was?.el.remove();
+      if (!calm()) el.classList.add('hp-in');
+      this.stage.append(el);
+    }
+    this.panel = { el, refs, key, uid: t.uid, side };
+  }
+
   /**
-   * The selected heroine: who she is, her build, and one way in to her
-   * upgrades (the full-screen tree, like BTD6). Kept small so the map gets
-   * the screen.
+   * The selected heroine (BTD6's tower panel): quick-buy for each path's next
+   * upgrade, the full upgrade screen, targeting and sell.
    */
-  private buildTower(b: Battle, t: Tower): HTMLElement {
+  private buildPanel(b: Battle, t: Tower, refs: DockRefs): HTMLElement {
     const def = t.def;
+    const paths = def.paths.map((p, i) => {
+      const tier = t.tiers[i];
+      const next = p.tiers[tier];
+      const reason = lockReason(t.tiers, i);
+      const pips = h('span', { class: 'pips' }, ...p.tiers.map((_, k) => h('i', { class: k < tier ? 'on' : '' })));
+      const head = h('span', { class: 'hp-path-head' }, h('span', { class: 'path-name' }, p.name), pips);
+      if (next && !reason) {
+        const btn = h(
+          'button',
+          {
+            class: 'btn buy hp-path',
+            title: `${next.name}: ${next.desc} (${'QWE'[i]})`,
+            onclick: () => (b.sim.buyUpgrade(t, i as 0 | 1 | 2) ? undefined : toast('Not enough gold')),
+          },
+          emblem(def.id, i, tier + 1),
+          head,
+          h('span', { class: 'up-name' }, next.name),
+          h('span', { class: 'up-cost' }, icon('gem'), gold(next.cost)),
+        );
+        refs.costButtons.push({ el: btn, cost: () => next.cost, ok: () => b.sim.cash >= next.cost && canBuyUpgrade(t.tiers, i) });
+        return btn;
+      }
+      return h(
+        'div',
+        { class: 'btn buy hp-path disabled' },
+        tier ? emblem(def.id, i, tier) : h('span', { class: 'emblem' }),
+        head,
+        h('span', { class: 'up-name' }, reason === 'Path locked' ? 'Locked' : 'Maxed'),
+      );
+    });
     const count = h('span', { class: 'tree-count' });
     const tree = h(
       'button',
-      { class: 'btn primary big tree-btn', title: 'Upgrades (U)', onclick: () => this.openTree(b, t) },
+      { class: 'btn primary tree-btn', title: 'Upgrade tree (U)', onclick: () => this.openTree(b, t) },
       icon('upgrade'),
       'Upgrades',
       count,
     );
-    this.dockRefs.tree = { el: tree, count, t };
-    const build = h(
-      'span',
-      { class: 'build' },
-      ...t.tiers.map((n, i) =>
-        h(
-          'span',
-          { class: 'build-path', title: def.paths[i].name },
-          ...def.paths[i].tiers.map((_, k) => h('i', { class: k < n ? 'on' : '' })),
-        ),
-      ),
+    refs.tree = { el: tree, count, t };
+    const target = h(
+      'div',
+      { class: 'hp-target', title: 'Targeting (Tab)' },
+      h('button', { class: 'btn icon', 'aria-label': 'Previous target mode', onclick: () => b.sim.cycleTargeting(t, -1) }, icon('back')),
+      h('span', null, h('small', null, 'Target'), h('b', null, TARGET_LABEL[t.targeting])),
+      h('button', { class: 'btn icon', 'aria-label': 'Next target mode', onclick: () => b.sim.cycleTargeting(t) }, icon('next')),
+    );
+    const sell = h(
+      'button',
+      {
+        class: 'btn danger',
+        title: 'Sell (Delete)',
+        onclick: () => {
+          b.sim.sell(t);
+          b.select(null);
+        },
+      },
+      icon('coin'),
+      h('span', { class: 'sell-label' }, 'Sell '),
+      String(sellValue(t.spent)),
     );
     return h(
       'div',
-      { class: 'dock tower', style: `--c:${hex(def.color)};--a:${hex(def.accent)}` },
+      { class: 'hpanel', role: 'dialog', 'aria-label': `${def.name} panel`, style: `--c:${hex(def.color)};--a:${hex(def.accent)}` },
       h(
         'div',
         { class: 'panel-head' },
@@ -412,41 +516,12 @@ export class Hud {
           'div',
           { class: 'grow' },
           h('div', { class: 'head-name' }, def.name),
-          h('div', { class: 'head-sub' }, h('em', null, def.title)),
-          h('div', { class: 'head-sub build-line' }, h('b', { class: 'build-code' }, t.tiers.join('-')), build, `${t.pops} pops`),
+          h('div', { class: 'head-sub build-line' }, h('b', { class: 'build-code' }, t.tiers.join('-')), `${t.pops} pops`),
         ),
         h('button', { class: 'btn icon', title: 'Close (Esc)', 'aria-label': 'Close', onclick: () => b.select(null) }, icon('close')),
       ),
-      h(
-        'div',
-        { class: 'tower-actions' },
-        tree,
-        h(
-          'button',
-          {
-            class: 'btn',
-            title: 'Targeting (Tab)',
-            'aria-label': `Target: ${TARGET_LABEL[t.targeting]}`,
-            onclick: () => b.sim.cycleTargeting(t),
-          },
-          icon('target'),
-          TARGET_LABEL[t.targeting],
-        ),
-        h(
-          'button',
-          {
-            class: 'btn danger',
-            title: 'Sell (Delete)',
-            onclick: () => {
-              b.sim.sell(t);
-              b.select(null);
-            },
-          },
-          icon('coin'),
-          h('span', { class: 'sell-label' }, 'Sell '),
-          String(sellValue(t.spent)),
-        ),
-      ),
+      h('div', { class: 'hp-paths' }, ...paths),
+      h('div', { class: 'hp-foot' }, target, tree, sell),
     );
   }
 
@@ -482,6 +557,8 @@ export class Hud {
     } else if (b.selected && (k === 'Delete' || k === 'Backspace')) {
       b.sim.sell(b.selected);
       b.select(null);
+    } else if (b.selected && ['q', 'w', 'e'].includes(k.toLowerCase())) {
+      b.sim.buyUpgrade(b.selected, ['q', 'w', 'e'].indexOf(k.toLowerCase()) as 0 | 1 | 2);
     } else if (b.selected && (k === 'u' || k === 'U')) {
       this.openTree(b, b.selected);
     } else if (b.selected && k === 'Tab') {

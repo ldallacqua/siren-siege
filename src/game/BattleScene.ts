@@ -308,14 +308,12 @@ export class BattleScene extends Phaser.Scene {
     this.downAt = { x: p.x, y: p.y };
     if (!b.placing) return; // selection happens on release, so a drag can pan instead
     const w = this.toWorld(p.x, p.y);
-    const touch = p.wasTouch;
-    const prev = b.ghost;
     b.ghost = { x: w.x, y: w.y };
-    if (!touch) {
-      if (!b.confirmPlace()) this.onToast?.(this.placeError(b));
-    } else if (prev && Math.hypot(prev.x - w.x, prev.y - w.y) < 0.6) {
+    if (!p.wasTouch) {
       if (!b.confirmPlace()) this.onToast?.(this.placeError(b));
     } else {
+      // Touch: taps and drags only move her; the Place button confirms, so a
+      // stray tap while fine-tuning never drops her in the wrong spot.
       this.dragging = true;
       b.emit();
     }

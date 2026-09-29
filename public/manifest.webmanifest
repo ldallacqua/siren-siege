@@ -1,10 +1,20 @@
 {
+  "id": "./",
   "name": "Siren Siege",
   "short_name": "Siren Siege",
+  "description": "Tower defense with alluring heroines: defend the shrine, raise Bond, unlock chats and art.",
   "start_url": "./",
+  "scope": "./",
   "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
   "orientation": "any",
-  "background_color": "#140a1f",
-  "theme_color": "#140a1f",
-  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "background_color": "#0d0914",
+  "theme_color": "#0d0914",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
 }
