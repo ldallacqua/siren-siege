@@ -63,6 +63,7 @@
 - Owner feedback: expression changes blink (preload images); bring quick upgrades back but in a BTD6-style panel next to the map, keeping the shop; installable PWA; tapping a tree badge must not buy; no sell/target inside the tree; touch placement only via Place.
 - Done: `preload.ts` (+ `playChat` waits for moods, `artChain`/lightbox skip known-missing files, `warmArt()` at boot). `Hud` keeps the dock as shop/placing and builds `.hpanel` in `#stage` (`syncPanel`, `sideFor` via `hud.locate` from `scene.pagePoint`). `BattleSim.cycleTargeting(t, dir)` (+ test). Tree tiles select only; Enter/Upgrade buys. `BattleScene.onDown` never places on touch. PWA: manifest, icons, `sw.js`, registration in `main.ts`. Smoke asserts all of it (no place on second tap, shop stays visible, badge tap doesn't buy, no Sell in tree, SW registers + 512 icon).
 - Earlier today: bigger outlined heroines, full-screen upgrade tree, smoke screenshot retry for CI.
+- Follow-up: owner's iPhone (Safari bars showing) squeezed the portrait tree header under the first path row; fixed (`.ut-body > * { flex-shrink: 0 }`, compact portrait layout + a `max-height: 800px` tier). Checked at 440×760 and 390×664.
 - Nothing half-done. Old `.dock.tower`/`.paths`/`.tower-actions` CSS is unused (harmless tech debt).
 
 ## Next up

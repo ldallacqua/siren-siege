@@ -5050,3 +5050,119 @@ body.calm .home-wash {
     grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.2fr) minmax(0, 0.9fr);
   }
 }
+
+/* upgrade tree, portrait: never squeeze the header (the screen scrolls instead),
+   and stay compact so phones with browser bars fit the tree and the Upgrade button */
+@media (max-aspect-ratio: 1/1) {
+  .ut-body {
+    flex: none;
+    gap: 10px;
+  }
+  .ut-body > * {
+    flex-shrink: 0;
+  }
+  .ut-hero {
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: start;
+  }
+  .ut-art {
+    height: 100px;
+  }
+  .ut-role {
+    font-size: 11px;
+  }
+  .ut-id h2 {
+    font-size: 18px;
+    margin: 0 0 2px;
+  }
+  .ut-build {
+    font-size: 12px;
+  }
+  .ut-art {
+    grid-row: span 2;
+  }
+  .ut-stats {
+    grid-column: 2;
+    align-self: start;
+  }
+  .ut-tree {
+    gap: 8px;
+  }
+  .ut-row {
+    gap: 4px;
+  }
+  .ut-path b {
+    font-size: 12px;
+  }
+  .ut-tiles {
+    gap: 8px;
+  }
+  .ut-tile {
+    aspect-ratio: 1 / 0.8;
+    padding: 6px 4px;
+    --cut: 10px;
+  }
+  .ut-tile .emblem {
+    width: 48%;
+    max-width: 64px;
+  }
+  .ut-tier {
+    top: 4px;
+    left: 11px;
+    font-size: 11px;
+  }
+  .ut-cost {
+    font-size: 12px;
+  }
+  .ut-detail {
+    gap: 6px;
+    padding: 10px 16px 12px;
+  }
+  .ut-detail-head .emblem {
+    width: 44px;
+    height: 44px;
+  }
+  .ut-detail-head small {
+    font-size: 11px;
+  }
+  .ut-detail-head h3 {
+    font-size: 17px;
+  }
+  .ut-desc {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  .ut-sig,
+  .ut-note {
+    font-size: 12px;
+  }
+  .ut-buy.big {
+    min-height: 46px;
+  }
+}
+/* short portrait screens (browser bars showing): tighter still */
+@media (max-aspect-ratio: 1/1) and (max-height: 800px) {
+  .utree .screen-top {
+    margin-bottom: 4px;
+    padding-top: calc(6px + env(safe-area-inset-top));
+    padding-bottom: 6px;
+  }
+  .utree .screen-top h2 {
+    font-size: 19px;
+  }
+  .ut-art {
+    height: 84px;
+  }
+  .ut-hero {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+  .ut-role {
+    display: none;
+  }
+  .ut-tile {
+    aspect-ratio: 1 / 0.72;
+  }
+  .ut-tile .emblem {
+    width: 42%;
+  }
+}
