@@ -180,6 +180,8 @@ if (dev)
   });
 
 goHome();
+let interacted = false;
+window.addEventListener('pointerdown', () => (interacted = true), { capture: true, once: true });
 checkForUpdate();
 
 /**
@@ -203,7 +205,7 @@ function checkForUpdate(): void {
         return;
       }
       // Only reload if the player hasn't started anything yet; otherwise just tell them.
-      if (!battle && !document.querySelector('#screens .screen:not(.home)')) location.reload();
+      if (!interacted && !battle) location.reload();
       else toast('A new version is available: reload the page to update.');
     })
     .catch(() => {});

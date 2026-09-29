@@ -2155,3 +2155,21 @@ input[type='range']::-moz-range-thumb {
     font-size: 16px;
   }
 }
+
+.dock-slot {
+  display: contents;
+}
+/* Re-rendering the screen you're already on (e.g. back from a chat) shouldn't replay its entrance. */
+.screen.no-anim,
+.screen.no-anim .home-hero {
+  animation: none;
+}
+.home-hero.swap {
+  animation: hero-swap 0.35s var(--ease);
+}
+@keyframes hero-swap {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+}

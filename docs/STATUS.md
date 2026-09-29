@@ -48,6 +48,7 @@
 - Design system: fonts in `public/fonts/` (OFL), `src/ui/icons.ts`, full `style.css` rewrite on tokens. New home (`showHome` in `screens.ts`, featured heroine = highest bond, switchable). HUD markup in `Hud.ts` uses icons and stat chips. Settings screen has panels, switches, slider readouts and a key list; the sfx slider is now called "Effects".
 - Battlefield: `src/game/mapArt.ts` paints the scene (seeded, cached per map, 3-tile margin); `BattleScene` shows it as an image and adds an additive `glow` layer, fireflies, lantern flicker, `drawEnemy()`, light-streak projectiles, dashed `drawRange()`, tower pads and diamond pips. The checkerboard `drawBackground` and map `theme` colors are no longer used for the ground.
 - Verified with smoke on all 3 viewports plus extra roster/gallery/results screenshots. Nothing half-done.
+- Follow-up (owner report: "every click re-renders the whole UI"): the home avatar picker re-ran `showHome()` (full rebuild + entrance animation + image reloads). Now `feature()` swaps only the portrait, name, colors and highlight. `show()` skips the entrance animation when re-showing the same screen type. The HUD builds stats/controls once per battle and updates them in place (`Hud.update`); only the lower panel swaps, and the shop panel is cached. The boot update check no longer reloads after the first tap. Smoke asserts element identity for both cases.
 
 ## Next up
 

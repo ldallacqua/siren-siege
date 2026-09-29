@@ -15,6 +15,8 @@ export function closeScreens(): void {
 }
 
 function show(el: HTMLElement): void {
+  const prev = root().firstElementChild;
+  if (prev && prev.className.split(' ')[1] === el.className.split(' ')[1]) el.classList.add('no-anim');
   root().replaceChildren(el);
   el.querySelector<HTMLElement>('[autofocus], button')?.focus({ preventScroll: true });
 }
@@ -83,64 +85,82 @@ export function showHome(a: HomeActions): void {
       label,
       meta ? h('span', { class: 'menu-meta' }, meta) : null,
     );
-  const hero = fullPortrait(artChain([portraitFile(d.id)], d.id, d.name, true, 'home-hero'), d.id);
-  hero.title = '';
-  show(
+  const heroFor = (id: string) => {
+    const img = fullPortrait(artChain([portraitFile(id)], id, HEROINE_BY_ID[id].name, true, 'home-hero'), id);
+    img.title = '';
+    return img;
+  };
+  let hero = heroFor(d.id);
+  const nameB = h('b', null, d.name);
+  const nameS = h('span', null, d.title);
+  // Switching the featured heroine updates only what changes (no full re-render).
+  const feature = (id: string) => {
+    if (id === featured) return;
+    featured = id;
+    const u = HEROINE_BY_ID[id];
+    screen.style.setProperty('--c', hex(u.color));
+    screen.style.setProperty('--a', hex(u.accent));
+    const next = heroFor(id);
+    next.classList.add('swap');
+    hero.replaceWith(next);
+    hero = next;
+    nameB.textContent = u.name;
+    nameS.textContent = u.title;
+    for (const p of screen.querySelectorAll<HTMLElement>('.pick')) p.classList.toggle('on', p.dataset.id === id);
+  };
+  const screen = h(
+    'section',
+    { class: 'screen home', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
+    h('div', { class: 'home-bg' }),
+    h('div', { class: 'home-moon' }),
+    hero,
+    h('div', { class: 'home-shade' }),
     h(
-      'section',
-      { class: 'screen home', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
-      h('div', { class: 'home-bg' }),
-      h('div', { class: 'home-moon' }),
-      hero,
-      h('div', { class: 'home-shade' }),
+      'div',
+      { class: 'home-main' },
       h(
         'div',
-        { class: 'home-main' },
-        h(
-          'div',
-          null,
-          h('h1', { class: 'logo' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
-          h('p', { class: 'tagline' }, 'Beauty is the last line of defense'),
-        ),
-        h(
-          'nav',
-          { class: 'home-menu' },
-          a.resume ? h('button', { class: 'btn primary big', onclick: a.resume }, h('span', null, 'Resume battle'), icon('next')) : null,
-          h(
-            'button',
-            { class: `btn ${a.resume ? '' : 'primary'} big`, onclick: a.play, autofocus: true },
-            h('span', { style: 'text-align:left' }, a.resume ? 'New battle' : 'Play', h('small', null, 'Moonlit Shrine')),
-            icon('play'),
-          ),
-          item('Heroines', 'heroines', () => showRoster(a), `${unlocked.length}/${HEROINES.length}`),
-          item('Gallery', 'image', () => showGallery(a), `${got}/${GALLERY.length}`),
-          item('Settings', 'gear', () => showSettings(a)),
-        ),
-        h('p', { class: 'home-foot' }, 'All characters are adults (21+) · v0.2', dev ? ' · DEV MODE' : ''),
+        null,
+        h('h1', { class: 'logo' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
+        h('p', { class: 'tagline' }, 'Beauty is the last line of defense'),
       ),
-      h('div', { class: 'home-name' }, h('b', null, d.name), h('span', null, d.title)),
       h(
-        'div',
-        { class: 'home-pick', role: 'group', 'aria-label': 'Featured heroine' },
-        ...unlocked.map((u) =>
-          h(
-            'button',
-            {
-              class: `pick ${u.id === featured ? 'on' : ''}`,
-              style: `--c:${hex(u.color)};--a:${hex(u.accent)}`,
-              title: `Show ${u.name}`,
-              'aria-label': `Show ${u.name}`,
-              onclick: () => {
-                featured = u.id;
-                showHome(a);
-              },
-            },
-            artChain([portraitFile(u.id)], u.id, u.name, true),
-          ),
+        'nav',
+        { class: 'home-menu' },
+        a.resume ? h('button', { class: 'btn primary big', onclick: a.resume }, h('span', null, 'Resume battle'), icon('next')) : null,
+        h(
+          'button',
+          { class: `btn ${a.resume ? '' : 'primary'} big`, onclick: a.play, autofocus: true },
+          h('span', { style: 'text-align:left' }, a.resume ? 'New battle' : 'Play', h('small', null, 'Moonlit Shrine')),
+          icon('play'),
+        ),
+        item('Heroines', 'heroines', () => showRoster(a), `${unlocked.length}/${HEROINES.length}`),
+        item('Gallery', 'image', () => showGallery(a), `${got}/${GALLERY.length}`),
+        item('Settings', 'gear', () => showSettings(a)),
+      ),
+      h('p', { class: 'home-foot' }, 'All characters are adults (21+) · v0.2', dev ? ' · DEV MODE' : ''),
+    ),
+    h('div', { class: 'home-name' }, nameB, nameS),
+    h(
+      'div',
+      { class: 'home-pick', role: 'group', 'aria-label': 'Featured heroine' },
+      ...unlocked.map((u) =>
+        h(
+          'button',
+          {
+            class: `pick ${u.id === featured ? 'on' : ''}`,
+            style: `--c:${hex(u.color)};--a:${hex(u.accent)}`,
+            title: `Show ${u.name}`,
+            'aria-label': `Show ${u.name}`,
+            'data-id': u.id,
+            onclick: () => feature(u.id),
+          },
+          artChain([portraitFile(u.id)], u.id, u.name, true),
         ),
       ),
     ),
   );
+  show(screen);
 }
 
 /** Music/sound volume, mute and reduced motion. Used by Settings, Options and the pause menu. */

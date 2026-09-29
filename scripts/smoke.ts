@@ -85,6 +85,19 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.getByRole('button', { name: /Play/ }).waitFor();
   await shot('1-home');
 
+  // Switching the featured heroine must update in place, not re-render the screen
+  await page.evaluate(() => ((window as any).__home = document.querySelector('.screen.home')));
+  await page.getByRole('button', { name: 'Show Yuki Frostveil' }).click();
+  assert(
+    await page.evaluate(
+      () =>
+        (window as any).__home === document.querySelector('.screen.home') &&
+        document.querySelector('.home-name b')?.textContent === 'Yuki Frostveil',
+    ),
+    'featured heroine switch re-rendered the home screen',
+  );
+  await page.getByRole('button', { name: 'Show Scarlet Vane' }).click();
+
   await page.getByRole('button', { name: /Play/ }).click();
   await page.locator('.dock.shop').waitFor();
   assert((await sim(page))?.towers === 0, 'battle did not start');
@@ -107,6 +120,15 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   }
   assert((await sim(page))?.towers === spots.length, `expected ${spots.length} heroines placed`);
   await shot('2-placed');
+
+  // HUD controls update in place: toggling pause/speed must not rebuild the shop cards
+  await page.evaluate(() => ((window as any).__card = document.querySelector('.card')));
+  await page.getByRole('button', { name: 'Pause (P)' }).click();
+  await page.getByRole('button', { name: 'Game speed (F)' }).click();
+  await page.getByRole('button', { name: 'Pause (P)' }).click();
+  await page.getByRole('button', { name: 'Game speed (F)' }).click();
+  await page.getByRole('button', { name: 'Game speed (F)' }).click();
+  assert(await page.evaluate(() => (window as any).__card === document.querySelector('.card')), 'HUD rebuilt the shop on a control toggle');
 
   const before = (await sim(page))!;
   await page.getByRole('button', { name: /Start/ }).click();

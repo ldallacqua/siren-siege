@@ -61,3 +61,7 @@ All SFX and music are generated with Web Audio (`src/audio/sound.ts`): zero asse
 ### D-015 · 2026-09-29 · "Moonlit Noir" UI system; painted battlefield texture
 
 Owner feedback: the UI "looks like old Flash games". Research on modern gacha/TD UIs (Arknights, Blue Archive, NIKKE, BTD6) and HUD-design guidance pointed to: two fonts max, one icon language, one hot accent, restrained surfaces, and a readable, place-like battlefield. So: self-hosted Cinzel + Barlow Semi Condensed (offline-safe, no Google Fonts), an inline SVG icon set, chamfered buttons, and one rose accent (rules in `docs/UI_STYLE.md`). The battlefield scenery is painted once per map with Canvas 2D (`mapArt.ts`, seeded) and shown as one image, transposed for portrait by flipY + 90° rotation; only live things are drawn per frame (plus an additive glow layer). Canvas 2D gives gradients and soft shadows cheaply and avoids per-frame geometry. Trade-off: the texture is 80 px/tile, so at 3× zoom on a high-DPI phone it's slightly soft.
+
+### D-016 · 2026-09-29 · Update DOM in place; don't re-render screens for small state changes
+
+`h()` + `show()` rebuild everything, which is fine for navigation but reads as a "page reload" (entrance animation replays, images re-decode) when used for a toggle. Rule: navigation may rebuild; in-screen state (featured heroine, HUD speed/pause/auto/wave, costs) must update existing nodes. The smoke test checks node identity so regressions get caught.

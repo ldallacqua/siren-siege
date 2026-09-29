@@ -8,6 +8,11 @@ import { artImg, openLightbox } from './art.ts';
 import { gold, h, hex, toast } from './dom.ts';
 import { icon } from './icons.ts';
 
+interface DockRefs {
+  costButtons: { el: HTMLButtonElement; cost: () => number; ok: () => boolean }[];
+  placeBtn?: HTMLButtonElement;
+}
+
 const TARGET_LABEL = { first: 'First', last: 'Last', strong: 'Strong', close: 'Close' } as const;
 
 /** Battle sidebar (landscape) / bottom dock (portrait). */
@@ -22,9 +27,17 @@ export class Hud {
     wave?: HTMLElement;
     waveBar?: HTMLElement;
     start?: HTMLButtonElement;
-    costButtons: { el: HTMLButtonElement; cost: () => number; ok: () => boolean }[];
-    placeBtn?: HTMLButtonElement;
-  } = { costButtons: [] };
+    startKey?: string;
+    speed?: HTMLButtonElement;
+    speedLabel?: HTMLElement;
+    auto?: HTMLButtonElement;
+    pause?: HTMLButtonElement;
+    pausedShown?: boolean;
+  } = {};
+  private dockRefs: DockRefs = { costButtons: [] };
+  private top: HTMLElement | null = null;
+  private dockSlot: HTMLElement | null = null;
+  private shop: { el: HTMLElement; refs: DockRefs } | null = null;
   onMenu: (() => void) | null = null;
 
   constructor(root: HTMLElement) {
@@ -42,6 +55,9 @@ export class Hud {
     this.unsub?.();
     this.battle = b;
     this.structKey = '';
+    this.refs = {};
+    this.dockRefs = { costButtons: [] };
+    this.top = this.dockSlot = this.shop = null;
     this.root.replaceChildren();
     if (b) {
       this.unsub = b.subscribe(() => this.refresh());
@@ -74,56 +90,72 @@ export class Hud {
     );
   }
 
+  /** Only the lower panel is rebuilt, and only when what it shows changes. */
   private key(b: Battle): string {
     const s = b.selected;
-    return [
-      b.placing ?? '-',
-      s ? `${s.uid}:${s.tiers.join('')}:${s.targeting}` : '-',
-      b.sim.waveActive,
-      b.speed,
-      b.sim.autoStart,
-      b.paused,
-      b.sim.result,
-    ].join('|');
+    return [b.placing ?? '-', s ? `${s.uid}:${s.tiers.join('')}:${s.targeting}` : '-'].join('|');
   }
 
   private refresh(): void {
     const b = this.battle;
     if (!b) return;
+    if (!this.top) this.buildTop(b);
     const k = this.key(b);
     if (k !== this.structKey) {
       this.structKey = k;
-      this.build(b);
+      this.buildDock(b);
     }
     this.update(b);
   }
 
   private update(b: Battle): void {
     const r = this.refs;
-    if (r.lives) r.lives.textContent = String(Math.max(0, b.sim.lives));
-    if (r.cash) r.cash.textContent = gold(b.sim.cash);
-    if (r.wave) r.wave.textContent = `${b.sim.wave}/${b.sim.waves.length}`;
-    if (r.waveBar) r.waveBar.style.width = `${(100 * b.sim.wave) / b.sim.waves.length}%`;
-    for (const c of r.costButtons) {
+    const sim = b.sim;
+    if (r.lives) r.lives.textContent = String(Math.max(0, sim.lives));
+    if (r.cash) r.cash.textContent = gold(sim.cash);
+    if (r.wave) r.wave.textContent = `${sim.wave}/${sim.waves.length}`;
+    if (r.waveBar) r.waveBar.style.width = `${(100 * sim.wave) / sim.waves.length}%`;
+    // Controls are updated in place (rebuilding them made the whole panel flash).
+    const startKey = `${sim.waveActive}|${sim.wave}|${sim.result}`;
+    if (r.start && r.startKey !== startKey) {
+      r.startKey = startKey;
+      r.start.className = `btn start ${sim.waveActive ? 'live' : 'primary'}`;
+      r.start.disabled = sim.waveActive || sim.result !== 'playing';
+      r.start.replaceChildren(
+        ...(sim.waveActive
+          ? [h('span', { class: 'live-dot' }), `Wave ${sim.wave} in progress`]
+          : [icon('play'), sim.wave === 0 ? 'Start' : 'Next wave']),
+      );
+    }
+    if (r.speed) {
+      r.speed.classList.toggle('on', b.speed > 1);
+      r.speedLabel!.textContent = `${b.speed}×`;
+    }
+    r.auto?.classList.toggle('on', sim.autoStart);
+    if (r.pause && r.pausedShown !== b.paused) {
+      r.pausedShown = b.paused;
+      r.pause.classList.toggle('on', b.paused);
+      r.pause.replaceChildren(icon(b.paused ? 'play' : 'pause'));
+    }
+    for (const c of this.dockRefs.costButtons) {
       const ok = c.ok();
       c.el.disabled = !ok;
-      c.el.classList.toggle('poor', ok === false && b.sim.cash < c.cost());
+      c.el.classList.toggle('poor', ok === false && sim.cash < c.cost());
     }
   }
 
   private updatePlaceBtn(): void {
     const b = this.battle;
-    const btn = this.refs.placeBtn;
+    const btn = this.dockRefs.placeBtn;
     if (!b || !btn || !b.placing) return;
     const ok = !!b.ghost && b.sim.canPlace(b.placing, b.ghost.x, b.ghost.y) && b.sim.cash >= HEROINE_BY_ID[b.placing].cost;
     btn.disabled = !ok;
   }
 
-  private build(b: Battle): void {
-    this.refs = { costButtons: [] };
+  /** Stats and controls: built once per battle. */
+  private buildTop(b: Battle): void {
     const r = this.refs;
     const sim = b.sim;
-
     r.lives = h('b', null, '0');
     r.cash = h('b', null, '0');
     r.wave = h('b', null, '0');
@@ -135,57 +167,52 @@ export class Hud {
       h('span', { class: 'stat cash', title: 'Gold' }, icon('gem'), r.cash),
       h('span', { class: 'stat wave', title: 'Wave' }, h('small', null, 'Wave'), r.wave, r.waveBar),
     );
-
-    r.start = h(
+    r.start = h('button', { class: 'btn start primary', onclick: () => sim.startWave(), title: 'Start next wave (Space)' });
+    r.speedLabel = h('span', null, '1×');
+    r.speed = h(
       'button',
-      {
-        class: `btn start ${sim.waveActive ? 'live' : 'primary'}`,
-        disabled: sim.waveActive || sim.result !== 'playing',
-        onclick: () => sim.startWave(),
-        title: 'Start next wave (Space)',
-      },
-      ...(sim.waveActive
-        ? [h('span', { class: 'live-dot' }), `Wave ${sim.wave} in progress`]
-        : [icon('play'), sim.wave === 0 ? 'Start' : 'Next wave']),
+      { class: 'btn icon speed', title: 'Game speed (F)', onclick: () => b.setSpeed(b.speed >= 3 ? 1 : b.speed + 1) },
+      icon('fast'),
+      r.speedLabel,
     );
+    r.auto = h(
+      'button',
+      { class: 'btn icon', title: 'Auto-start waves', 'aria-label': 'Auto-start waves', onclick: () => b.toggleAuto() },
+      icon('auto'),
+    );
+    r.pause = h('button', { class: 'btn icon', title: 'Pause (P)', 'aria-label': 'Pause (P)', onclick: () => b.togglePause() });
     const controls = h(
       'div',
       { class: 'controls' },
       r.start,
-      h(
-        'button',
-        {
-          class: `btn icon speed ${b.speed > 1 ? 'on' : ''}`,
-          title: 'Game speed (F)',
-          onclick: () => b.setSpeed(b.speed >= 3 ? 1 : b.speed + 1),
-        },
-        icon('fast'),
-        `${b.speed}×`,
-      ),
-      h(
-        'button',
-        {
-          class: `btn icon ${sim.autoStart ? 'on' : ''}`,
-          title: 'Auto-start waves',
-          'aria-label': 'Auto-start waves',
-          onclick: () => b.toggleAuto(),
-        },
-        icon('auto'),
-      ),
-      h(
-        'button',
-        { class: `btn icon ${b.paused ? 'on' : ''}`, title: 'Pause (P)', 'aria-label': 'Pause (P)', onclick: () => b.togglePause() },
-        icon(b.paused ? 'play' : 'pause'),
-      ),
+      r.speed,
+      r.auto,
+      r.pause,
       h('button', { class: 'btn icon', title: 'Menu', onclick: () => this.onMenu?.() }, icon('menu')),
     );
+    this.top = h('div', { class: 'hud' }, stats, controls);
+    this.dockSlot = h('div', { class: 'dock-slot' });
+    this.root.replaceChildren(this.top, this.dockSlot);
+  }
 
+  /** The lower panel: shop (kept and reused), placing, or the selected heroine. */
+  private buildDock(b: Battle): void {
     let dock: HTMLElement;
-    if (b.placing) dock = this.buildPlacing(b, b.placing);
-    else if (b.selected) dock = this.buildTower(b, b.selected);
-    else dock = this.buildShop(b);
-
-    this.root.replaceChildren(h('div', { class: 'hud' }, stats, controls), dock);
+    if (b.placing) {
+      this.dockRefs = { costButtons: [] };
+      dock = this.buildPlacing(b, b.placing);
+    } else if (b.selected) {
+      this.dockRefs = { costButtons: [] };
+      dock = this.buildTower(b, b.selected);
+    } else {
+      if (!this.shop) {
+        this.dockRefs = { costButtons: [] };
+        this.shop = { el: this.buildShop(b), refs: this.dockRefs };
+      }
+      this.dockRefs = this.shop.refs;
+      dock = this.shop.el;
+    }
+    this.dockSlot!.replaceChildren(dock);
   }
 
   private buildShop(b: Battle): HTMLElement {
@@ -210,7 +237,7 @@ export class Hud {
         h('span', { class: 'card-lvl' }, `Lv ${heroineLevel(def.id)}`),
         unlocked ? h('span', { class: 'card-key' }, String(i + 1)) : null,
       );
-      if (unlocked) this.refs.costButtons.push({ el: card, cost: () => def.cost, ok: () => b.sim.cash >= def.cost });
+      if (unlocked) this.dockRefs.costButtons.push({ el: card, cost: () => def.cost, ok: () => b.sim.cash >= def.cost });
       return card;
     });
     return h('div', { class: 'dock shop' }, h('div', { class: 'label' }, 'Deploy a heroine'), h('div', { class: 'cards' }, ...cards));
@@ -219,7 +246,7 @@ export class Hud {
   private buildPlacing(b: Battle, id: string): HTMLElement {
     const def = HEROINE_BY_ID[id];
     const touch = matchMedia('(pointer: coarse)').matches;
-    this.refs.placeBtn = h(
+    this.dockRefs.placeBtn = h(
       'button',
       { class: 'btn primary', disabled: true, onclick: () => b.confirmPlace() || toast("Can't place her there") },
       'Place',
@@ -244,7 +271,7 @@ export class Hud {
         { class: 'hint' },
         touch ? 'Tap or drag on the map to position her, then tap again or press Place.' : 'Click the map to place her. Esc to cancel.',
       ),
-      h('div', { class: 'row' }, this.refs.placeBtn, h('button', { class: 'btn', onclick: () => b.cancel() }, 'Cancel')),
+      h('div', { class: 'row' }, this.dockRefs.placeBtn, h('button', { class: 'btn', onclick: () => b.cancel() }, 'Cancel')),
     );
   }
 
@@ -266,7 +293,7 @@ export class Hud {
           h('span', { class: 'up-name' }, next.name),
           h('span', { class: 'up-cost' }, icon('gem'), String(next.cost)),
         );
-        this.refs.costButtons.push({ el: btn, cost: () => next.cost, ok: () => b.sim.cash >= next.cost && canBuyUpgrade(t.tiers, i) });
+        this.dockRefs.costButtons.push({ el: btn, cost: () => next.cost, ok: () => b.sim.cash >= next.cost && canBuyUpgrade(t.tiers, i) });
         action = btn;
       } else {
         action = h('div', { class: 'btn buy disabled' }, h('span', { class: 'up-name' }, reason ?? 'Maxed'));

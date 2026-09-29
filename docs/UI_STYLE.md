@@ -34,7 +34,7 @@ The visual language for every screen. Read it before touching `src/style.css`, `
 - `.panel`: glass fill, hairline edge, a faint top highlight.
 - Counters (lives, gold, wave): icon + tabular number in a dark chip.
 - Section labels: small uppercase label with a short gold rule.
-- Motion: 120–180 ms ease-out; press = scale 0.97; screens fade and rise 6 px. Respect `reducedMotion()`.
+- Motion: 120–180 ms ease-out; press = scale 0.97; screens fade and rise 6 px only when navigating to a different screen. Never re-render a screen for an in-screen change (update nodes in place, D-016). Respect `reducedMotion()`.
 
 ## Battlefield
 
