@@ -111,6 +111,11 @@ export function isUnlocked(id: string): boolean {
   return bestWaveOverall() >= def.unlock.wave;
 }
 
+export function isMapUnlocked(map: { unlock?: { map: string; wave: number } }): boolean {
+  if (dev || !map.unlock) return true;
+  return (save.bestWave[map.unlock.map] ?? 0) >= map.unlock.wave;
+}
+
 export function unlockedIds(): string[] {
   return HEROINES.filter((h) => isUnlocked(h.id)).map((h) => h.id);
 }

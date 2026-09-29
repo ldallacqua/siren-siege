@@ -59,6 +59,62 @@ function rrect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h
   ctx.closePath();
 }
 
+/** Per-map look. `shrine` is the Moonlit Shrine garden; `snow` is Mount Shirahane. */
+interface Palette {
+  bg: [string, string];
+  patches: number[];
+  tuft: [number, number];
+  flowers: number[];
+  pathBase: string;
+  stones: number[];
+  curb: [number, number];
+  moss: number;
+  light: { glow: string; mid: string; spill: string };
+  roof: [string, string, string, string, string];
+  water: [string, string];
+  frozen: boolean;
+  trees: { a: number[]; aKind: 'sakura' | 'snowpine'; b: number[] };
+  petals: [number, number];
+  moon: string;
+}
+
+const PALETTES: Record<string, Palette> = {
+  shrine: {
+    bg: ['#1a1c2b', '#141522'],
+    patches: [0x1f2b2c, 0x232036, 0x1a2530, 0x2a2238, 0x16201f],
+    tuft: [0x33504a, 0x4a6d63],
+    flowers: [0xff9cc4, 0xd6c8ff],
+    pathBase: '#35323f',
+    stones: [0x4f4b5e, 0x575265, 0x5e596d, 0x4a4658, 0x625c6f, 0x544f60],
+    curb: [0x3f3b4c, 0x4d4859],
+    moss: 0x2f4a40,
+    light: { glow: '255,190,110', mid: '255,150,80', spill: '255,214,150' },
+    roof: ['#6d6879', '#4a4656', '#3e3a49', '#5f5a6c', '#7a7588'],
+    water: ['#2c3c63', '#101528'],
+    frozen: false,
+    trees: { a: [0xb8547f, 0xd9739c, 0xeb92b5, 0xf6b5cf], aKind: 'sakura', b: [0x16302a, 0x1f3f36, 0x2a5044, 0x3a6656] },
+    petals: [0xffb3cf, 0xffd9e6],
+    moon: '170,185,255',
+  },
+  snow: {
+    bg: ['#56627a', '#3b4560'],
+    patches: [0x6f7c95, 0x8793aa, 0x4c5873, 0x9aa6bd, 0x5e6a84],
+    tuft: [0xc9d6e8, 0xe8f0fa],
+    flowers: [0xbfe9ff, 0xffffff],
+    pathBase: '#2c3346',
+    stones: [0x4a5268, 0x525b72, 0x5a647c, 0x46506a, 0x606a80, 0x4e5870],
+    curb: [0x3a4258, 0x485169],
+    moss: 0xdfe8f4,
+    light: { glow: '150,210,255', mid: '110,170,255', spill: '200,235,255' },
+    roof: ['#b9c6d8', '#8795ab', '#6f7c93', '#a5b3c8', '#d5e0ee'],
+    water: ['#a8c8e8', '#5f7fa6'],
+    frozen: true,
+    trees: { a: [0x1f3a3a, 0x2d4f4c, 0xdfe9f4, 0xf5f9ff], aKind: 'snowpine', b: [0x2a3a44, 0x3a4c58, 0xcfdbe8, 0xeef4fb] },
+    petals: [0xffffff, 0xdbe9ff],
+    moon: '200,220,255',
+  },
+};
+
 const cache = new Map<string, MapArt>();
 
 export function paintMap(map: MapDef): MapArt {
@@ -74,6 +130,7 @@ export function paintMap(map: MapDef): MapArt {
   ctx.scale(PX, PX);
   ctx.translate(M, M);
   const rnd = mulberry32(hashStr(map.id));
+  const P = PALETTES[map.art ?? 'shrine'];
   const R = (a: number, b: number) => a + rnd() * (b - a);
   const pts: Pt[] = map.path.map(([x, y]) => ({ x, y }));
   // Run the path on into the margin so it doesn't stop at the map's edge.
@@ -111,11 +168,11 @@ export function paintMap(map: MapDef): MapArt {
 
   // ---------------------------------------------------------------- ground
   const bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#1a1c2b');
-  bg.addColorStop(1, '#141522');
+  bg.addColorStop(0, P.bg[0]);
+  bg.addColorStop(1, P.bg[1]);
   ctx.fillStyle = bg;
   ctx.fillRect(-M, -M, W + 2 * M, H + 2 * M);
-  const patches = [0x1f2b2c, 0x232036, 0x1a2530, 0x2a2238, 0x16201f];
+  const patches = P.patches;
   for (let i = 0; i < 420; i++) {
     const x = R(-M, W + M);
     const y = R(-M, H + M);
@@ -139,7 +196,7 @@ export function paintMap(map: MapDef): MapArt {
     const y = R(-M, H + M);
     if (pathDist({ x, y }) < half + 0.12) continue;
     const blades = 3 + Math.floor(rnd() * 3);
-    const col = rnd() < 0.7 ? 0x33504a : 0x4a6d63;
+    const col = rnd() < 0.7 ? P.tuft[0] : P.tuft[1];
     for (let k = 0; k < blades; k++) {
       const a = -Math.PI / 2 + R(-0.6, 0.6);
       const len = R(0.08, 0.2);
@@ -156,7 +213,7 @@ export function paintMap(map: MapDef): MapArt {
     const x = R(0.3, W - 0.3);
     const y = R(0.3, H - 0.3);
     if (pathDist({ x, y }) < half + 0.25) continue;
-    const c = rnd() < 0.6 ? 0xff9cc4 : 0xd6c8ff;
+    const c = rnd() < 0.6 ? P.flowers[0] : P.flowers[1];
     for (let k = 0; k < 5; k++) {
       const a = (k / 5) * Math.PI * 2;
       ctx.fillStyle = rgba(c, 0.8);
@@ -176,10 +233,10 @@ export function paintMap(map: MapDef): MapArt {
   ctx.shadowBlur = PX * 0.35;
   strokePath(map.pathWidth + 0.34, 'rgba(12,10,18,0.7)');
   ctx.restore();
-  strokePath(map.pathWidth + 0.08, '#35323f');
+  strokePath(map.pathWidth + 0.08, P.pathBase);
   // flagstones: irregular, softly shaded, low-contrast joints
   const step = 0.25;
-  const stoneCols = [0x4f4b5e, 0x575265, 0x5e596d, 0x4a4658, 0x625c6f, 0x544f60];
+  const stoneCols = P.stones;
   for (let gx = -M; gx < W + M; gx += step) {
     for (let gy = -M; gy < H + M; gy += step) {
       const x = gx + R(-0.03, 0.03) + ((Math.round(gy / step) % 2) * step) / 2;
@@ -223,7 +280,7 @@ export function paintMap(map: MapDef): MapArt {
         ctx.rotate(Math.atan2(uy, ux) + R(-0.05, 0.05));
         const sw = R(0.32, 0.36);
         rrect(ctx, -sw / 2, -0.06, sw, 0.12, 0.04);
-        ctx.fillStyle = rgba(mix(0x3f3b4c, 0x4d4859, rnd()), 1);
+        ctx.fillStyle = rgba(mix(P.curb[0], P.curb[1], rnd()), 1);
         ctx.fill();
         ctx.fillStyle = 'rgba(255,255,255,0.07)';
         ctx.fillRect(-sw / 2 + 0.02, -0.05, sw - 0.04, 0.03);
@@ -237,7 +294,7 @@ export function paintMap(map: MapDef): MapArt {
     const y = R(-M, H + M);
     const d = pathDist({ x, y });
     if (d < half - 0.12 || d > half + 0.05) continue;
-    ctx.fillStyle = rgba(0x2f4a40, R(0.3, 0.6));
+    ctx.fillStyle = rgba(P.moss, R(0.3, 0.6));
     ctx.beginPath();
     ctx.arc(x, y, R(0.03, 0.07), 0, Math.PI * 2);
     ctx.fill();
@@ -374,25 +431,25 @@ export function paintMap(map: MapDef): MapArt {
     const y = p.y + (by / bl) * (half + 0.62);
     if (!free(x, y, 0.3, 0.1) || i % 2 === 0) continue;
     const glow = ctx.createRadialGradient(x, y, 0, x, y, 1.5);
-    glow.addColorStop(0, 'rgba(255,190,110,0.32)');
-    glow.addColorStop(0.4, 'rgba(255,150,80,0.12)');
-    glow.addColorStop(1, 'rgba(255,150,80,0)');
+    glow.addColorStop(0, `rgba(${P.light.glow},0.32)`);
+    glow.addColorStop(0.4, `rgba(${P.light.mid},0.12)`);
+    glow.addColorStop(1, `rgba(${P.light.mid},0)`);
     ctx.fillStyle = glow;
     ctx.fillRect(x - 1.5, y - 1.5, 3, 3);
     shadow(x + 0.1, y + 0.16, 0.32, 0.2, 0.55);
     // light spilling from under the roof
     const spill = ctx.createRadialGradient(x, y, 0.1, x, y, 0.42);
-    spill.addColorStop(0, 'rgba(255,214,150,0.9)');
-    spill.addColorStop(1, 'rgba(255,170,90,0)');
+    spill.addColorStop(0, `rgba(${P.light.spill},0.9)`);
+    spill.addColorStop(1, `rgba(${P.light.mid},0)`);
     ctx.fillStyle = spill;
     ctx.fillRect(x - 0.42, y - 0.42, 0.84, 0.84);
     // pyramidal stone roof seen from above: four shaded faces
     const rr = 0.24;
     const faces: [number, number, number, number, string][] = [
-      [0, -rr, rr, 0, '#6d6879'],
-      [rr, 0, 0, rr, '#4a4656'],
-      [0, rr, -rr, 0, '#3e3a49'],
-      [-rr, 0, 0, -rr, '#5f5a6c'],
+      [0, -rr, rr, 0, P.roof[0]],
+      [rr, 0, 0, rr, P.roof[1]],
+      [0, rr, -rr, 0, P.roof[2]],
+      [-rr, 0, 0, -rr, P.roof[3]],
     ];
     for (const [ax, ay, bx2, by2, col] of faces) {
       ctx.fillStyle = col;
@@ -403,7 +460,7 @@ export function paintMap(map: MapDef): MapArt {
       ctx.closePath();
       ctx.fill();
     }
-    ctx.fillStyle = '#7a7588';
+    ctx.fillStyle = P.roof[4];
     ctx.beginPath();
     ctx.arc(x, y, 0.05, 0, Math.PI * 2);
     ctx.fill();
@@ -428,8 +485,8 @@ export function paintMap(map: MapDef): MapArt {
     ctx.fillStyle = '#3c394a';
     ctx.fill();
     const water = ctx.createRadialGradient(-0.2, -0.3, 0.1, 0, 0, rx);
-    water.addColorStop(0, '#2c3c63');
-    water.addColorStop(1, '#101528');
+    water.addColorStop(0, P.water[0]);
+    water.addColorStop(1, P.water[1]);
     ctx.beginPath();
     ctx.arc(0, 0, rx, 0, Math.PI * 2);
     ctx.fillStyle = water;
@@ -448,8 +505,20 @@ export function paintMap(map: MapDef): MapArt {
       ctx.stroke();
     }
     ctx.restore();
-    // lily pads
-    for (let k = 0; k < 3; k++) {
+    // lily pads (or cracks in the ice)
+    if (P.frozen) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+      ctx.lineWidth = 0.02;
+      for (let k = 0; k < 4; k++) {
+        ctx.beginPath();
+        let cx = x + R(-0.3, 0.3);
+        let cy = y + R(-0.2, 0.2);
+        ctx.moveTo(cx, cy);
+        for (let j = 0; j < 4; j++) ctx.lineTo((cx += R(-0.25, 0.25)), (cy += R(-0.15, 0.15)));
+        ctx.stroke();
+      }
+    }
+    for (let k = 0; k < (P.frozen ? 0 : 3); k++) {
       const lx = x + R(-0.6, 0.5);
       const ly = y + R(-0.3, 0.35);
       ctx.fillStyle = '#2f5a4a';
@@ -463,7 +532,7 @@ export function paintMap(map: MapDef): MapArt {
   }
 
   // Sakura trees and pines, preferring the map's edges
-  const trees: { x: number; y: number; r: number; kind: 'sakura' | 'pine' }[] = [];
+  const trees: { x: number; y: number; r: number; kind: 'sakura' | 'snowpine' | 'pine' }[] = [];
   // A few inside the map, but only hugging its edges (the open middle is where heroines stand)…
   for (let tries = 0; tries < 900 && trees.length < 6; tries++) {
     const x = R(0.3, W - 0.3);
@@ -471,7 +540,7 @@ export function paintMap(map: MapDef): MapArt {
     if (x > 0.9 && x < W - 0.9 && y > 0.8 && y < H - 0.8) continue;
     const r = R(0.5, 0.75);
     if (!free(x, y, r * 0.6, 0.1)) continue;
-    trees.push({ x, y, r, kind: rnd() < 0.65 ? 'sakura' : 'pine' });
+    trees.push({ x, y, r, kind: rnd() < 0.65 ? P.trees.aKind : 'pine' });
     taken.push({ x, y, r: r * 0.9 });
   }
   // …and a ring of them in the margin to frame the garden on letterboxed screens.
@@ -481,13 +550,13 @@ export function paintMap(map: MapDef): MapArt {
     if (x > -0.4 && x < W + 0.4 && y > -0.4 && y < H + 0.4) continue;
     const r = R(0.7, 1.1);
     if (pathDist({ x, y }) < half + r + 0.2 || trees.some((t) => Math.hypot(t.x - x, t.y - y) < (t.r + r) * 0.8)) continue;
-    trees.push({ x, y, r, kind: rnd() < 0.5 ? 'sakura' : 'pine' });
+    trees.push({ x, y, r, kind: rnd() < 0.5 ? P.trees.aKind : 'pine' });
   }
   for (const t of trees) shadow(t.x + 0.25, t.y + 0.3, t.r * 1.1, t.r * 0.8, 0.5);
   for (const t of trees) {
     if (t.kind === 'pine') {
       // leafy shrub: clustered clumps, dark underside to lit top-left
-      const greens = [0x16302a, 0x1f3f36, 0x2a5044, 0x3a6656];
+      const greens = P.trees.b;
       for (let layer = 0; layer < 4; layer++) {
         for (let k = 0; k < 10 - layer * 2; k++) {
           const a = R(0, Math.PI * 2);
@@ -510,8 +579,23 @@ export function paintMap(map: MapDef): MapArt {
         ctx.arc(t.x + R(-t.r, t.r) * 0.5 - 0.12, t.y + R(-t.r, t.r) * 0.5 - 0.14, R(0.015, 0.03), 0, Math.PI * 2);
         ctx.fill();
       }
+    } else if (t.kind === 'snowpine') {
+      // fir seen from above: dark star-shaped layers with snow on the top ones
+      const cols = P.trees.a;
+      for (let k = 0; k < 4; k++) {
+        const rr = t.r * (1 - k * 0.22);
+        ctx.fillStyle = rgba(cols[k], 1);
+        ctx.beginPath();
+        for (let s2 = 0; s2 < 14; s2++) {
+          const a = (s2 / 14) * Math.PI * 2 + k * 0.4;
+          const rad = rr * (s2 % 2 ? 0.62 : 1);
+          ctx.lineTo(t.x + Math.cos(a) * rad - k * 0.04, t.y + Math.sin(a) * rad - k * 0.05);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
     } else {
-      const pinks = [0xb8547f, 0xd9739c, 0xeb92b5, 0xf6b5cf];
+      const pinks = P.trees.a;
       for (let layer = 0; layer < 4; layer++) {
         for (let k = 0; k < 9 - layer; k++) {
           const a = R(0, Math.PI * 2);
@@ -560,7 +644,7 @@ export function paintMap(map: MapDef): MapArt {
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(R(0, Math.PI));
-    ctx.fillStyle = rgba(rnd() < 0.7 ? 0xffb3cf : 0xffd9e6, R(0.5, 0.9));
+    ctx.fillStyle = rgba(rnd() < 0.7 ? P.petals[0] : P.petals[1], R(0.5, 0.9));
     ctx.beginPath();
     ctx.ellipse(0, 0, 0.045, 0.026, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -569,8 +653,8 @@ export function paintMap(map: MapDef): MapArt {
 
   // ---------------------------------------------------------------- lighting
   const moon = ctx.createLinearGradient(W, 0, W * 0.3, H);
-  moon.addColorStop(0, 'rgba(170,185,255,0.12)');
-  moon.addColorStop(1, 'rgba(170,185,255,0)');
+  moon.addColorStop(0, `rgba(${P.moon},0.12)`);
+  moon.addColorStop(1, `rgba(${P.moon},0)`);
   ctx.fillStyle = moon;
   ctx.fillRect(0, 0, W, H);
   const vig = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.72);

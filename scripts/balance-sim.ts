@@ -1,6 +1,7 @@
 // Headless balance check: a greedy bot plays the map and reports how far it gets.
 // Usage: npm run sim            (all heroines)
 //        npm run sim -- scarlet yuki   (restrict roster)
+//        MAP=frostveil-pass npm run sim  (another map)
 import { HEROINES } from '../src/data/heroines.ts';
 import { MAPS, WAVES } from '../src/data/maps.ts';
 import { BattleSim, STEP } from '../src/game/sim/BattleSim.ts';
@@ -8,7 +9,8 @@ import { canBuyUpgrade } from '../src/game/sim/upgrades.ts';
 
 const roster = process.argv.slice(2).filter((a) => !a.startsWith('-'));
 const ids = roster.length ? roster : HEROINES.map((h) => h.id);
-const map = MAPS[0];
+const map = MAPS.find((m) => m.id === process.env.MAP) ?? MAPS[0];
+console.log(`map: ${map.id}`);
 const sim = new BattleSim(map, WAVES, { unlocked: ids });
 
 // Candidate spots ranked by how much path they cover within 3 tiles.

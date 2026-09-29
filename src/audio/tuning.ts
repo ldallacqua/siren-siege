@@ -59,6 +59,17 @@ export const TRACKS: Record<string, Track> = {
     ],
     arp: [0, 2, 3, 5, 3, 2, 1, 2],
   },
+  // Frostveil Pass: E minor, i–VI–iv–V (Em C Am B), sparse and glassy, a little faster.
+  'frostveil-pass': {
+    bpm: 92,
+    bars: [
+      [52, 55, 59, 64],
+      [48, 52, 55, 60],
+      [45, 48, 52, 57],
+      [47, 51, 54, 59],
+    ],
+    arp: [3, 1, 2, 0, 2, 1, 3, 2],
+  },
 };
 
 export const trackFor = (mapId: string): Track => TRACKS[mapId] ?? Object.values(TRACKS)[0];

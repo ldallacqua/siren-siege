@@ -22,6 +22,32 @@ export const MAPS: MapDef[] = [
       [21, 4.5],
     ],
     theme: { ground: 0x1f1433, ground2: 0x251a3d, path: 0x5b3a72, pathEdge: 0xff8fc4 },
+    art: 'shrine',
+    difficulty: 'Normal',
+    blurb: 'The last Moongate. A long, winding garden road: room to learn every heroine.',
+  },
+  {
+    id: 'frostveil-pass',
+    name: 'Frostveil Pass',
+    cols: 20,
+    rows: 12,
+    pathWidth: 0.8,
+    // Mount Shirahane, Yuki's silent mountain. A short climb: the Blight reaches the gate fast.
+    path: [
+      [-1, 9.5],
+      [4.5, 9.5],
+      [4.5, 2.5],
+      [9.5, 2.5],
+      [9.5, 7.5],
+      [14.5, 7.5],
+      [14.5, 3.5],
+      [21, 3.5],
+    ],
+    theme: { ground: 0x3b4560, ground2: 0x56627a, path: 0x2c3346, pathEdge: 0xbfe9ff },
+    art: 'snow',
+    difficulty: 'Hard',
+    blurb: "Yuki's silent mountain. A short, steep pass: the Blight reaches the gate fast.",
+    unlock: { map: 'moonlit-shrine', wave: 10, label: 'Reach wave 10 on Moonlit Shrine' },
   },
 ];
 

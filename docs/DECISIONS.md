@@ -69,3 +69,7 @@ Owner feedback: the UI "looks like old Flash games". Research on modern gacha/TD
 ### D-017 · 2026-09-29 · Rendering-only data on sim fx; Vfx module owns battle effects
 
 Per-heroine visuals need to know who fired and how upgraded she is, so `Fx` gained optional `hero`, `tier`, `angle` (and `hit` events carry the enemy uid in `value`). The sim still never reads fx back, so determinism and balance are untouched. All transient battle visuals moved from `BattleScene` into `Vfx.ts` (tile-space particles projected through the scene view each frame) so the scene stays about layout/input and effects can grow independently. Chat backdrops are CSS gradients + a small 2D-canvas particle loop rather than images, so every scene works with zero art and is replaceable later.
+
+### D-018 · 2026-09-29 · Gacha-style lobby; maps themed by palette, not by new renderers
+
+Owner asked for a NIKKE-like home: destinations as tiles around a full-screen heroine you can tap. The lobby keeps the in-place update rule (D-016) for switching heroines. New arenas reuse the generic `mapArt.ts` painter with a `Palette` per `MapDef.art`, so a map is data (path, palette, blurb, unlock) plus a music track, not new rendering code. Arena difficulty comes from path length and is checked with the bot (`MAP=… npm run sim`).

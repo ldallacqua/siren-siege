@@ -1,18 +1,20 @@
-import { sound } from '../audio/sound.ts';
+import { VOICE, sound } from '../audio/sound.ts';
 import { episodesFor } from '../data/dialogues.ts';
 import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
 import { ENEMIES } from '../data/enemies.ts';
-import { BESTIARY, BESTIARY_NOTE, CODEX, STORIES } from '../data/lore.ts';
+import { MAPS, WAVES } from '../data/maps.ts';
+import { paintMap } from '../game/mapArt.ts';
+import { BESTIARY, BESTIARY_NOTE, CODEX, IDLE_LINES, STORIES } from '../data/lore.ts';
 import { GALLERY, portraitFile } from '../data/progression.ts';
-import type { GalleryItem } from '../data/types.ts';
-import { dev, heroineLevel, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
+import type { ChatEpisode, GalleryItem } from '../data/types.ts';
+import { dev, heroineLevel, isMapUnlocked, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
 import { openLightbox } from './art.ts';
 import { playChat } from './chat.ts';
 import { artChain, bondBar, closeScreens, show, topbar } from './common.ts';
 import { h, hex, toast } from './dom.ts';
 
 export { closeScreens };
-import { icon } from './icons.ts';
+import { icon, type IconName } from './icons.ts';
 
 // ------------------------------------------------------------------ home
 
@@ -24,6 +26,17 @@ export interface HomeActions {
 /** Which heroine the lobby features; the player can switch with the avatars. */
 let featured = '';
 
+/** Chats the player can open but hasn't finished yet. */
+function newChats(): ChatEpisode[] {
+  return HEROINES.filter((d) => isUnlocked(d.id)).flatMap((d) =>
+    episodesFor(d.id).filter((e) => heroineLevel(d.id) >= e.level && !(save.heroines[d.id]?.chatsDone ?? []).includes(e.id)),
+  );
+}
+
+/**
+ * The lobby (gacha-style home): the featured heroine fills the screen and the
+ * destinations sit around her as tiles. Tap her to hear a line.
+ */
 export function showHome(a: HomeActions): void {
   const unlocked = HEROINES.filter((d) => isUnlocked(d.id));
   if (!featured || !unlocked.some((d) => d.id === featured)) {
@@ -32,26 +45,58 @@ export function showHome(a: HomeActions): void {
   }
   const d = HEROINE_BY_ID[featured];
   const got = GALLERY.filter((g) => heroineLevel(g.heroine) >= g.level).length;
-  const item = (label: string, ic: Parameters<typeof icon>[0], onclick: () => void, meta?: string) =>
+  const fresh = newChats().length;
+  const best = Math.max(0, ...Object.values(save.bestWave));
+  const mapsOpen = MAPS.filter((m) => isMapUnlocked(m)).length;
+
+  const badge = (n: number | string) => (n ? h('span', { class: 'badge' }, String(n)) : null);
+  const tile = (label: string, ic: IconName, onclick: () => void, n: number | string = 0) =>
     h(
       'button',
-      { class: 'menu-item', onclick, 'aria-label': label },
-      icon(ic),
-      label,
-      meta ? h('span', { class: 'menu-meta' }, meta) : null,
+      { class: 'lobby-tile', onclick, 'aria-label': label, title: label },
+      h('span', { class: 'lobby-ico' }, icon(ic), badge(n)),
+      h('span', { class: 'lobby-lbl' }, label),
     );
+
   const heroFor = (id: string) => {
-    const img = fullPortrait(artChain([portraitFile(id)], id, HEROINE_BY_ID[id].name, true, 'home-hero'), id);
-    img.title = '';
+    const img = artChain([portraitFile(id)], id, HEROINE_BY_ID[id].name, true, 'home-hero');
+    img.draggable = false;
     return img;
   };
   let hero = heroFor(d.id);
+  const heroWrap = h('button', { class: 'lobby-hero', 'aria-label': 'Talk to her', onclick: () => talk() }, hero);
+  const bubble = h('div', { class: 'lobby-bubble', 'aria-live': 'polite' });
   const nameB = h('b', null, d.name);
   const nameS = h('span', null, d.title);
+  const bondSlot = h('div', { class: 'lobby-bond' }, bondBar(d.id));
+  let lastLine = -1;
+  let bubbleTimer = 0;
+
+  const talk = () => {
+    const id = featured;
+    const lines = (IDLE_LINES[id] ?? []).filter((l) => heroineLevel(id) >= l.level);
+    if (!lines.length) return;
+    let i = Math.floor(Math.random() * lines.length);
+    if (i === lastLine && lines.length > 1) i = (i + 1) % lines.length;
+    lastLine = i;
+    bubble.textContent = lines[i].text;
+    bubble.classList.remove('on');
+    void bubble.offsetWidth;
+    bubble.classList.add('on');
+    heroWrap.classList.remove('poke');
+    void heroWrap.offsetWidth;
+    heroWrap.classList.add('poke');
+    const voice = VOICE[id] ?? 1.5;
+    for (let k = 0; k < 6; k++) window.setTimeout(() => sound.play('blip', voice), k * 70);
+    clearTimeout(bubbleTimer);
+    bubbleTimer = window.setTimeout(() => bubble.classList.remove('on'), 4200);
+  };
+
   // Switching the featured heroine updates only what changes (no full re-render).
   const feature = (id: string) => {
     if (id === featured) return;
     featured = id;
+    lastLine = -1;
     const u = HEROINE_BY_ID[id];
     screen.style.setProperty('--c', hex(u.color));
     screen.style.setProperty('--a', hex(u.accent));
@@ -61,62 +106,187 @@ export function showHome(a: HomeActions): void {
     hero = next;
     nameB.textContent = u.name;
     nameS.textContent = u.title;
+    bondSlot.replaceChildren(bondBar(id));
+    bubble.classList.remove('on');
     for (const p of screen.querySelectorAll<HTMLElement>('.pick')) p.classList.toggle('on', p.dataset.id === id);
   };
+
   const screen = h(
     'section',
-    { class: 'screen home', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
+    { class: 'screen home lobby', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
     h('div', { class: 'home-bg' }),
     h('div', { class: 'home-moon' }),
-    hero,
+    heroWrap,
     h('div', { class: 'home-shade' }),
+    bubble,
+    // top bar
     h(
-      'div',
-      { class: 'home-main' },
+      'header',
+      { class: 'lobby-top' },
       h(
         'div',
-        null,
-        h('h1', { class: 'logo' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
-        h('p', { class: 'tagline' }, 'Beauty is the last line of defense'),
+        { class: 'lobby-id' },
+        h('span', { class: 'lobby-emblem' }, icon('star')),
+        h('div', null, h('b', null, 'Commander'), h('span', null, `Wins ${save.wins} · Best wave ${best}`)),
       ),
+      h('div', { class: 'lobby-logo', 'aria-hidden': 'true' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
       h(
-        'nav',
-        { class: 'home-menu' },
-        a.resume ? h('button', { class: 'btn primary big', onclick: a.resume }, h('span', null, 'Resume battle'), icon('next')) : null,
-        h(
-          'button',
-          { class: `btn ${a.resume ? '' : 'primary'} big`, onclick: a.play, autofocus: true },
-          h('span', { style: 'text-align:left' }, a.resume ? 'New battle' : 'Play', h('small', null, 'Moonlit Shrine')),
-          icon('play'),
-        ),
-        item('Heroines', 'heroines', () => showRoster(a), `${unlocked.length}/${HEROINES.length}`),
-        item('Gallery', 'image', () => showGallery(a), `${got}/${GALLERY.length}`),
-        item('Codex', 'book', () => showCodex(a)),
-        item('Settings', 'gear', () => showSettings(a)),
+        'button',
+        { class: 'btn icon lobby-gear', title: 'Settings', 'aria-label': 'Settings', onclick: () => showSettings(a) },
+        icon('gear'),
       ),
-      h('p', { class: 'home-foot' }, 'All characters are adults (21+) · v0.2', dev ? ' · DEV MODE' : ''),
     ),
-    h('div', { class: 'home-name' }, nameB, nameS),
+    // left rail
+    h(
+      'nav',
+      { class: 'lobby-rail left', 'aria-label': 'Places' },
+      tile('Messages', 'chat', () => showMessages(a), fresh),
+      tile('Gallery', 'image', () => showGallery(a), `${got}/${GALLERY.length}`),
+      tile('Codex', 'book', () => showCodex(a)),
+    ),
+    // right: heroine picker + name
     h(
       'div',
-      { class: 'home-pick', role: 'group', 'aria-label': 'Featured heroine' },
-      ...unlocked.map((u) =>
-        h(
-          'button',
-          {
-            class: `pick ${u.id === featured ? 'on' : ''}`,
-            style: `--c:${hex(u.color)};--a:${hex(u.accent)}`,
-            title: `Show ${u.name}`,
-            'aria-label': `Show ${u.name}`,
-            'data-id': u.id,
-            onclick: () => feature(u.id),
-          },
-          artChain([portraitFile(u.id)], u.id, u.name, true),
+      { class: 'lobby-rail right' },
+      h(
+        'div',
+        { class: 'home-pick', role: 'group', 'aria-label': 'Featured heroine' },
+        ...unlocked.map((u) =>
+          h(
+            'button',
+            {
+              class: `pick ${u.id === featured ? 'on' : ''}`,
+              style: `--c:${hex(u.color)};--a:${hex(u.accent)}`,
+              title: `Show ${u.name}`,
+              'aria-label': `Show ${u.name}`,
+              'data-id': u.id,
+              onclick: () => feature(u.id),
+            },
+            artChain([portraitFile(u.id)], u.id, u.name, true),
+          ),
+        ),
+      ),
+    ),
+    h('div', { class: 'home-name' }, nameB, nameS, bondSlot),
+    // bottom: the two big destinations
+    h(
+      'div',
+      { class: 'lobby-bottom' },
+      h(
+        'button',
+        { class: 'lobby-big squad', 'aria-label': 'Heroines', onclick: () => showRoster(a) },
+        icon('heroines'),
+        h('span', null, h('b', null, 'Heroines'), h('small', null, `${unlocked.length}/${HEROINES.length} recruited`)),
+      ),
+      a.resume
+        ? h(
+            'button',
+            { class: 'lobby-big battle', 'aria-label': 'Resume battle', onclick: a.resume },
+            icon('play'),
+            h('span', null, h('b', null, 'Resume')),
+          )
+        : null,
+      h(
+        'button',
+        { class: 'lobby-big battle', 'aria-label': 'Play', onclick: a.play, autofocus: true },
+        h('span', null, h('small', null, `${mapsOpen}/${MAPS.length} arenas open`), h('b', null, 'Battle')),
+        icon('play'),
+      ),
+    ),
+    h('p', { class: 'home-foot' }, 'All characters are adults (21+) · v0.3', dev ? ' · DEV MODE' : ''),
+  );
+  show(screen);
+}
+
+/** Every chat the player can read, newest first. */
+export function showMessages(a: HomeActions): void {
+  const rows = HEROINES.filter((d) => isUnlocked(d.id)).flatMap((d) =>
+    episodesFor(d.id).map((ep) => ({
+      d,
+      ep,
+      open: heroineLevel(d.id) >= ep.level,
+      done: (save.heroines[d.id]?.chatsDone ?? []).includes(ep.id),
+    })),
+  );
+  const rank = (r: (typeof rows)[number]) => (r.open && !r.done ? 0 : r.open ? 1 : 2);
+  rows.sort((x, y) => rank(x) - rank(y) || x.ep.level - y.ep.level);
+  const fresh = rows.filter((r) => r.open && !r.done).length;
+  show(
+    h(
+      'section',
+      { class: 'screen list messages' },
+      topbar('Messages', () => showHome(a), fresh ? `${fresh} new` : 'All caught up'),
+      h(
+        'div',
+        { class: 'screen-inner msg-list' },
+        ...rows.map(({ d, ep, open, done }) =>
+          h(
+            'button',
+            {
+              class: `msg ${open ? '' : 'locked'} ${open && !done ? 'new' : ''}`,
+              style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
+              onclick: () => (open ? playChat(ep, () => showMessages(a)) : toast(`Reach Bond ${ep.level} with ${d.name.split(' ')[0]}`)),
+            },
+            artChain([portraitFile(d.id)], d.id, d.name, true, 'msg-av'),
+            h('span', { class: 'msg-body' }, h('b', null, d.name), h('span', null, open ? ep.title : `Locked · Bond ${ep.level}`)),
+            h('span', { class: 'msg-tag' }, open ? (done ? 'Read' : 'New') : icon('lock')),
+          ),
         ),
       ),
     ),
   );
-  show(screen);
+}
+
+/** Arena select: one card per map with a painted preview. */
+export function showMapSelect(a: HomeActions, start: (mapId: string) => void): void {
+  const cards = MAPS.map((m) => {
+    const open = isMapUnlocked(m);
+    const best = save.bestWave[m.id] ?? 0;
+    const cleared = best >= WAVES.length;
+    const preview = h('img', { class: 'arena-art', alt: '', draggable: false });
+    // The painted map, reused as the card art (cached by mapArt).
+    requestAnimationFrame(() => {
+      try {
+        preview.src = paintMap(m).canvas.toDataURL('image/webp', 0.7);
+      } catch {
+        /* preview is decorative */
+      }
+    });
+    return h(
+      'button',
+      {
+        class: `arena ${open ? '' : 'locked'} art-${m.art ?? 'shrine'}`,
+        'aria-label': m.name,
+        onclick: () => (open ? start(m.id) : toast(m.unlock?.label ?? 'Locked')),
+      },
+      preview,
+      h('span', { class: 'arena-shade' }),
+      h('span', { class: `arena-diff d-${(m.difficulty ?? 'Normal').toLowerCase()}` }, m.difficulty ?? 'Normal'),
+      h(
+        'span',
+        { class: 'arena-info' },
+        h('b', null, m.name),
+        h('span', { class: 'arena-blurb' }, open ? (m.blurb ?? '') : (m.unlock?.label ?? 'Locked')),
+        h(
+          'span',
+          { class: 'arena-best' },
+          ...(open
+            ? cleared
+              ? [icon('star'), 'Cleared']
+              : [icon('wave'), best ? `Best wave ${best}/${WAVES.length}` : 'Not played yet']
+            : [icon('lock'), 'Locked']),
+        ),
+      ),
+    );
+  });
+  show(
+    h(
+      'section',
+      { class: 'screen list arenas' },
+      topbar('Choose an arena', () => showHome(a)),
+      h('div', { class: 'screen-inner arena-grid' }, ...cards),
+    ),
+  );
 }
 
 /** Music/sound volume, mute and reduced motion. Used by Settings, Options and the pause menu. */
@@ -433,6 +603,7 @@ export interface ResultInfo {
   total: number;
   gains: { id: string; xp: number; before: number; after: number }[];
   newlyUnlocked: string[];
+  mapName?: string;
 }
 
 export function showResults(r: ResultInfo, again: () => void, home: () => void): void {
@@ -464,7 +635,7 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
     h(
       'section',
       { class: `screen results ${r.won ? 'won' : 'lost'}` },
-      h('p', { class: 'results-kicker' }, `Moonlit Shrine · Wave ${Math.min(r.wave, r.total)}/${r.total}`),
+      h('p', { class: 'results-kicker' }, `${r.mapName ?? 'Moonlit Shrine'} · Wave ${Math.min(r.wave, r.total)}/${r.total}`),
       h('h1', null, r.won ? 'Victory' : 'Defeated'),
       h(
         'p',

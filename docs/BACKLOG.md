@@ -50,9 +50,11 @@ Kunoichi (camo detection, shuriken pierce), mecha pilot (long range, missiles), 
 
 - Blocked by: B-06 for the kunoichi's identity.
 
-### B-11 · P3 · Maps 2–4 + map select
+### B-11 · P3 · Maps 3–4
 
-_Neon Harbor_ (two entrances merging), _Hot Spring Valley_ (water tiles only some heroines can use), _Blood Moon Castle_ (expert, short path). Map select screen.
+Map select and Frostveil Pass are done. Next: _Neon Harbor_ (two entrances merging; needs multi-path support in the sim) and _Blood Moon Castle_ (Scarlet's Crimson Keep, expert). Each needs a palette in `mapArt.ts`, a music track and a bot run.
+
+- Accept: sim tests for multi-path spawning; bot result recorded in STATUS.
 
 ### B-12 · P2 · 18+ age gate + legal
 
@@ -90,7 +92,6 @@ The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price,
 
 ## Tech debt / nice to have
 
-- T-05 · Map art per new map: `mapArt.ts` is generic (ground, path, props from the path), but each new map (B-11) should get its own palette/props via `MapDef.theme`. Accept: second map looks distinct.
 - T-06 · Optionally make scenery props block placement (BTD6-style obstacles) so heroines can't stand on trees/ponds; needs sim support (`canPlace`) + tests.
 - T-07 · Sharper battlefield at max zoom: raise `PX` in `mapArt.ts` on large screens only, or paint a second hi-res texture on zoom > 2.
 

@@ -117,3 +117,43 @@ export const STORIES: Record<string, StoryEntry[]> = {
     },
   ],
 };
+
+/** Lines she says when you tap her in the lobby (a few unlock with Bond). */
+export const IDLE_LINES: Record<string, { level: number; text: string }[]> = {
+  scarlet: [
+    { level: 1, text: 'Staring, Commander? Go on. I charge by the minute, but for you I run a tab.' },
+    { level: 1, text: 'Silver polished, coat pressed, hunger politely asleep. I am ready when you are.' },
+    { level: 1, text: 'Careful where you poke, darling. Some of us bite back.' },
+    { level: 3, text: 'The rain here smells like the Keep. I hate that I like it.' },
+    { level: 5, text: 'Your heartbeat is very loud today. Nervous, or pleased to see me?' },
+    { level: 7, text: 'Stand a little closer. The shadows are colder when you are not in them.' },
+    { level: 9, text: "Four hundred years and I've finally found something worth being late for." },
+  ],
+  yuki: [
+    { level: 1, text: '...Hello. Your hand is warm. Please do not do that without warning.' },
+    { level: 1, text: 'Kaede says I should "say more words". This is me saying more words.' },
+    { level: 1, text: "I'm not sulking. It's just my face. It freezes like that." },
+    { level: 3, text: 'The hot spring was... acceptable. I might go again. With you.' },
+    { level: 5, text: 'I finished the snow figure of you. It looks surprised. So do you, right now.' },
+    { level: 7, text: 'You did not freeze. I keep checking. You are still warm.' },
+    { level: 9, text: "It's snowing just over you. Yes, that's me. Stop smiling." },
+  ],
+  kaede: [
+    { level: 1, text: "COMMANDER! Let's go blow something up. Or drink. Both. Both is good." },
+    { level: 1, text: 'Poke my horns again and I poke you back. With fire.' },
+    { level: 1, text: "You look tired. Here, have some sake. It's medicinal. Oni law." },
+    { level: 3, text: "Kid at the village said my horns were cool today. Not that I care. I'm thrilled." },
+    { level: 5, text: 'Sunrise on the watchtower tomorrow? You bring breakfast, I bring bad jokes.' },
+    { level: 7, text: 'If I ever get too hot to handle... you know what to do. Grab my hand.' },
+    { level: 9, text: "I'm teaching you the second half of the dance tonight. No excuses." },
+  ],
+  selene: [
+    { level: 1, text: 'Ara~ Tapping a priestess? The Lady saw that, Commander.' },
+    { level: 1, text: 'The seal is quiet today. So I get to be a little lazy with you.' },
+    { level: 1, text: 'Would you like your fortune? It says: "more tea, less war".' },
+    { level: 3, text: 'I drew the Lovers card again. The deck has a sense of humor.' },
+    { level: 5, text: 'The cracks close faster when you visit. I shall start charging admission.' },
+    { level: 7, text: "Don't look at the scroll. Look at me. Much nicer to read." },
+    { level: 9, text: 'I have decided to grow old here and be terribly bossy. You are included.' },
+  ],
+};

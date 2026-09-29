@@ -53,7 +53,7 @@ src/
     types.ts         All shared types (Stats, HeroineDef, EnemyDef, Wave, ChatEpisode…)
     heroines.ts      Roster, base stats, 3 upgrade paths × tiers (apply() mutates Stats)
     enemies.ts       Layered enemies, rbe() = total layers
-    maps.ts          Map path polylines + WAVES
+    maps.ts          Maps (path, palette, blurb, difficulty, unlock) + WAVES
     dialogues.ts     Chat episodes (node graph, Bond 1/3/5/7/9 per heroine) + PROLOGUE
     lore.ts          Codex entries, bestiary text, per-heroine story entries unlocked by Bond
     progression.ts   Bond XP thresholds, gallery slots, art file naming

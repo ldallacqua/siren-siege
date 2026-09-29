@@ -97,6 +97,14 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     'featured heroine switch re-rendered the home screen',
   );
   await page.getByRole('button', { name: 'Show Scarlet Vane' }).click();
+  // Tapping her makes her talk; Messages lists the chats
+  await page.getByRole('button', { name: 'Talk to her' }).click();
+  await page.locator('.lobby-bubble.on').waitFor({ timeout: 2000 });
+  await shot('1b-lobby-talk');
+  await page.getByRole('button', { name: 'Messages' }).click();
+  await page.locator('.msg').first().waitFor();
+  await shot('1c-messages');
+  await page.getByTitle('Back', { exact: true }).click();
 
   await page.getByRole('button', { name: /Play/ }).click();
   // First Play shows the story prologue
@@ -104,6 +112,11 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.waitForTimeout(900);
   await shot('0-prologue');
   await page.getByTitle('Leave').click();
+  // …then the arena select
+  await page.locator('.arena').first().waitFor();
+  assert((await page.locator('.arena').count()) >= 2, 'expected at least two arenas');
+  await shot('0b-arenas');
+  await page.getByRole('button', { name: 'Moonlit Shrine' }).click();
   await page.locator('.dock.shop').waitFor();
   assert((await sim(page))?.towers === 0, 'battle did not start');
   assert(await page.evaluate(() => (window as any).siren.sound.unlocked), 'audio did not unlock on the Play tap');

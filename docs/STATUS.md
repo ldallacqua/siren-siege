@@ -27,6 +27,9 @@
 - **Chat player:** 14 painted scenes with ambient particles (snow, embers, steam, lanterns, stars…), breathing portrait with mood crossfades, typewriter with punctuation pauses and per-heroine voice blips, hearts + sound on favorite choices, live Bond meter, log, auto, skip, keyboard (Space/1/2/A/S/L/Esc), chapter-complete card with Bond gain and unlocks.
 - **Combat visuals (`Vfx.ts`):** Scarlet tracers + muzzle flash + sparks; Yuki frost nova with ice spikes, shards, frozen-in-ice enemies; Kaede arcing fireballs, layered explosions, embers, smoke, scorch; Selene moon arrows with star trails and ally aura sparkles. Hit flashes, effects scale with tier. Per-heroine attack sounds.
 - **UI sound/feedback:** click/select/back on every button, hover ticks, wave-clear chime, low-lives alarm + pulsing counter, hurt shake, gold pulse, unlock/bond-up fanfares on results.
+- **Lobby home (gacha style):** full-screen featured heroine (tap her for a Bond-gated idle line with voice blips), Commander badge (wins, best wave), left rail tiles Messages (new-chat badge) / Gallery / Codex, heroine picker on the right, big Heroines + Battle tiles at the bottom.
+- **Messages screen:** every chat across heroines, new first. **Arena select:** cards with painted map previews, difficulty, best wave, lock state.
+- **Second arena, Frostveil Pass (Hard):** Mount Shirahane snow palette (snowy firs, frozen pond, ice-blue lanterns), shorter path; unlocks at wave 10 on Moonlit Shrine; own music track. Bot reaches wave 15 there vs 19 on the shrine.
 - Save in localStorage; `?dev` mode.
 - Tooling: unit tests (40), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
@@ -46,16 +49,16 @@
 
 ## Last session
 
-**2026-09-29 — combat VFX, lore, chat player, sound polish (Claude, cloud session)**
+**2026-09-29 — lobby home, messages, second arena (Claude, cloud session)**
 
-- Owner: "improve the chats, the lore, add sound/animation everywhere; skills and projectiles look bad".
-- Sim fx now carry `hero`/`tier`/`angle` and a new `hit` kind (write-only, deterministic). `src/game/Vfx.ts` renders all battle effects; `BattleScene` just routes fx to it and to `sound`.
-- Lore: `docs/LORE.md` (canon) + `src/data/lore.ts` (Codex, bestiary, story entries). 12 new episodes + prologue in `dialogues.ts`; `ChatEpisode.scene`; `save.seenPrologue` (optional field, old saves fine). Tests require Bond 1/3/5/7/9 chats and a scene + 2 decisions per episode.
-- Chat player moved to `src/ui/chat.ts`; shared helpers to `src/ui/common.ts`.
+- Owner asked for a NIKKE-style lobby and a second battle arena with a select screen.
+- `showHome` in `ui/screens.ts` is now the lobby (styles under "home (lobby)" in `style.css`); `showMessages`, `showMapSelect` added. Idle lines in `data/lore.ts` (`IDLE_LINES`).
+- `MapDef` gained `art`, `blurb`, `difficulty`, `unlock`; `mapArt.ts` takes a per-map palette (`PALETTES.shrine` / `.snow`). `save.isMapUnlocked()`. `Battle(mapId)` + `lastMap` in `main.ts`; results show the arena name. `MAP=frostveil-pass npm run sim` runs the bot there.
+- Smoke: arena select, lobby talk bubble, messages screen.
 - Nothing half-done.
 
 ## Next up
 
-1. **Owner playtest:** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+1. **Owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
 2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
 3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

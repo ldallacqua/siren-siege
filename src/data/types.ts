@@ -92,6 +92,13 @@ export interface MapDef {
   path: [number, number][];
   pathWidth: number;
   theme: { ground: number; ground2: number; path: number; pathEdge: number };
+  /** Scenery style painted by game/mapArt.ts (default 'shrine'). */
+  art?: 'shrine' | 'snow';
+  /** Map select card copy. */
+  blurb?: string;
+  difficulty?: 'Normal' | 'Hard' | 'Expert';
+  /** Best wave on another map required to unlock this one. */
+  unlock?: { map: string; wave: number; label: string };
 }
 
 // ---- Story / meta ----

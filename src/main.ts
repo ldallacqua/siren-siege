@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import './style.css';
 import { sound } from './audio/sound.ts';
 import { PROLOGUE } from './data/dialogues.ts';
+import { MAPS } from './data/maps.ts';
 import { HEROINES } from './data/heroines.ts';
 import { Battle } from './game/Battle.ts';
 import { BattleScene } from './game/BattleScene.ts';
@@ -10,7 +11,7 @@ import { h, toast } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
 import { playChat } from './ui/chat.ts';
-import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions } from './ui/screens.ts';
+import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions, showMapSelect } from './ui/screens.ts';
 
 const stage = document.getElementById('stage')!;
 const side = document.getElementById('side')!;
@@ -107,16 +108,18 @@ const hud = new Hud(side);
 scene.onToast = toast;
 let battle: Battle | null = null;
 
+let lastMap = MAPS[0].id;
 const home: HomeActions = {
   play: () => {
-    if (save.seenPrologue) return startBattle();
-    // First time: the story prologue, then straight into the battle.
+    const select = () => showMapSelect(home, (id) => startBattle(id));
+    if (save.seenPrologue) return select();
+    // First time: the story prologue, then pick a battlefield.
     playChat(
       PROLOGUE,
       () => {
         save.seenPrologue = true;
         persist();
-        startBattle();
+        select();
       },
       { noReward: true },
     );
@@ -128,9 +131,10 @@ function setPlaying(on: boolean): void {
   requestAnimationFrame(fit);
 }
 
-function startBattle(): void {
+function startBattle(mapId = lastMap): void {
+  lastMap = mapId;
   closeScreens();
-  battle = new Battle();
+  battle = new Battle(mapId);
   battle.onFinish = finishBattle;
   battle.sim.onWaveEnd = (wave, bonus) => {
     toast(`Wave ${wave} cleared · +${bonus} gold`);
@@ -166,7 +170,11 @@ function finishBattle(b: Battle): void {
   });
   persist();
   setTimeout(() => {
-    showResults({ won, wave: b.sim.wave, total: b.sim.waves.length, gains, newlyUnlocked }, startBattle, goHome);
+    showResults(
+      { won, wave: b.sim.wave, total: b.sim.waves.length, gains, newlyUnlocked, mapName: b.map.name },
+      () => startBattle(),
+      goHome,
+    );
     if (newlyUnlocked.length) window.setTimeout(() => sound.play('unlock'), 500);
     else if (gains.some((g) => g.after > g.before)) window.setTimeout(() => sound.play('bondUp'), 500);
   }, 700);

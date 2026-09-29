@@ -76,6 +76,20 @@ describe('enemies and waves', () => {
     }
   });
 
+  it('maps have unique ids, card copy, and unlocks that point at a real earlier map', () => {
+    const ids = MAPS.map((m) => m.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const m of MAPS) {
+      expect(m.blurb, m.id).toBeTruthy();
+      if (m.unlock) {
+        expect(ids.indexOf(m.unlock.map), m.id).toBeGreaterThanOrEqual(0);
+        expect(ids.indexOf(m.unlock.map), m.id).toBeLessThan(ids.indexOf(m.id));
+        expect(m.unlock.wave).toBeLessThanOrEqual(WAVES.length);
+      }
+    }
+    expect(MAPS[0].unlock, 'first map is always open').toBeUndefined();
+  });
+
   it('maps have a path that starts and ends off-grid', () => {
     for (const m of MAPS) {
       const path = new Path(m.path);
