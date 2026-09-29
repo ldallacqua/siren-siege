@@ -14,19 +14,19 @@
 - Unlocks: Kaede after reaching wave 10, Selene after clearing wave 20.
 - Responsive: landscape sidebar, portrait bottom dock with transposed map, short-landscape compact mode. Touch/mouse/keyboard.
 - Battlefield chibi sprites: drop `public/art/<id>/chibi.webp` and towers render it (idle bob, recoil on attack, flips toward the target); falls back to colored discs per heroine when missing.
-- Art pipeline for the owner: `docs/ART_GUIDE.md` (ChatGPT workflow, copy-paste prompts per heroine and asset, naming, phone upload); `npm run art` converts PNG/JPG uploads to sized WebP and lists misnamed files; empty `public/art/<id>/` folders exist for GitHub web upload.
+- **MVP art shipped:** 19 generated WebP assets: portraits, right-facing transparent chibis and First Impression gallery scenes for all four heroines; seven expression variants. See `docs/ART_ASSETS.md` for inventory and prompts.
+- Art pipeline for the owner: `docs/ART_GUIDE.md` (ChatGPT workflow, copy-paste prompts per heroine and asset, naming, phone upload); `npm run art` converts PNG/JPG uploads to sized WebP and lists misnamed files; assets live in `public/art/<id>/`.
 - Save in localStorage; `?dev` mode.
 - Tooling: unit tests (27), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
 ## Known issues / limitations
 
-- **All art is placeholder** (generated SVG cards; heroines on the map are colored discs with an initial until `chibi.webp` files exist). Real art drops into `public/art/<id>/` — see `docs/ART_DIRECTION.md`.
+- **MVP art scope:** remaining mood variants fall back to the main portrait; gallery slots 2–5 still show placeholders. The owner explicitly deferred the full 64-image set. Optional follow-up: B-01.
 - **No audio** at all yet.
 - Balance only validated by the naive bot (`npm run sim`: loses around wave 19–20). No human playtest data yet.
 - Upgrade tiers stop at 3 (BTD6 has 5). No camo/regrow enemies, no hero abilities.
 - Only 2 of the planned 5 chats per heroine are written; `speaker: 'you'` lines are supported but unused.
 - Fonts come from Google Fonts; offline or blocked networks fall back to Georgia/system fonts (fine, just less pretty).
-- Placeholder art text is visible faintly behind shop-card labels (cosmetic; disappears with real art).
 - No 18+ age gate yet (required before any public promotion — see BACKLOG B-12).
 - Saves are per-browser only; clearing site data wipes progress.
 - Phaser bundle is ~1.4 MB (≈360 KB gzip); fine for now.
@@ -34,16 +34,19 @@
 
 ## Last session
 
-**2026-09-28 — B-02 chibi sprites (Claude, cloud session)**
+**2026-09-28 — B-01 MVP art pass (Codex)**
 
-- `BattleScene` probes `art/<id>/chibi.webp` with a plain `<img>` after `create()` (non-blocking; Phaser's loader `console.error`s on 404, which the smoke test rejects) and registers hits via `textures.addImage`.
-- Towers with a texture draw as a sprite (~1.15 tiles tall, feet on the shadow) with idle bob, recoil + squash while `tower.flash > 0`, and a horizontal flip toward the aim (deadzone avoids jitter on vertical aim; portrait transposition respected). Pose math is pure in `src/game/chibiPose.ts`, tested in `tests/chibi.test.ts`. Placement ghost shows the sprite too. Tier pips moved to a top graphics layer so they draw over sprites.
-- Smoke verified on all 3 viewports without art and with temporary generated test chibis (not committed).
-- Follow-up (owner request): wrote `docs/ART_GUIDE.md` for generating all art with ChatGPT; added `scripts/art-import.ts` (`npm run art`, uses the smoke-test Chromium, no new deps) — tested with PNGs, misnamed files and a misspelled folder.
-- Nothing half-done.
+- Generated 19 final assets with the built-in image tool, using each main portrait as the identity reference. Four portraits, four chibis, four First Impression gallery scenes; smile for everyone plus Scarlet tease, Yuki shy and Kaede laugh.
+- Owner reduced scope from 64 images to the most important MVP assets. Remaining expressions and gallery scenes are intentionally deferred, not unfinished MVP work.
+- Selene's final design uses a covered embroidered bodice consistently in portrait, smile, chibi and gallery. Yuki's design includes an ice staff.
+- Imported with `npm run art` (WebP quality 85); preserved alpha; 256×256 chibis, 1086×1448 portraits and 1448×1086 gallery scenes. No game code or player progression changed.
+- Improved smoke captures to finish finite screen fades and decode images before screenshots; added each heroine's first gallery lightbox, requiring shipped files to load as real WebP rather than silently falling back.
+- Asset inventory and production prompt set: `docs/ART_ASSETS.md`.
+- Validation: 19 WebP files inspected for dimensions/alpha; smoke passed at 1280×720, 390×844 touch and 844×390 touch. Reviewed battlefield, shop, profile, chat and gallery screenshots; no crop or layout adjustments required.
+- Environment note: Chromium's bundled tar extraction failed on `chown`. Unpacked the existing npm-bundled Chromium/fonts/SwiftShader without ownership changes into a scratch TMPDIR, then ran the normal importer and smoke command. No dependency or repo workaround needed.
 
 ## Next up
 
-1. **B-01 real art pass** — owner will generate art with ChatGPT per `docs/ART_GUIDE.md`. When files land (or he says "import the new art"): `npm run art`, `npm run smoke`, check crops and chibi scale in screenshots.
-2. **B-03 juice** — sound effects, music, pop particles, floating gold text.
-3. **B-04 heroine barks**, then **B-05 tiers 4–5**.
+1. **B-03 juice** — sound effects, music, pop particles, floating gold text.
+2. **B-04 heroine barks**, then **B-05 tiers 4–5**.
+3. **B-01 optional art expansion** only when requested; the MVP asset set is complete.

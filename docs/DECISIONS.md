@@ -45,3 +45,7 @@ Cloud/sandboxed agents usually can't download Playwright browsers, but can insta
 ### D-011 · 2026-09-28 · Optional battlefield art probed with `<img>`, not the Phaser loader
 
 Phaser's loader logs `console.error` for every missing file, and the smoke test (rightly) fails on console errors. Chibi sprites are optional, so `BattleScene` probes them with a plain `Image` after the scene starts (never blocking the battle) and adds successful loads with `textures.addImage`. Missing files only produce the browser's network 404 line, same as the DOM art fallback. Chibi art faces right; the scene mirrors it toward the target.
+
+### D-012 · 2026-09-28 · Prioritize a 19-image MVP art set
+
+The owner reduced the 64-image production brief to the most important assets per heroine: main portrait, battlefield chibi and first gallery unlock, retaining seven completed expressions. Missing moods continue to use the existing portrait fallback; later gallery slots keep placeholders. No unlock thresholds or game data changed. The committed portraits are the visual references for future art; inventory and prompt set live in `docs/ART_ASSETS.md`. Selene uses a covered embroidered ceremonial bodice across her final set, and Yuki uses the ice staff established by her portrait.

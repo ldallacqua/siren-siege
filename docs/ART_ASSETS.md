@@ -1,0 +1,68 @@
+# MVP art inventory
+
+Generated with ChatGPT's built-in image generation tool for this project on 2026-09-28 (owner timezone). Imported with `npm run art`: WebP quality 85, no cropping or upscaling, alpha preserved.
+
+## Shipped files
+
+All paths below are relative to `public/art/`.
+
+| Heroine | Files                                                                                                                                 |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Scarlet | `scarlet/portrait.webp`, `scarlet/chibi.webp`, `scarlet/portrait-smile.webp`, `scarlet/portrait-tease.webp`, `scarlet/gallery-1.webp` |
+| Yuki    | `yuki/portrait.webp`, `yuki/chibi.webp`, `yuki/portrait-smile.webp`, `yuki/portrait-shy.webp`, `yuki/gallery-1.webp`                  |
+| Kaede   | `kaede/portrait.webp`, `kaede/chibi.webp`, `kaede/portrait-smile.webp`, `kaede/portrait-laugh.webp`, `kaede/gallery-1.webp`           |
+| Selene  | `selene/portrait.webp`, `selene/chibi.webp`, `selene/portrait-smile.webp`, `selene/gallery-1.webp`                                    |
+
+19 files: four main portraits, four chibis, seven expressions and four First Impression illustrations. Portraits are 1086×1448 with alpha; chibis are 256×256 with alpha; gallery illustrations are opaque 1448×1086 landscapes. Total approximately 5.6 MB.
+
+The owner explicitly reduced the full 64-image brief to an MVP pass. Other expressions intentionally fall back to the matching main portrait; gallery slots 2–5 retain their placeholders. Do not treat the remaining 45 images as a release blocker.
+
+## Visual reference and prompt set
+
+Use each committed `portrait.webp` as the identity reference for future art. Follow [ART_DIRECTION.md](ART_DIRECTION.md) and [ART_GUIDE.md](ART_GUIDE.md), with these production choices:
+
+- Style: high-quality anime gacha key art, clean lineart, cel shading with soft gradients, glossy highlights, detailed eyes, pink-violet rim light.
+- Main portraits: adult character sheets from ART_GUIDE §5.2, tall 3:4, thighs-up, centered facing viewer, face in top third, holding signature weapon/magic, true transparent background. No scenery, text, UI, frame or watermark.
+- Scarlet: 27-year-old vampire, crimson hair, red eyes, gothic black/crimson duster and corset, leather shorts, twin silver revolvers, amused smirk.
+- Yuki: 24-year-old snow witch, silver hair and blue eyes, white/ice-blue kimono, snowflake ornaments, ice magic. The generated design includes an ice staff, retained across her assets.
+- Kaede: 29-year-old oni, orange-red hair, red horns, amber eyes, tribal markings, red/black festival jacket, white sarashi wrap, short hakama, gourd, flame magic.
+- Selene: 26-year-old moon priestess, lavender side braid, violet eyes, crescent ornament, white/lilac/gold gown, moonlight bow. Final portrait and chibi use an opaque high-neck embroidered bodice with full chest coverage. This replaces the initial low-neck design after an expression generation was rejected.
+
+### Chibi prompt
+
+Reference: the same heroine's main portrait.
+
+> Create the character's battlefield chibi sprite: adult fantasy heroine represented as a nonsexual 2.5-head-tall miniature, simplified bold shapes and thick outlines that read at 64 px. Preserve signature hair, eyes, ornaments, palette and weapon. Square canvas, full body including both feet, centered ready stance angled in three-quarter view facing screen-right, weapon/magic aimed right. Feet near bottom, transparent alpha background, no ground shadow, scenery, text or UI.
+
+Selene's final chibi was edited to match the covered embroidered bodice of her final portrait.
+
+### Expression prompt
+
+Reference: the same heroine's main portrait.
+
+> Change only facial expression to [expression]. Preserve identity, head angle and position, hair silhouette, exact body pose, hands, costume and coverage, jewelry, weapon/magic, lighting, colors, canvas dimensions and transparent alpha. No zoom, reframe, body movement, scenery or text. These images swap during dialogue.
+
+| File suffix      | Expression                                           |
+| ---------------- | ---------------------------------------------------- |
+| smile (all four) | Warm genuine smile with soft eyes                    |
+| tease (Scarlet)  | Teasing smile, one eyebrow raised                    |
+| shy (Yuki)       | Bashful sidelong eyes, strong blush, small shy smile |
+| laugh (Kaede)    | Laughing openly, both eyes closed with joy           |
+
+### First Impression gallery prompts
+
+Reference: the same heroine's main portrait. New action pose; wide 4:3 full illustrated scene; face near center; preserve identity, battle outfit and style. Cinematic moonlight, no text, border, UI, nudity, explicit content or gore.
+
+| Heroine | Scene                                                                                                                                 |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Scarlet | Gothic rooftop under a blood moon, both revolvers firing outward, crimson-lined coat and hair flowing, amused smirk                   |
+| Yuki    | Summoning a glittering blizzard on a snowy shrine bridge, sleeves and hair in the wind, ice crystals around staff and free hand       |
+| Kaede   | Leaping through a lantern-lit festival street, large fireball between her hands, fierce joyous grin                                   |
+| Selene  | Drawing her moonlight bow from a temple roof, giant full moon and clouds, lavender braid flowing, covered embroidered ceremonial gown |
+
+## Verification
+
+- Inspect alpha channels and dimensions after importing.
+- Run `npm run check` and `npm run smoke`.
+- Smoke captures home, battlefield, upgrade, profile, chat and each heroine's First Impression lightbox in all three viewports. Screenshots finish finite animations and wait for image decoding.
+- The smoke test raises only its disposable in-memory Bond values to 2 for gallery inspection. Normal player progression is unchanged.

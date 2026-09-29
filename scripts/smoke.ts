@@ -5,7 +5,7 @@
 // Browser resolution order: $CHROME_PATH, then @sparticuz/chromium (Linux x64: works in
 // sandboxes/cloud sessions where browser downloads are blocked), then Playwright's own Chromium
 // (`npx playwright-core install chromium`).
-import { mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { chromium, type Page } from 'playwright-core';
 import { preview } from 'vite';
 
@@ -74,7 +74,12 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     // Missing art and blocked web fonts are expected; everything else is a bug.
     if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text());
   });
-  const shot = (step: string) => page.screenshot({ path: `${OUT}/${v.name}-${step}.png` });
+  const shot = async (step: string) => {
+    await page.locator('img').evaluateAll(async (images) => {
+      await Promise.all(images.map((img) => (img as HTMLImageElement).decode().catch(() => {})));
+    });
+    return page.screenshot({ path: `${OUT}/${v.name}-${step}.png`, animations: 'disabled' });
+  };
 
   await page.goto(`${base}?dev`, { waitUntil: 'load' });
   await page.getByRole('button', { name: /Play/ }).waitFor();
@@ -127,6 +132,33 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.locator('.chat-box').waitFor();
   for (let i = 0; i < 3; i++) await page.locator('.chat-box').click();
   await shot('6-chat');
+
+  // Art remains optional, but every shipped first-unlock illustration must load
+  // as the real WebP in its lightbox, not silently fall back to an SVG.
+  await page.getByTitle('Leave').click();
+  await page.getByTitle('Back', { exact: true }).click();
+  await page.getByTitle('Back', { exact: true }).click();
+  await page.evaluate(() => {
+    const progress = (window as any).siren.save.heroines;
+    for (const heroine of Object.values(progress) as { xp: number }[]) heroine.xp = 100; // Bond 2
+  });
+  await page.getByRole('button', { name: 'Gallery', exact: true }).click();
+  const heroineIds = ['scarlet', 'yuki', 'kaede', 'selene'];
+  for (const [index, id] of heroineIds.entries()) {
+    await page
+      .locator('.gallery-section')
+      .nth(index)
+      .getByRole('button', { name: /First Impression/ })
+      .click();
+    if (existsSync(`public/art/${id}/gallery-1.webp`)) {
+      await page.waitForFunction((id) => {
+        const img = document.querySelector<HTMLImageElement>('.lightbox-art');
+        return img?.complete && img.naturalWidth > 0 && img.currentSrc.endsWith(`/art/${id}/gallery-1.webp`);
+      }, id);
+    }
+    await shot(`7-gallery-${id}`);
+    await page.locator('.lightbox').click();
+  }
 
   await ctx.close();
   assert(errors.length === 0, `page errors:\n${errors.join('\n')}`);
