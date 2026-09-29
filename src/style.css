@@ -270,6 +270,14 @@ body.in-battle #side {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
+/* Full-screen tap targets (title card, lobby heroine) get focused on load or tap; the
+   browser's default ring would frame the whole screen (and drift with the parallax). */
+.splash,
+.lobby-hero,
+.splash:focus-visible,
+.lobby-hero:focus-visible {
+  outline: none;
+}
 
 .row {
   display: flex;
