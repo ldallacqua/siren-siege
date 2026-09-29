@@ -72,6 +72,7 @@ src/
     BattleScene.ts   Phaser scene: draws a Battle, maps pointer input (tap, drag-pan, pinch, wheel); transposes map in portrait
   ui/                DOM UI over the canvas
     Hud.ts           Sidebar (landscape) / dock (portrait): stats, controls, shop, placing, upgrade panel
+    upgradeTree.ts   Full-screen BTD6-style upgrade tree (battle: buys, pauses; profile: preview); emblems.ts draws its badges
     screens.ts       Home, roster, profile, codex, gallery, results, pause, options, settings
     chat.ts          Visual-novel chat player (scenes, ambient canvas, voice blips, log/auto/skip, end card)
     common.ts        show(), artChain(), bondBar(), topbar() shared by screens

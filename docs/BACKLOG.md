@@ -23,6 +23,8 @@ When placed / upgraded to tier 3 / Bond level up, show a short speech bubble lin
 
 ### B-05 · P2 · Tiers 4 and 5 (BTD6 parity)
 
+(The upgrade tree screen, `src/ui/upgradeTree.ts`, reads tier counts from data; its grid and `emblems.ts` need 2 more columns/badge levels.)
+
 Raise `MAX_TIER` to 5; crosspath rule becomes 5-2-0 max (logic already generic). Design tier 4–5 for all 12 paths (big, visible power spikes; tier 5 costs 15–40k). Pips UI shows 5.
 
 - Accept: `canBuyUpgrade` tests for 5-2-0 / 5-3-0 / 4-2-1; balance sim still loses naive bot around wave 18–20; UI fits portrait (3 path columns).
@@ -100,3 +102,9 @@ The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price,
 - T-02 · Lazy-load Phaser after the home screen renders to speed up first paint.
 - T-03 · Replace per-frame `Graphics.clear()` redraw with pooled sprites once real sprites exist (only if profiling shows a need).
 - T-04 · Smarter balance bot (buys tier 3s, positions by role) so balance targets are closer to real players.
+
+### B-17 · P3 · Heroine look changes with upgrades on the map
+
+BTD6 towers visibly change per crosspath. Ours get a sigil and pips; next step is an accessory per path at tier 3 (e.g. Scarlet's second pistol, Yuki's crown of ice, Kaede's glowing horns, Selene's halo) drawn over the chibi or as art variants `chibi-<path>.webp`.
+
+- Accept: a 3-x-x heroine is recognizable from a 0-0-3 one at fit zoom on a phone; falls back to the plain chibi when art is missing.

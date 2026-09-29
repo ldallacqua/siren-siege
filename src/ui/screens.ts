@@ -13,6 +13,7 @@ import { playChat, startAmbient, type Ambient } from './chat.ts';
 import { artChain, bondBar, closeScreens, show, topbar } from './common.ts';
 import { h, hex, toast } from './dom.ts';
 import { applyCalm, parallax, stagger, tilt } from './motion.ts';
+import { showUpgradeTree } from './upgradeTree.ts';
 
 export { closeScreens };
 import { icon, type IconName } from './icons.ts';
@@ -523,6 +524,12 @@ export function showProfile(id: string, a: HomeActions): void {
               h('span', { class: 'tag' }, `${d.cost} gold`),
             ),
             bondBar(id),
+            h(
+              'button',
+              { class: 'btn tree-btn', onclick: () => showUpgradeTree(id, { onClose: () => showProfile(id, a) }) },
+              icon('upgrade'),
+              'Upgrade tree',
+            ),
             h('p', { class: 'profile-bio' }, d.bio),
             h('p', { class: 'fine' }, d.archetype),
             h('div', { class: 'label' }, 'Her story'),

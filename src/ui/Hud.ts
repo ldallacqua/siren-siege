@@ -9,7 +9,9 @@ import { heroineLevel, isUnlocked } from '../state/save.ts';
 import { artImg, openLightbox } from './art.ts';
 import { gold, h, hex, toast } from './dom.ts';
 import { icon } from './icons.ts';
+import { closeScreens } from './common.ts';
 import { calm } from './motion.ts';
+import { showUpgradeTree } from './upgradeTree.ts';
 
 interface DockRefs {
   costButtons: { el: HTMLButtonElement; cost: () => number; ok: () => boolean; was?: boolean }[];
@@ -410,6 +412,12 @@ export class Hud {
         { class: 'row tower-actions' },
         h(
           'button',
+          { class: 'btn primary tree-btn', title: 'Upgrade tree (U)', onclick: () => this.openTree(b, t) },
+          icon('upgrade'),
+          'Upgrades',
+        ),
+        h(
+          'button',
           {
             class: 'btn',
             title: 'Targeting (Tab)',
@@ -436,6 +444,22 @@ export class Hud {
     );
   }
 
+  /** The full-screen upgrade tree. The match pauses while it's open. */
+  private openTree(b: Battle, t: Tower): void {
+    const was = b.paused;
+    b.paused = true;
+    b.emit();
+    sound.play('open');
+    showUpgradeTree(t.def.id, {
+      battle: { b, t },
+      onClose: () => {
+        closeScreens();
+        b.paused = was;
+        b.emit();
+      },
+    });
+  }
+
   private onKey(e: KeyboardEvent): void {
     const b = this.battle;
     if (!b || document.querySelector('#screens .screen')) return;
@@ -452,6 +476,8 @@ export class Hud {
     } else if (b.selected && (k === 'Delete' || k === 'Backspace')) {
       b.sim.sell(b.selected);
       b.select(null);
+    } else if (b.selected && (k === 'u' || k === 'U')) {
+      this.openTree(b, b.selected);
     } else if (b.selected && k === 'Tab') {
       e.preventDefault();
       b.sim.cycleTargeting(b.selected);

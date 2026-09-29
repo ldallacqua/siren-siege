@@ -183,6 +183,20 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await fullArt('scarlet', '4b-portrait');
   assert(!(await page.evaluate(() => (window as any).siren.battle.paused)), 'closing the portrait should resume');
 
+  // Full-screen upgrade tree: pauses, buys, returns to the battle running again
+  const tiers = () => page.evaluate(() => (window as any).siren.battle.selected?.tiers.join('') as string);
+  const t0 = await tiers();
+  await page.getByRole('button', { name: 'Upgrades' }).click();
+  await page.locator('.utree .ut-buy').waitFor();
+  assert(await page.evaluate(() => (window as any).siren.battle.paused), 'the upgrade tree should pause the battle');
+  await page.locator('.utree .ut-buy').click();
+  assert((await tiers()) !== t0, 'buying from the upgrade tree did nothing');
+  await page.waitForTimeout(400);
+  await shot('4c-tree');
+  await page.locator('.utree').getByRole('button', { name: 'Back' }).click();
+  await page.locator('.utree').waitFor({ state: 'detached' });
+  assert(!(await page.evaluate(() => (window as any).siren.battle.paused)), 'closing the upgrade tree should resume');
+
   // Battlefield zoom: buttons, selecting while zoomed, drag-to-pan, and (touch) two-finger pinch
   const cam = () =>
     page.evaluate(() => {
@@ -252,6 +266,11 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.getByRole('button', { name: 'Heroines' }).click();
   await page.locator('.roster-card').first().click();
   await shot('5-profile');
+  await page.getByRole('button', { name: 'Upgrade tree' }).click();
+  await page.locator('.utree .ut-tile').first().waitFor();
+  await shot('5c-tree');
+  await page.locator('.utree').getByRole('button', { name: 'Back' }).click();
+  await page.locator('.profile-art').waitFor();
   await page.locator('.profile-art').click();
   await fullArt('scarlet', '5b-portrait');
   await page.locator('.chat-item').first().click();

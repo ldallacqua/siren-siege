@@ -34,6 +34,48 @@ function mixColor(a: number, b: number, t: number): number {
   return (ch(16) << 16) | (ch(8) << 8) | ch(0);
 }
 
+/** Map sprite height in tiles (the outline padding is included). */
+const CHIBI_H = 1.5;
+/** Enemies are drawn a little larger than their hit radius so they read at phone size. */
+const ENEMY_DRAW = 1.15;
+
+/**
+ * Bake a "sticker" outline into a chibi: a dark outer edge and a thin rim in
+ * her color. Detailed art on a dark map otherwise dissolves at phone size;
+ * BTD6 solved the same problem with its outline update.
+ */
+function outlined(img: HTMLImageElement, color: number): HTMLCanvasElement {
+  const w = img.naturalWidth;
+  const hgt = img.naturalHeight;
+  const p = Math.max(3, Math.round(hgt * 0.03));
+  const sil = (fill: string) => {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = hgt;
+    const x = c.getContext('2d')!;
+    x.drawImage(img, 0, 0);
+    x.globalCompositeOperation = 'source-in';
+    x.fillStyle = fill;
+    x.fillRect(0, 0, w, hgt);
+    return c;
+  };
+  const out = document.createElement('canvas');
+  out.width = w + p * 2;
+  out.height = hgt + p * 2;
+  const ctx = out.getContext('2d')!;
+  const ring = (s: HTMLCanvasElement, r: number) => {
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      ctx.drawImage(s, p + Math.cos(a) * r, p + Math.sin(a) * r);
+    }
+  };
+  ring(sil('#0a0610'), p);
+  const rim = mixColor(color, 0xffffff, 0.55);
+  ring(sil(`#${rim.toString(16).padStart(6, '0')}`), p * 0.45);
+  ctx.drawImage(img, p, p);
+  return out;
+}
+
 /**
  * Renders a Battle and forwards pointer input to it. The map is laid out in
  * tile units; in portrait stages the whole map is transposed (x<->y) so the
@@ -145,7 +187,7 @@ export class BattleScene extends Phaser.Scene {
       const img = new Image();
       img.onload = () => {
         const key = chibiKey(h.id);
-        if (!this.textures.exists(key)) this.textures.addImage(key, img);
+        if (!this.textures.exists(key)) this.textures.addCanvas(key, outlined(img, h.color));
       };
       img.src = `art/${h.id}/chibi.webp`;
     }
@@ -314,7 +356,9 @@ export class BattleScene extends Phaser.Scene {
     this.dragging = false;
     if (b && this.gesture === 'tap' && !b.placing) {
       const w = this.toWorld(p.x, p.y);
-      b.select(b.sim.towerAt(w.x, w.y));
+      // Her sprite stands above her footprint, so a tap on her head counts too.
+      const head = this.toWorld(p.x, p.y + this.view.tile * 0.55);
+      b.select(b.sim.towerAt(w.x, w.y) ?? b.sim.towerAt(head.x, head.y));
     }
     this.gesture = this.touches.size ? 'done' : 'none';
   }
@@ -369,7 +413,7 @@ export class BattleScene extends Phaser.Scene {
     // Enemies (shadows first so bodies never sit under a neighbour's shadow)
     for (const e of sim.enemies) {
       if (!e.alive) continue;
-      const r = e.def.radius * T;
+      const r = e.def.radius * T * ENEMY_DRAW;
       g.fillStyle(0x000000, 0.35);
       g.fillEllipse(this.sx(e.x, e.y), this.sy(e.x, e.y) + r * 0.7, r * 1.7, r * 0.6);
     }
@@ -430,7 +474,7 @@ export class BattleScene extends Phaser.Scene {
           .setVisible(true)
           .setAlpha(0.7)
           .setPosition(x, y + T * 0.32);
-        this.ghostImg.setScale((T * 1.15) / this.ghostImg.height);
+        this.ghostImg.setScale((T * CHIBI_H) / this.ghostImg.height);
       }
     }
   }
@@ -553,7 +597,7 @@ export class BattleScene extends Phaser.Scene {
     const d = e.def;
     const hit = this.vfx.flash(e.uid);
     // A hit squashes the spirit for a frame or two
-    const r = d.radius * T * (1 + hit * 0.18);
+    const r = d.radius * T * ENEMY_DRAW * (1 + hit * 0.18);
     const light = mixColor(d.color, 0xffffff, 0.45);
     this.vfx.status(e.x, e.y, e.burnT > 0, e.slowT > 0);
     const dark = mixColor(d.color, 0x000000, 0.45);
@@ -566,6 +610,9 @@ export class BattleScene extends Phaser.Scene {
         g.fillTriangle(x + s * r * 0.35, y - r * 0.7, x + s * r * 0.8, y - r * 0.35, x + s * r * 0.75, y - r * 1.25);
       }
     }
+    // Dark outline first: keeps the spirit readable over the stone path.
+    g.fillStyle(0x07040b, 0.9);
+    g.fillCircle(x, y, r + Math.max(1.5, r * 0.12));
     g.fillStyle(dark, 1);
     g.fillCircle(x, y, r);
     g.fillStyle(d.color, 1);
@@ -665,10 +712,13 @@ export class BattleScene extends Phaser.Scene {
     const land = Math.min(1, pres.s);
     // Ground pad at her feet: shadow, a ring in her color, brighter when selected
     const fy = y + r * 0.72;
-    g.fillStyle(0x000000, 0.45 * land);
-    g.fillEllipse(x, fy, r * 1.9 * land, r * 0.7 * land);
-    g.lineStyle(Math.max(1.5, T * 0.04), def.color, selected ? 1 : 0.55);
-    g.strokeEllipse(x, fy, r * 1.9 * land, r * 0.7 * land);
+    // A solid colored base (like BTD6's footprint) so she reads against any ground.
+    g.fillStyle(0x000000, 0.5 * land);
+    g.fillEllipse(x, fy + r * 0.06, r * 2.3 * land, r * 0.9 * land);
+    g.fillStyle(mixColor(def.color, 0x000000, 0.35), 0.55 * land);
+    g.fillEllipse(x, fy, r * 2.1 * land, r * 0.78 * land);
+    g.lineStyle(Math.max(2, T * 0.055), mixColor(def.color, 0xffffff, 0.2), selected ? 1 : 0.8);
+    g.strokeEllipse(x, fy, r * 2.1 * land, r * 0.78 * land);
     if (pres.ring > 0) {
       // landing / upgrade shockwave on the ground
       const k = 1 - pres.ring;
@@ -723,7 +773,7 @@ export class BattleScene extends Phaser.Scene {
     }
     const pose = chibiPose(reducedMotion() ? 0 : this.time.now / 1000, t.uid * 1.7, dx, dy, t.flash, s.facing);
     s.facing = pose.facing;
-    const scale = ((T * 1.15) / s.img.height) * this.pres.s;
+    const scale = ((T * CHIBI_H) / s.img.height) * this.pres.s;
     // Feet sit on the shadow ellipse; squash keeps the feet planted.
     s.img
       .setPosition(x + pose.dx * T, y + T * 0.32 + pose.dy * T + this.pres.dy)
