@@ -1,63 +1,18 @@
 import { sound } from '../audio/sound.ts';
 import { episodesFor } from '../data/dialogues.ts';
 import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
-import { GALLERY, MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
-import type { ChatEpisode, ChatNode, GalleryItem } from '../data/types.ts';
-import { addXp, dev, heroineLevel, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
-import { openLightbox, placeholderArt } from './art.ts';
+import { ENEMIES } from '../data/enemies.ts';
+import { BESTIARY, BESTIARY_NOTE, CODEX, STORIES } from '../data/lore.ts';
+import { GALLERY, portraitFile } from '../data/progression.ts';
+import type { GalleryItem } from '../data/types.ts';
+import { dev, heroineLevel, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
+import { openLightbox } from './art.ts';
+import { playChat } from './chat.ts';
+import { artChain, bondBar, closeScreens, show, topbar } from './common.ts';
 import { h, hex, toast } from './dom.ts';
+
+export { closeScreens };
 import { icon } from './icons.ts';
-
-const root = () => document.getElementById('screens')!;
-
-export function closeScreens(): void {
-  root().replaceChildren();
-}
-
-function show(el: HTMLElement): void {
-  const prev = root().firstElementChild;
-  if (prev && prev.className.split(' ')[1] === el.className.split(' ')[1]) el.classList.add('no-anim');
-  root().replaceChildren(el);
-  el.querySelector<HTMLElement>('[autofocus], button')?.focus({ preventScroll: true });
-}
-
-/** Image with a chain of candidate files, ending in the generated placeholder. */
-function artChain(files: string[], heroine: string, label: string, portrait = true, className = ''): HTMLImageElement {
-  const img = h('img', { class: className, alt: label, draggable: false, decoding: 'async' });
-  let i = 0;
-  const next = () => {
-    if (i < files.length) img.src = files[i++];
-    else {
-      img.onerror = null;
-      img.src = placeholderArt(heroine, label, portrait);
-    }
-  };
-  img.onerror = next;
-  next();
-  return img;
-}
-
-function bondBar(id: string): HTMLElement {
-  const p = bondProgress(save.heroines[id]?.xp ?? 0);
-  const pct = p.level >= MAX_BOND ? 100 : Math.round((p.into / p.need) * 100);
-  return h(
-    'div',
-    { class: 'bond' },
-    h('span', { class: 'bond-lvl' }, icon('heart'), `Bond ${p.level}`),
-    h('span', { class: 'bond-track' }, h('span', { class: 'bond-fill', style: `width:${pct}%` })),
-    h('span', { class: 'bond-num' }, p.level >= MAX_BOND ? 'MAX' : `${p.into}/${p.need}`),
-  );
-}
-
-function topbar(title: string, back: () => void, extra?: string): HTMLElement {
-  return h(
-    'header',
-    { class: 'screen-top' },
-    h('button', { class: 'btn icon', onclick: back, title: 'Back' }, icon('back')),
-    h('h2', null, title),
-    extra ? h('span', { class: 'count' }, extra) : null,
-  );
-}
 
 // ------------------------------------------------------------------ home
 
@@ -136,6 +91,7 @@ export function showHome(a: HomeActions): void {
         ),
         item('Heroines', 'heroines', () => showRoster(a), `${unlocked.length}/${HEROINES.length}`),
         item('Gallery', 'image', () => showGallery(a), `${got}/${GALLERY.length}`),
+        item('Codex', 'book', () => showCodex(a)),
         item('Settings', 'gear', () => showSettings(a)),
       ),
       h('p', { class: 'home-foot' }, 'All characters are adults (21+) · v0.2', dev ? ' · DEV MODE' : ''),
@@ -366,6 +322,16 @@ export function showProfile(id: string, a: HomeActions): void {
           bondBar(id),
           h('p', { class: 'profile-bio' }, d.bio),
           h('p', { class: 'fine' }, d.archetype),
+          h('div', { class: 'label' }, 'Her story'),
+          h(
+            'div',
+            { class: 'story-list' },
+            ...(STORIES[id] ?? []).map((s) =>
+              lvl >= s.level
+                ? h('div', { class: 'story' }, h('b', null, s.title), h('p', null, s.text))
+                : h('div', { class: 'story locked' }, icon('lock'), h('span', null, `Reach Bond ${s.level} to learn more`)),
+            ),
+          ),
           h('div', { class: 'label' }, 'Chats'),
           h('div', { class: 'chat-list' }, ...chats),
           h('div', { class: 'label' }, 'Gallery'),
@@ -406,6 +372,37 @@ function fullPortrait(img: HTMLImageElement, id: string): HTMLImageElement {
   return img;
 }
 
+/** World lore + bestiary. */
+export function showCodex(a: HomeActions): void {
+  show(
+    h(
+      'section',
+      { class: 'screen list codex' },
+      topbar('Codex', () => showHome(a)),
+      h(
+        'div',
+        { class: 'screen-inner codex-body' },
+        h('div', { class: 'label' }, 'The world'),
+        ...CODEX.map((c) => h('article', { class: 'codex-entry' }, h('h3', null, c.title), h('p', null, c.text))),
+        h('div', { class: 'label' }, 'The Blight'),
+        h('p', { class: 'codex-note' }, BESTIARY_NOTE),
+        h(
+          'div',
+          { class: 'bestiary' },
+          ...ENEMIES.map((e) =>
+            h(
+              'div',
+              { class: `beast ${e.boss ? 'boss' : ''} ${e.armored ? 'armored' : ''}`, style: `--e:${hex(e.color)}` },
+              h('span', { class: 'beast-orb' }),
+              h('div', null, h('b', null, e.name), h('p', null, BESTIARY[e.id] ?? '')),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
 export function showGallery(a: HomeActions): void {
   const sections = HEROINES.map((d) => {
     const lvl = heroineLevel(d.id);
@@ -426,108 +423,6 @@ export function showGallery(a: HomeActions): void {
       h('div', { class: 'screen-inner' }, ...sections),
     ),
   );
-}
-
-// ------------------------------------------------------------------ chat
-
-export function playChat(ep: ChatEpisode, onClose: () => void): void {
-  const d = HEROINE_BY_ID[ep.heroine];
-  const nodes = new Map(ep.nodes.map((n) => [n.id, n]));
-  let earned = 0;
-  let typing = 0;
-  let fullText = '';
-
-  const portrait = h('div', { class: 'chat-portrait' });
-  const name = h('div', { class: 'chat-name' });
-  const text = h('div', { class: 'chat-text' });
-  const choices = h('div', { class: 'chat-choices' });
-  const box = h('div', { class: 'chat-box', onclick: () => advance() }, name, text, h('div', { class: 'chat-more' }, icon('next')));
-  const screen = h(
-    'section',
-    { class: 'screen chat', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
-    h('button', { class: 'btn icon chat-close', onclick: () => finish(false), title: 'Leave' }, icon('close')),
-    h('div', { class: 'chat-ep' }, h('small', null, `${d.name.split(' ')[0]} · Bond ${ep.level}`), ep.title),
-    portrait,
-    h('div', { class: 'chat-bottom' }, box, choices),
-  );
-  let node: ChatNode = nodes.get(ep.start)!;
-  let mood = '';
-
-  const render = () => {
-    const m = node.mood ?? (node.speaker === 'her' ? 'smile' : mood);
-    if (m !== mood || !portrait.firstChild) {
-      mood = m;
-      portrait.replaceChildren(artChain([portraitFile(ep.heroine, m), portraitFile(ep.heroine)], ep.heroine, d.name, true, 'chat-art'));
-    }
-    screen.classList.toggle('narration', node.speaker === 'narration');
-    name.textContent = node.speaker === 'her' ? d.name : node.speaker === 'you' ? 'You' : '';
-    fullText = node.text;
-    text.textContent = '';
-    choices.replaceChildren();
-    clearInterval(typing);
-    let i = 0;
-    typing = window.setInterval(() => {
-      i += 2;
-      text.textContent = fullText.slice(0, i);
-      if (i >= fullText.length) doneTyping();
-    }, 16);
-  };
-
-  const doneTyping = () => {
-    clearInterval(typing);
-    typing = 0;
-    text.textContent = fullText;
-    if (node.choices) {
-      choices.replaceChildren(
-        ...node.choices.map((c) =>
-          h(
-            'button',
-            {
-              class: 'btn choice',
-              onclick: (e: Event) => {
-                e.stopPropagation();
-                earned += c.affection;
-                if (c.affection >= 30) toast(`${d.name.split(' ')[0]} liked that`);
-                go(c.next);
-              },
-            },
-            icon('next'),
-            c.text,
-          ),
-        ),
-      );
-    }
-  };
-
-  const go = (id: string) => {
-    const n = nodes.get(id);
-    if (!n) return finish(true);
-    node = n;
-    render();
-  };
-
-  const advance = () => {
-    if (typing) return doneTyping();
-    if (node.choices) return;
-    if (node.end || !node.next) return finish(true);
-    go(node.next);
-  };
-
-  const finish = (completed: boolean) => {
-    clearInterval(typing);
-    const prog = (save.heroines[ep.heroine] ??= { xp: 0, chatsDone: [] });
-    const first = completed && !prog.chatsDone.includes(ep.id);
-    if (first) {
-      prog.chatsDone.push(ep.id);
-      persist();
-      const { before, after } = addXp(ep.heroine, earned + 50);
-      toast(after > before ? `Bond up! ${d.name.split(' ')[0]} is now Bond ${after}` : `+${earned + 50} bond with ${d.name.split(' ')[0]}`);
-    }
-    onClose();
-  };
-
-  show(screen);
-  render();
 }
 
 // ------------------------------------------------------------------ results

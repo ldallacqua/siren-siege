@@ -1,6 +1,6 @@
 // Data integrity tests: run these after adding heroines, enemies, waves, chats or gallery items.
 import { describe, expect, it } from 'vitest';
-import { EPISODES } from '../src/data/dialogues.ts';
+import { EPISODES, PROLOGUE } from '../src/data/dialogues.ts';
 import { ENEMIES, ENEMY_BY_ID, rbe } from '../src/data/enemies.ts';
 import { HEROINES } from '../src/data/heroines.ts';
 import { MAPS, WAVES } from '../src/data/maps.ts';
@@ -90,6 +90,23 @@ describe('enemies and waves', () => {
 });
 
 describe('dialogues', () => {
+  it('each heroine has a chat at Bond 1, 3, 5, 7 and 9 (Bond 9 is the confession)', () => {
+    for (const h of HEROINES) {
+      const levels = EPISODES.filter((e) => e.heroine === h.id).map((e) => e.level);
+      expect(
+        levels.sort((a, b) => a - b),
+        h.id,
+      ).toEqual([1, 3, 5, 7, 9]);
+    }
+  });
+
+  it('every episode has a scene and two decisions', () => {
+    for (const ep of [...EPISODES, PROLOGUE]) {
+      expect(ep.scene, ep.id).toBeTruthy();
+      expect(ep.nodes.filter((n) => n.choices).length, ep.id).toBe(2);
+    }
+  });
+
   it('episode ids are unique and reference real heroines', () => {
     const ids = EPISODES.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
@@ -102,7 +119,7 @@ describe('dialogues', () => {
   });
 
   it('every node link resolves, every node is reachable and every path ends', () => {
-    for (const ep of EPISODES) {
+    for (const ep of [...EPISODES, PROLOGUE]) {
       const nodes = new Map(ep.nodes.map((n) => [n.id, n]));
       expect(nodes.size, `${ep.id} duplicate node ids`).toBe(ep.nodes.length);
       expect(nodes.has(ep.start), `${ep.id} start`).toBe(true);

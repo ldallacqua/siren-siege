@@ -8,7 +8,7 @@ This file is the single source of truth for any AI coding agent (Claude Code, Co
 
 - Live: https://ldallacqua.github.io/siren-siege/ (served from the `gh-pages` branch, deployed by CI on every push to `main`)
 - Owner: Lucas (ldallacqua). Talks to agents in English or Portuguese.
-- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · **UI look: `docs/UI_STYLE.md` (read before any UI/CSS/battlefield change)** · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names)
+- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · **UI look: `docs/UI_STYLE.md` (read before any UI/CSS/battlefield change)** · **Story canon: `docs/LORE.md` (read before writing chats, bios or enemies)** · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names)
 
 ## 2. Resume protocol (do this first, every session)
 
@@ -54,13 +54,15 @@ src/
     heroines.ts      Roster, base stats, 3 upgrade paths × tiers (apply() mutates Stats)
     enemies.ts       Layered enemies, rbe() = total layers
     maps.ts          Map path polylines + WAVES
-    dialogues.ts     Chat episodes (node graph)
+    dialogues.ts     Chat episodes (node graph, Bond 1/3/5/7/9 per heroine) + PROLOGUE
+    lore.ts          Codex entries, bestiary text, per-heroine story entries unlocked by Bond
     progression.ts   Bond XP thresholds, gallery slots, art file naming
   game/
     sim/             PURE LOGIC, no Phaser/DOM. Deterministic, fixed 60 Hz.
       BattleSim.ts     Spawning, movement, targeting, projectiles, damage/pop, economy, waves
       upgrades.ts      computeStats(), BTD6 crosspath rule canBuyUpgrade(), sell value
       path.ts          Polyline distance lookup
+    Vfx.ts           Battle particles/rings/decals/trails/hit flashes, per-heroine styles scaled by tier
     mapArt.ts        Paints a map's static scenery (ground, path, props, lighting) once into a canvas texture
     camera.ts        Pure zoom/pan math (fit, zoomAt, panBy, clamping) for the battlefield
     chibiPose.ts     Pure bob/recoil/facing math for chibi sprites
@@ -68,7 +70,9 @@ src/
     BattleScene.ts   Phaser scene: draws a Battle, maps pointer input (tap, drag-pan, pinch, wheel); transposes map in portrait
   ui/                DOM UI over the canvas
     Hud.ts           Sidebar (landscape) / dock (portrait): stats, controls, shop, placing, upgrade panel
-    screens.ts       Home, roster, profile, chat player, gallery + lightbox, results, pause, settings
+    screens.ts       Home, roster, profile, codex, gallery, results, pause, options, settings
+    chat.ts          Visual-novel chat player (scenes, ambient canvas, voice blips, log/auto/skip, end card)
+    common.ts        show(), artChain(), bondBar(), topbar() shared by screens
     art.ts           Loads public/art files, falls back to generated SVG placeholders; lightbox
     icons.ts         Inline SVG icon set (use this, never emoji/unicode glyphs in UI chrome)
     dom.ts           h() hyperscript helper, toast, formatters
@@ -93,7 +97,7 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 
 **Tune difficulty:** edit `WAVES` in `maps.ts`, enemy `speed`/`hp`, or economy constants in `BattleSim.endWave()`/`pop()`. Target: `npm run sim` (a naive bot buying cheapest upgrades) should reach wave ~18–20 and lose narrowly; a thinking player wins.
 
-**Write a chat:** add a `ChatEpisode` to `EPISODES` using the `her()/nar()/pick()/end()` helpers. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of: smile, tease, smirk, wink, laugh, blush, shy, pout, grin. Tests verify links, reachability and endings.
+**Write a chat:** read `docs/LORE.md` first. Add a `ChatEpisode` (with a `scene`) to `EPISODES` using the `her()/nar()/pick()/you()/end()` helpers. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of: smile, tease, smirk, wink, laugh, blush, shy, pout, grin. Tests verify links, reachability and endings.
 
 **Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots.
 

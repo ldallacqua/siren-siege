@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import './style.css';
 import { sound } from './audio/sound.ts';
+import { PROLOGUE } from './data/dialogues.ts';
 import { HEROINES } from './data/heroines.ts';
 import { Battle } from './game/Battle.ts';
 import { BattleScene } from './game/BattleScene.ts';
@@ -8,6 +9,7 @@ import { addXp, dev, isUnlocked, persist, save } from './state/save.ts';
 import { h, toast } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
+import { playChat } from './ui/chat.ts';
 import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions } from './ui/screens.ts';
 
 const stage = document.getElementById('stage')!;
@@ -78,11 +80,48 @@ window.addEventListener('keydown', (e) => {
 for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'])
   window.addEventListener(ev, () => sound.unlock(), { capture: true, passive: true });
 
+// Interface sounds: every button clicks; back/close buttons sound different.
+document.addEventListener(
+  'click',
+  (e) => {
+    const btn = (e.target as HTMLElement).closest('button');
+    if (!btn || btn.disabled || btn.classList.contains('choice') || btn.closest('#stage canvas')) return;
+    const t = btn.title;
+    if (t === 'Back' || t === 'Close' || t === 'Leave') sound.play('back');
+    else if (btn.classList.contains('primary')) sound.play('select');
+    else sound.play('tap');
+  },
+  true,
+);
+document.addEventListener(
+  'pointerover',
+  (e) => {
+    const el = (e.target as HTMLElement).closest('.menu-item, .card, .roster-card, .thumb, .chat-item');
+    if (el && (e as PointerEvent).pointerType === 'mouse' && !el.contains((e as PointerEvent).relatedTarget as Node))
+      sound.play('tap', 1.5);
+  },
+  true,
+);
+
 const hud = new Hud(side);
 scene.onToast = toast;
 let battle: Battle | null = null;
 
-const home: HomeActions = { play: () => startBattle() };
+const home: HomeActions = {
+  play: () => {
+    if (save.seenPrologue) return startBattle();
+    // First time: the story prologue, then straight into the battle.
+    playChat(
+      PROLOGUE,
+      () => {
+        save.seenPrologue = true;
+        persist();
+        startBattle();
+      },
+      { noReward: true },
+    );
+  },
+};
 
 function setPlaying(on: boolean): void {
   document.body.classList.toggle('in-battle', on);
@@ -95,6 +134,7 @@ function startBattle(): void {
   battle.onFinish = finishBattle;
   battle.sim.onWaveEnd = (wave, bonus) => {
     toast(`Wave ${wave} cleared · +${bonus} gold`);
+    sound.play('waveClear');
     recordWave(battle!, false);
   };
   scene.setBattle(battle);
@@ -127,6 +167,8 @@ function finishBattle(b: Battle): void {
   persist();
   setTimeout(() => {
     showResults({ won, wave: b.sim.wave, total: b.sim.waves.length, gains, newlyUnlocked }, startBattle, goHome);
+    if (newlyUnlocked.length) window.setTimeout(() => sound.play('unlock'), 500);
+    else if (gains.some((g) => g.after > g.before)) window.setTimeout(() => sound.play('bondUp'), 500);
   }, 700);
 }
 

@@ -65,3 +65,7 @@ Owner feedback: the UI "looks like old Flash games". Research on modern gacha/TD
 ### D-016 · 2026-09-29 · Update DOM in place; don't re-render screens for small state changes
 
 `h()` + `show()` rebuild everything, which is fine for navigation but reads as a "page reload" (entrance animation replays, images re-decode) when used for a toggle. Rule: navigation may rebuild; in-screen state (featured heroine, HUD speed/pause/auto/wave, costs) must update existing nodes. The smoke test checks node identity so regressions get caught.
+
+### D-017 · 2026-09-29 · Rendering-only data on sim fx; Vfx module owns battle effects
+
+Per-heroine visuals need to know who fired and how upgraded she is, so `Fx` gained optional `hero`, `tier`, `angle` (and `hit` events carry the enemy uid in `value`). The sim still never reads fx back, so determinism and balance are untouched. All transient battle visuals moved from `BattleScene` into `Vfx.ts` (tile-space particles projected through the scene view each frame) so the scene stays about layout/input and effects can grow independently. Chat backdrops are CSS gradients + a small 2D-canvas particle loop rather than images, so every scene works with zero art and is replaceable later.

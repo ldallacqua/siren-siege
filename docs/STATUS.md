@@ -23,8 +23,12 @@
 - **Update check:** GitHub Pages caches the page for 10 min; on boot the game asks for the current build and reloads once (or shows a toast mid-game) if it's running an old one.
 - **UI overhaul ("Moonlit Noir", see `docs/UI_STYLE.md`):** self-hosted fonts, SVG icons, chamfered buttons, one accent color; lobby-style home with a featured heroine (avatar picker); restyled HUD (stat chips, wave progress, icon controls, framed shop cards with hotkeys), roster/profile/gallery/chat/results/settings/pause.
 - **Painted battlefield:** moss ground, flagstone path, stone lanterns (flickering), torii exit, spawn portal, pond, sakura/shrubs, fireflies, lighting; scenery continues past the map edges on wide screens. Enemies are shaded spirits with eyes; projectiles are light streaks; towers stand on colored pads; range rings are dashed.
+- **Story:** lore bible `docs/LORE.md`; 20 chats (Bond 1/3/5/7/9 per heroine, Bond 9 = confession) + a prologue on first Play; richer bios; "Her story" entries on profiles unlocked by Bond; Codex screen (world + bestiary).
+- **Chat player:** 14 painted scenes with ambient particles (snow, embers, steam, lanterns, stars…), breathing portrait with mood crossfades, typewriter with punctuation pauses and per-heroine voice blips, hearts + sound on favorite choices, live Bond meter, log, auto, skip, keyboard (Space/1/2/A/S/L/Esc), chapter-complete card with Bond gain and unlocks.
+- **Combat visuals (`Vfx.ts`):** Scarlet tracers + muzzle flash + sparks; Yuki frost nova with ice spikes, shards, frozen-in-ice enemies; Kaede arcing fireballs, layered explosions, embers, smoke, scorch; Selene moon arrows with star trails and ally aura sparkles. Hit flashes, effects scale with tier. Per-heroine attack sounds.
+- **UI sound/feedback:** click/select/back on every button, hover ticks, wave-clear chime, low-lives alarm + pulsing counter, hurt shake, gold pulse, unlock/bond-up fanfares on results.
 - Save in localStorage; `?dev` mode.
-- Tooling: unit tests (36), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
+- Tooling: unit tests (40), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
 ## Known issues / limitations
 
@@ -42,16 +46,16 @@
 
 ## Last session
 
-**2026-09-29 — UI overhaul (Claude, cloud session)**
+**2026-09-29 — combat VFX, lore, chat player, sound polish (Claude, cloud session)**
 
-- Owner asked for a more polished, professional UI ("looks like old Flash games"). Audited every screen, researched modern gacha/TD UI and HUD guidance, and wrote `docs/UI_STYLE.md` (rules + checklist).
-- Design system: fonts in `public/fonts/` (OFL), `src/ui/icons.ts`, full `style.css` rewrite on tokens. New home (`showHome` in `screens.ts`, featured heroine = highest bond, switchable). HUD markup in `Hud.ts` uses icons and stat chips. Settings screen has panels, switches, slider readouts and a key list; the sfx slider is now called "Effects".
-- Battlefield: `src/game/mapArt.ts` paints the scene (seeded, cached per map, 3-tile margin); `BattleScene` shows it as an image and adds an additive `glow` layer, fireflies, lantern flicker, `drawEnemy()`, light-streak projectiles, dashed `drawRange()`, tower pads and diamond pips. The checkerboard `drawBackground` and map `theme` colors are no longer used for the ground.
-- Verified with smoke on all 3 viewports plus extra roster/gallery/results screenshots. Nothing half-done.
-- Follow-up (owner report: "every click re-renders the whole UI"): the home avatar picker re-ran `showHome()` (full rebuild + entrance animation + image reloads). Now `feature()` swaps only the portrait, name, colors and highlight. `show()` skips the entrance animation when re-showing the same screen type. The HUD builds stats/controls once per battle and updates them in place (`Hud.update`); only the lower panel swaps, and the shop panel is cached. The boot update check no longer reloads after the first tap. Smoke asserts element identity for both cases.
+- Owner: "improve the chats, the lore, add sound/animation everywhere; skills and projectiles look bad".
+- Sim fx now carry `hero`/`tier`/`angle` and a new `hit` kind (write-only, deterministic). `src/game/Vfx.ts` renders all battle effects; `BattleScene` just routes fx to it and to `sound`.
+- Lore: `docs/LORE.md` (canon) + `src/data/lore.ts` (Codex, bestiary, story entries). 12 new episodes + prologue in `dialogues.ts`; `ChatEpisode.scene`; `save.seenPrologue` (optional field, old saves fine). Tests require Bond 1/3/5/7/9 chats and a scene + 2 decisions per episode.
+- Chat player moved to `src/ui/chat.ts`; shared helpers to `src/ui/common.ts`.
+- Nothing half-done.
 
 ## Next up
 
-1. **Owner feedback on the new look** (live site). Easy knobs: colors/tokens at the top of `style.css`; scenery in `mapArt.ts`.
-2. **Owner confirms sound on phone**, then **B-03b perf check** (the new glow layer and fireflies add draw calls; measure with 200 enemies at 3×).
-3. **B-04 heroine barks**, then **B-12 18+ age gate**, then **B-05 tiers 4–5**.
+1. **Owner playtest:** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
+3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

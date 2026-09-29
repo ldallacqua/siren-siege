@@ -112,6 +112,23 @@ export interface ChatNode {
   end?: boolean;
 }
 
+/** Backdrop for a chat (see chat scenes in ui/screens.ts + style.css). */
+export type ChatScene =
+  | 'night'
+  | 'armory'
+  | 'fireside'
+  | 'bloodmoon'
+  | 'dawn'
+  | 'snow'
+  | 'lake'
+  | 'onsen'
+  | 'festival'
+  | 'training'
+  | 'roof'
+  | 'parlor'
+  | 'moongate'
+  | 'archive';
+
 export interface ChatEpisode {
   id: string;
   heroine: string;
@@ -119,6 +136,7 @@ export interface ChatEpisode {
   level: number; // bond level required
   start: string;
   nodes: ChatNode[];
+  scene?: ChatScene;
 }
 
 export interface GalleryItem {

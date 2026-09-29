@@ -99,6 +99,11 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.getByRole('button', { name: 'Show Scarlet Vane' }).click();
 
   await page.getByRole('button', { name: /Play/ }).click();
+  // First Play shows the story prologue
+  await page.locator('.screen.chat').waitFor({ timeout: 3000 });
+  await page.waitForTimeout(900);
+  await shot('0-prologue');
+  await page.getByTitle('Leave').click();
   await page.locator('.dock.shop').waitFor();
   assert((await sim(page))?.towers === 0, 'battle did not start');
   assert(await page.evaluate(() => (window as any).siren.sound.unlocked), 'audio did not unlock on the Play tap');

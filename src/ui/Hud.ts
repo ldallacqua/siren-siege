@@ -1,3 +1,4 @@
+import { sound } from '../audio/sound.ts';
 import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
 import { portraitFile } from '../data/progression.ts';
 import type { Battle } from '../game/Battle.ts';
@@ -33,6 +34,8 @@ export class Hud {
     auto?: HTMLButtonElement;
     pause?: HTMLButtonElement;
     pausedShown?: boolean;
+    lastLives?: number;
+    lastCash?: number;
   } = {};
   private dockRefs: DockRefs = { costButtons: [] };
   private top: HTMLElement | null = null;
@@ -111,7 +114,25 @@ export class Hud {
   private update(b: Battle): void {
     const r = this.refs;
     const sim = b.sim;
-    if (r.lives) r.lives.textContent = String(Math.max(0, sim.lives));
+    if (r.lives) {
+      r.lives.textContent = String(Math.max(0, sim.lives));
+      // Low lives: pulse the counter and sound a warning each time they drop below a threshold
+      const low = sim.lives > 0 && sim.lives <= 25;
+      r.lives.parentElement!.classList.toggle('low', low);
+      if (r.lastLives !== undefined && sim.lives < r.lastLives) {
+        r.lives.parentElement!.classList.remove('hurt');
+        void r.lives.parentElement!.offsetWidth;
+        r.lives.parentElement!.classList.add('hurt');
+        if (low) sound.play('warn');
+      }
+      r.lastLives = sim.lives;
+    }
+    if (r.cash && r.lastCash !== undefined && sim.cash > r.lastCash + 40) {
+      r.cash.parentElement!.classList.remove('gain');
+      void r.cash.parentElement!.offsetWidth;
+      r.cash.parentElement!.classList.add('gain');
+    }
+    r.lastCash = sim.cash;
     if (r.cash) r.cash.textContent = gold(sim.cash);
     if (r.wave) r.wave.textContent = `${sim.wave}/${sim.waves.length}`;
     if (r.waveBar) r.waveBar.style.width = `${(100 * sim.wave) / sim.waves.length}%`;

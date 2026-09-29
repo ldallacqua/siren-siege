@@ -14,6 +14,8 @@ export interface SaveData {
   bestWave: Record<string, number>; // per map
   wins: number;
   settings: Settings;
+  /** The story prologue has been shown (first Play). */
+  seenPrologue?: boolean;
 }
 
 export interface Settings {

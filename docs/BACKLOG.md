@@ -44,12 +44,6 @@ Easy / Normal / Hard / Impoppable: multipliers on enemy speed, start cash, lives
 
 - Accept: stored per map+difficulty in save (migrate save v1 → v2).
 
-### B-09 · P2 · Write remaining chats (Bond 5, 7, 9) for all 4 heroines
-
-Follow the voice notes in `docs/GDD.md` §3.6. Each episode 8–12 nodes, 2 choices. Bond 9 episode is a confession arc.
-
-- Accept: data tests pass; tone stays suggestive, never explicit.
-
 ### B-10 · P3 · Heroines 5–8
 
 Kunoichi (camo detection, shuriken pierce), mecha pilot (long range, missiles), succubus (charm: enemies walk backwards briefly), pirate captain (economy + cannon). Each needs data, chats, art sheet in ART_DIRECTION.
@@ -87,6 +81,12 @@ The MVP pass is complete: 19 assets (all four portraits/chibis/First Impression 
 - When requested: add missing expressions and `gallery-2` … `gallery-5`, reusing each committed main portrait as the character reference.
 - Preserve Selene's covered ceremonial bodice and the established character designs.
 - Accept: no body/framing jump between expressions, proper alpha, no face cropping in cards, gallery lightboxes and all three smoke viewports verified.
+
+### B-16 · P2 · Main story chapters
+
+The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price, the Hollow King). Add story chapters unlocked by map progress (e.g. after wave 10, after winning), using `playChat` with `noReward` and multi-heroine scenes (needs a `speaker` per node for other heroines).
+
+- Accept: at least 3 chapters; multi-speaker chat support with tests; stays consistent with docs/LORE.md.
 
 ## Tech debt / nice to have
 
