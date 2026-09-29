@@ -23,16 +23,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # Same gate as CI: a red check never reaches the live site.
+      # A red check never reaches the live site. The real-browser smoke test runs before
+      # the push instead (.githooks/pre-push, ~2 min locally vs ~11 min on this runner).
       - run: npm run check
-      - name: Smoke test
-        run: npm run smoke
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: smoke-screenshots
-          path: artifacts/smoke/
-          if-no-files-found: ignore
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

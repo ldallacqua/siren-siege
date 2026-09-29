@@ -15,7 +15,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run format:check && npm run typecheck && npm test && npm run sim && vite build",
-    "art": "node --experimental-strip-types --no-warnings scripts/art-import.ts"
+    "art": "node --experimental-strip-types --no-warnings scripts/art-import.ts",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "license": "UNLICENSED",
   "dependencies": {
