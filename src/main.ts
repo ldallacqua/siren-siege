@@ -7,7 +7,7 @@ import { BattleScene } from './game/BattleScene.ts';
 import { addXp, dev, isUnlocked, persist, save } from './state/save.ts';
 import { h, toast } from './ui/dom.ts';
 import { Hud } from './ui/Hud.ts';
-import { closeScreens, showHome, showPauseMenu, showResults, type HomeActions } from './ui/screens.ts';
+import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions } from './ui/screens.ts';
 
 const stage = document.getElementById('stage')!;
 const side = document.getElementById('side')!;
@@ -41,7 +41,21 @@ const zoomBtn = (label: string, title: string, fn: () => void) =>
 const zoomIn = zoomBtn('+', 'Zoom in', () => scene.zoomBy(1.4));
 const zoomOut = zoomBtn('−', 'Zoom out', () => scene.zoomBy(1 / 1.4));
 const zoomFit = zoomBtn('⤢', 'Fit map', () => scene.resetZoom());
-stage.append(h('div', { class: 'zoom-ctl' }, zoomIn, zoomOut, zoomFit));
+const optionsBtn = zoomBtn('⚙', 'Options', () => openOptions());
+stage.append(h('div', { class: 'zoom-ctl' }, optionsBtn, zoomIn, zoomOut, zoomFit));
+
+function openOptions(): void {
+  if (!battle) return;
+  const b = battle;
+  const wasPaused = b.paused;
+  b.paused = true;
+  b.emit();
+  showOptions(() => {
+    closeScreens();
+    b.paused = wasPaused;
+    b.emit();
+  });
+}
 scene.onZoom = (z) => {
   zoomIn.disabled = z >= scene.maxZoom - 1e-6;
   zoomOut.disabled = zoomFit.disabled = z <= scene.minZoom + 1e-6;
@@ -60,7 +74,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Browsers only allow audio after a user gesture; unlock on the first one.
-for (const ev of ['pointerdown', 'keydown', 'touchend'])
+for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'])
   window.addEventListener(ev, () => sound.unlock(), { capture: true, passive: true });
 
 const hud = new Hud(side);
@@ -165,3 +179,31 @@ if (dev)
   });
 
 goHome();
+checkForUpdate();
+
+/**
+ * GitHub Pages lets browsers cache index.html for 10 minutes, so right after a
+ * deploy players can get the old game. Ask the server (bypassing the cache)
+ * which build is current, and reload once if it's newer than the one running.
+ */
+function checkForUpdate(): void {
+  const current = document.querySelector<HTMLScriptElement>('script[type="module"][src*="assets/index-"]')?.src.split('/').pop();
+  if (!current) return; // dev server: no hashed bundle
+  fetch('./', { cache: 'no-store' })
+    .then((r) => r.text())
+    .then((html) => {
+      const latest = html.match(/assets\/(index-[\w-]+\.js)/)?.[1];
+      if (!latest || latest === current) return;
+      const key = `sirensiege.reloaded.${latest}`;
+      try {
+        if (sessionStorage.getItem(key)) return; // CDN still stale: don't loop
+        sessionStorage.setItem(key, '1');
+      } catch {
+        return;
+      }
+      // Only reload if the player hasn't started anything yet; otherwise just tell them.
+      if (!battle && !document.querySelector('#screens .screen:not(.home)')) location.reload();
+      else toast('A new version is available: reload the page to update.');
+    })
+    .catch(() => {});
+}

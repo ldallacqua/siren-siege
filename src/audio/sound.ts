@@ -43,10 +43,15 @@ class Sound {
   private nextNoteAt = 0;
   private timer = 0;
 
-  /** Call from any user gesture. Safe to call repeatedly. */
+  /**
+   * Call from user gestures. Safe to call repeatedly: browsers only honour
+   * resume() inside "activation" events (touchend / pointerup / click / keydown,
+   * not a touch pointerdown), so we simply retry on each of them until running.
+   */
   unlock(): void {
+    this.iosPlayback();
     if (this.ctx) {
-      if (this.ctx.state === 'suspended' && !document.hidden) void this.ctx.resume();
+      if (this.ctx.state !== 'running' && !document.hidden) void this.ctx.resume();
       return;
     }
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -62,11 +67,38 @@ class Sound {
     const d = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     this.applySettings();
+    if (ctx.state !== 'running') void ctx.resume();
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) void ctx.suspend();
       else void ctx.resume();
     });
     if (this.track) this.startScheduler();
+  }
+
+  private silent: HTMLAudioElement | null = null;
+
+  /**
+   * iPhones route Web Audio through the "ringer" channel, so the silent switch
+   * mutes the whole game. Declaring a playback session (Safari 16.4+) or, on
+   * older iOS, keeping a silent <audio> element playing moves it to the media
+   * channel like a video.
+   */
+  private iosPlayback(): void {
+    const nav = navigator as Navigator & { audioSession?: { type: string } };
+    if (nav.audioSession && nav.audioSession.type !== 'playback') {
+      try {
+        nav.audioSession.type = 'playback';
+      } catch {
+        /* not supported */
+      }
+    }
+    if (!/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) || !('ontouchend' in document)) return;
+    if (!this.silent) {
+      this.silent = new Audio(silentWav());
+      this.silent.loop = true;
+      this.silent.setAttribute('playsinline', '');
+    }
+    if (this.silent.paused) void this.silent.play().catch(() => {});
   }
 
   get unlocked(): boolean {
@@ -303,6 +335,30 @@ class Sound {
     src.start(t, Math.random() * 0.5);
     src.stop(t + dur + 0.02);
   }
+}
+
+/** A 0.1 s silent 8-bit mono WAV as a data URI (for the iOS media-channel trick). */
+function silentWav(): string {
+  const n = 800;
+  const b = new Uint8Array(44 + n);
+  const dv = new DataView(b.buffer);
+  const str = (o: number, s: string) => [...s].forEach((c, i) => (b[o + i] = c.charCodeAt(0)));
+  str(0, 'RIFF');
+  dv.setUint32(4, 36 + n, true);
+  str(8, 'WAVEfmt ');
+  dv.setUint32(16, 16, true);
+  dv.setUint16(20, 1, true); // PCM
+  dv.setUint16(22, 1, true); // mono
+  dv.setUint32(24, 8000, true);
+  dv.setUint32(28, 8000, true);
+  dv.setUint16(32, 1, true);
+  dv.setUint16(34, 8, true);
+  str(36, 'data');
+  dv.setUint32(40, n, true);
+  b.fill(128, 44); // 8-bit silence is the midpoint
+  let bin = '';
+  for (const x of b) bin += String.fromCharCode(x);
+  return 'data:audio/wav;base64,' + btoa(bin);
 }
 
 export const sound = new Sound();

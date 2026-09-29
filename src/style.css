@@ -828,11 +828,30 @@ body.in-battle #side {
   cursor: zoom-out;
   animation: fade 0.2s;
 }
+.lightbox[style*='--c'] {
+  background: radial-gradient(ellipse at 50% 35%, color-mix(in srgb, var(--c) 35%, transparent), transparent 70%), rgba(8, 3, 14, 0.96);
+}
 .lightbox-art {
   max-width: 100%;
-  max-height: 88dvh;
+  max-height: 86dvh;
   object-fit: contain;
   border-radius: 12px;
+}
+.lightbox-close {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+}
+.zoomable {
+  cursor: zoom-in;
+}
+.head-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  cursor: zoom-in;
+  flex: none;
 }
 
 /* Chat */
@@ -1073,14 +1092,14 @@ body.in-battle #side {
 
 /* Short landscape: pause menu buttons on the left, audio controls on the right */
 @media (min-aspect-ratio: 1/1) and (max-height: 520px) {
-  .modal-card:has(.audio-controls) {
+  .modal-card:not(.options-card):has(.audio-controls) {
     width: min(640px, 94vw);
     display: grid;
     grid-template-columns: 1fr 1.2fr;
     column-gap: 18px;
     align-content: start;
   }
-  .modal-card:has(.audio-controls) h2 {
+  .modal-card:not(.options-card):has(.audio-controls) h2 {
     grid-column: 1 / -1;
   }
   .modal-card .audio-controls {

@@ -4,7 +4,7 @@ import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
 import { GALLERY, MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode, ChatNode, GalleryItem } from '../data/types.ts';
 import { addXp, dev, heroineLevel, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
-import { placeholderArt } from './art.ts';
+import { openLightbox, placeholderArt } from './art.ts';
 import { h, hex, toast } from './dom.ts';
 
 const root = () => document.getElementById('screens')!;
@@ -243,7 +243,7 @@ export function showProfile(id: string, a: HomeActions): void {
       h(
         'div',
         { class: 'profile-body' },
-        artChain([portraitFile(id)], id, d.name, true, 'profile-art'),
+        fullPortrait(artChain([portraitFile(id)], id, d.name, true, 'profile-art'), id),
         h(
           'div',
           { class: 'profile-info' },
@@ -276,13 +276,19 @@ function galleryThumb(g: GalleryItem, lvl: number): HTMLElement {
 }
 
 function lightbox(g: GalleryItem): void {
-  const layer = h(
-    'div',
-    { class: 'lightbox', onclick: () => layer.remove() },
-    artChain([g.file], g.heroine, g.title, false, 'lightbox-art'),
-    h('div', { class: 'lightbox-cap' }, `${HEROINE_BY_ID[g.heroine].name} — ${g.title}`),
-  );
-  document.body.append(layer);
+  openLightbox([g.file], g.heroine, `${HEROINE_BY_ID[g.heroine].name} — ${g.title}`, { portrait: false });
+}
+
+/** Tap a heroine's picture to see her whole portrait. */
+function fullPortrait(img: HTMLImageElement, id: string): HTMLImageElement {
+  const d = HEROINE_BY_ID[id];
+  img.classList.add('zoomable');
+  img.title = 'Tap to view full art';
+  img.onclick = (e) => {
+    e.stopPropagation();
+    openLightbox([portraitFile(id)], id, `${d.name} — ${d.title}`, { tint: d.color });
+  };
+  return img;
 }
 
 export function showGallery(a: HomeActions): void {
@@ -468,6 +474,24 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
 }
 
 // ------------------------------------------------------------------ pause menu
+
+/** In-battle options (sound, music, motion). The caller pauses the battle; `done` resumes. */
+export function showOptions(done: () => void): void {
+  show(
+    h(
+      'section',
+      { class: 'screen modal', onclick: (e: Event) => e.target === e.currentTarget && done() },
+      h(
+        'div',
+        { class: 'modal-card options-card' },
+        h('h2', null, 'Options'),
+        audioControls(),
+        h('p', { class: 'fine' }, 'Pinch or use + / − to zoom, drag to move the map. Keys: M mute · 0 fit map.'),
+        h('button', { class: 'btn primary big', onclick: done, autofocus: true }, 'Done'),
+      ),
+    ),
+  );
+}
 
 export function showPauseMenu(resume: () => void, restart: () => void, quit: () => void): void {
   show(

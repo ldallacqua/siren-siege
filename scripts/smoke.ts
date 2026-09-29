@@ -123,6 +123,21 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.locator('.btn.buy').first().click();
   await shot('4-upgrade');
 
+  // Tapping her avatar pauses and shows the whole portrait
+  const fullArt = async (id: string, step: string) => {
+    await page.waitForFunction((id) => {
+      const img = document.querySelector<HTMLImageElement>('.lightbox-art');
+      return img?.complete && img.naturalWidth > 0 && img.currentSrc.includes(`/art/${id}/portrait`);
+    }, id);
+    await shot(step);
+    await page.getByTitle('Close', { exact: true }).click();
+    await page.locator('.lightbox').waitFor({ state: 'detached' });
+  };
+  await page.locator('.dock.tower .head-btn').click();
+  assert(await page.evaluate(() => (window as any).siren.battle.paused), 'viewing her portrait should pause');
+  await fullArt('scarlet', '4b-portrait');
+  assert(!(await page.evaluate(() => (window as any).siren.battle.paused)), 'closing the portrait should resume');
+
   // Battlefield zoom: buttons, selecting while zoomed, drag-to-pan, and (touch) two-finger pinch
   const cam = () =>
     page.evaluate(() => {
@@ -177,6 +192,14 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   }
 
   // Pause menu -> home -> profile -> chat
+  // Options from the battlefield gear: pauses, shows audio controls, Done resumes
+  await page.getByRole('button', { name: 'Options' }).click();
+  await page.getByRole('slider', { name: 'Sound' }).waitFor();
+  assert(await page.evaluate(() => (window as any).siren.battle.paused), 'options should pause the battle');
+  await shot('11-options');
+  await page.getByRole('button', { name: 'Done' }).click();
+  assert(!(await page.evaluate(() => (window as any).siren.battle.paused)), 'Done should resume the battle');
+
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('slider', { name: 'Music' }).waitFor();
   await shot('9-pause');
@@ -184,6 +207,8 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.getByRole('button', { name: 'Heroines' }).click();
   await page.locator('.roster-card').first().click();
   await shot('5-profile');
+  await page.locator('.profile-art').click();
+  await fullArt('scarlet', '5b-portrait');
   await page.locator('.chat-item').first().click();
   await page.locator('.chat-box').waitFor();
   for (let i = 0; i < 3; i++) await page.locator('.chat-box').click();

@@ -4,7 +4,7 @@ import type { Battle } from '../game/Battle.ts';
 import type { Tower } from '../game/sim/BattleSim.ts';
 import { canBuyUpgrade, lockReason, sellValue } from '../game/sim/upgrades.ts';
 import { heroineLevel, isUnlocked } from '../state/save.ts';
-import { artImg } from './art.ts';
+import { artImg, openLightbox } from './art.ts';
 import { gold, h, hex, toast } from './dom.ts';
 
 const TARGET_LABEL = { first: 'First', last: 'Last', strong: 'Strong', close: 'Close' } as const;
@@ -45,6 +45,31 @@ export class Hud {
       this.unsub = b.subscribe(() => this.refresh());
       this.refresh();
     }
+  }
+
+  /** Her round avatar; tapping it pauses and shows her full portrait. */
+  private headArt(b: Battle, def: (typeof HEROINES)[number]): HTMLElement {
+    return h(
+      'button',
+      {
+        class: 'head-btn',
+        title: `View ${def.name}`,
+        'aria-label': `View ${def.name}`,
+        onclick: () => {
+          const was = b.paused;
+          b.paused = true;
+          b.emit();
+          openLightbox([portraitFile(def.id)], def.id, `${def.name} — ${def.title}`, {
+            tint: def.color,
+            onClose: () => {
+              b.paused = was;
+              b.emit();
+            },
+          });
+        },
+      },
+      artImg(portraitFile(def.id), def.id, def.name, true, 'head-art'),
+    );
   }
 
   private key(b: Battle): string {
@@ -188,7 +213,7 @@ export class Hud {
       h(
         'div',
         { class: 'panel-head' },
-        artImg(portraitFile(def.id), def.id, def.name, true, 'head-art'),
+        this.headArt(b, def),
         h('div', null, h('div', { class: 'head-name' }, def.name), h('div', { class: 'head-sub' }, `${def.title} · ◆ ${def.cost}`)),
       ),
       h(
@@ -238,7 +263,7 @@ export class Hud {
       h(
         'div',
         { class: 'panel-head' },
-        artImg(portraitFile(def.id), def.id, def.name, true, 'head-art'),
+        this.headArt(b, def),
         h(
           'div',
           { class: 'grow' },

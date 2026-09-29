@@ -57,3 +57,57 @@ export function artImg(file: string, heroineId: string, label: string, portrait 
   };
   return img;
 }
+
+/**
+ * Full-screen viewer showing a whole image (never cropped). Tap anywhere, the ✕
+ * or Esc to close. `files` is a fallback chain; the placeholder is last.
+ */
+export function openLightbox(
+  files: string[],
+  heroineId: string,
+  caption: string,
+  opts: { portrait?: boolean; tint?: number; onClose?: () => void } = {},
+): void {
+  const portrait = opts.portrait ?? true;
+  const img = document.createElement('img');
+  img.className = 'lightbox-art';
+  img.alt = caption;
+  img.draggable = false;
+  let i = 0;
+  const next = () => {
+    if (i < files.length) img.src = files[i++];
+    else {
+      img.onerror = null;
+      img.src = placeholderArt(heroineId, caption, portrait);
+    }
+  };
+  img.onerror = next;
+  next();
+  const layer = document.createElement('div');
+  layer.className = 'lightbox';
+  layer.setAttribute('role', 'dialog');
+  layer.setAttribute('aria-label', caption);
+  if (opts.tint !== undefined) layer.style.setProperty('--c', hex(opts.tint));
+  const close = document.createElement('button');
+  close.className = 'btn icon lightbox-close';
+  close.title = 'Close';
+  close.textContent = '✕';
+  const cap = document.createElement('div');
+  cap.className = 'lightbox-cap';
+  cap.textContent = caption;
+  layer.append(close, img, cap);
+  const done = () => {
+    layer.remove();
+    window.removeEventListener('keydown', onKey, true);
+    opts.onClose?.();
+  };
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      done();
+    }
+  };
+  layer.onclick = done;
+  window.addEventListener('keydown', onKey, true);
+  document.body.append(layer);
+}

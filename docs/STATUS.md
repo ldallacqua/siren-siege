@@ -18,6 +18,9 @@
 - Art pipeline for the owner: `docs/ART_GUIDE.md` (ChatGPT workflow, copy-paste prompts per heroine and asset, naming, phone upload); `npm run art` converts PNG/JPG uploads to sized WebP and lists misnamed files; assets live in `public/art/<id>/`.
 - **Battlefield zoom (1×–3×):** pinch, mouse wheel, +/−/fit buttons in the map's empty corner, keys `+` `-` `0`; drag to pan when zoomed (clamped so the map never leaves the screen); tap still selects. Resets per battle and on rotation.
 - **Juice (B-03):** synthesized Web Audio SFX for pop, shot, bomb, blast, freeze pulse, armor block, place, upgrade (bigger for tier 3), sell, wave start, wave bonus, leak, boss spawn, boss bounty, victory/defeat; generative music loop per map (`src/audio/`). Pop/upgrade particles, floating `+◆` for boss bounty, wave bonus and sell, screen shake on boss spawn/leak. Music/Sound sliders, mute and Reduced motion in Settings and the pause menu (persisted; reduced motion follows the OS by default); `M` mutes. Audio unlocks on the first tap/key.
+- **In-battle Options** (⚙ on the battlefield, above the zoom buttons): music/sound volume, mute, reduced motion; pauses while open. The ☰ pause menu has the same controls.
+- **Full portrait viewer:** tapping a heroine's picture (profile, or the round avatar in the battle panel) opens her whole portrait uncropped; in battle it pauses until closed.
+- **Update check:** GitHub Pages caches the page for 10 min; on boot the game asks for the current build and reloads once (or shows a toast mid-game) if it's running an old one.
 - Save in localStorage; `?dev` mode.
 - Tooling: unit tests (36), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
 
@@ -42,10 +45,12 @@
 - Zoom/pan: pure math in `src/game/camera.ts` (tests in `tests/camera.test.ts`), folded into `BattleScene`'s tile→screen transform (D-013). Input rewritten as a small gesture machine (tap / pan / pinch / done); selection moved to pointer-up. Zoom buttons in `main.ts`, styled in `style.css` (`.zoom-ctl`). Dev hook exposes `siren.scene` (`zoom`, `pagePoint()`).
 - Smoke now zooms with the buttons, selects a heroine while zoomed, drag-pans (mouse and touch), and pinches with two real touch points via CDP on the touch viewports; screenshots `*-8-zoomed.png`.
 - B-03 juice: sim now emits presentation fx (`shot`, `place`, `upgrade`, `sell`, `wave`, `bonus`, `boss`, `bounty`; capped at 1000 for headless runs, never read back so determinism holds). `BattleScene.onFx()` routes each to `sound.fx()`, visuals, particles, floating text and shake. Audio engine `src/audio/sound.ts`, pure helpers + music patterns `src/audio/tuning.ts` (tested). Settings fields added to the save (merged, so old saves load). Smoke checks the audio unlock, pause-menu controls and that settings persist.
+- Owner feedback round: saw no sound and no options. The live site was already correct, so the likely cause was the 10-min Pages cache (hence the update check). Audio unlock hardened anyway: it retries on every activation event (touchend/pointerup/click/keydown; a touch pointerdown doesn't count), and on iPhone it declares a playback audio session and plays a silent looping `<audio>` so the ring/silent switch doesn't mute the game. Not verifiable here: needs the owner's phone.
+- Added ⚙ Options on the battlefield and the tap-to-view full portrait (`openLightbox()` in `ui/art.ts`, also used by the gallery). Smoke covers both.
 - Nothing half-done.
 
 ## Next up
 
-1. **Owner listening pass** on the live site: sound mix, music taste. Tune the volumes and envelopes in `src/audio/sound.ts`.
-2. **B-03 perf check**: 200 enemies at 3× on a mid phone (devtools CPU throttle 4×); if it drops, lower the particle count and pop-sound rate first.
-3. **B-04 heroine barks**, then **B-12 18+ age gate** (needed before promoting the game), then **B-05 tiers 4–5**.
+1. **Owner confirms sound works on his phone** (after a reload). If not: check the ⚙ Options Sound toggle, the phone volume, and on iPhone the silent switch; then debug `src/audio/sound.ts` `unlock()`/`iosPlayback()`.
+2. **Owner listening pass** (mix and music), then the **B-03b perf check**.
+3. **B-04 heroine barks**, then **B-12 18+ age gate**, then **B-05 tiers 4–5**.
