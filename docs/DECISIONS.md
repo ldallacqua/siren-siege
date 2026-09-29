@@ -89,3 +89,7 @@ Like BTD6: selecting a heroine never replaces the shop. Her panel (quick-buy per
 ### D-022 · 2026-09-29 · PWA with a hand-written service worker; preload art in the UI layer
 
 No plugin (vite-plugin-pwa would be a new dependency): `public/sw.js` is ~50 lines. Pages are network-first so the existing update check (`checkForUpdate`, `no-store` fetch) and fresh deploys keep working; other same-origin files are stale-while-revalidate (hashed bundles never go stale; art refreshes on the next visit). Registered only when the hashed bundle is present (production). Image preloading lives in `ui/preload.ts`: it also records which optional art files are missing, so fallback chains stop paying a 404 per mood change.
+
+### D-023 · 2026-09-29 · Messages is per heroine; gifts are a battle drop with hidden tastes
+
+Following NIKKE's Advise screen: Messages first picks a heroine, then shows her Bond screen with episodes in Bond order (a diary), so order and progress are obvious. Gifts give Bond XP outside battle but are **earned in battle** (1 per 5 waves, +2 on a win), so fighting stays the main loop and there's no new currency or shop to balance. Each heroine loves 2 gifts and likes 1 (from LORE); tastes are hidden until you've given that gift once, which makes gifting a small discovery game. Sheets (gift, diary) live inside the Bond screen instead of going through `show()`, because `show()` replaces the current screen with a modal.

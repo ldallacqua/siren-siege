@@ -6,7 +6,8 @@ import { MAPS } from './data/maps.ts';
 import { HEROINES } from './data/heroines.ts';
 import { Battle } from './game/Battle.ts';
 import { BattleScene } from './game/BattleScene.ts';
-import { addXp, dev, isUnlocked, persist, save } from './state/save.ts';
+import { addGifts, addXp, dev, isUnlocked, persist, save } from './state/save.ts';
+import { rollDrops } from './data/gifts.ts';
 import { h, toast } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
@@ -17,6 +18,25 @@ import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type H
 
 applyCalm();
 warmArt();
+
+// iOS home-screen apps with a translucent status bar size fixed layers one
+// status bar short, leaving a band at the bottom. There, size the app to the
+// real screen height instead (browser tabs are unaffected).
+function fitStandalone(): void {
+  const nav = navigator as Navigator & { standalone?: boolean };
+  const standalone = nav.standalone === true || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+  if (!standalone) return;
+  const portrait = innerHeight >= innerWidth;
+  const full = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+  const gap = full - innerHeight;
+  const root = document.documentElement;
+  if (gap > 1 && gap < 120) {
+    root.style.setProperty('--app-h', `${full}px`);
+    root.classList.add('fullh');
+  } else root.classList.remove('fullh');
+}
+fitStandalone();
+window.addEventListener('resize', fitStandalone);
 
 // Installable app (PWA) + offline play: see public/sw.js. Production builds only,
 // so the dev server's hot reload never fights a cached copy.
@@ -193,10 +213,14 @@ function finishBattle(b: Battle): void {
     const xp = Math.round(p * 0.1 + b.sim.wave * 4 + (won ? 150 : 0));
     return { id, xp, ...addXp(id, xp) };
   });
+  // Gifts found on the field (see data/gifts.ts): one per 5 waves, two more for a win.
+  const cleared = won ? b.sim.waves.length : Math.max(0, b.sim.wave - 1);
+  const gifts = rollDrops(cleared, won, Math.random);
+  addGifts(gifts);
   persist();
   setTimeout(() => {
     showResults(
-      { won, wave: b.sim.wave, total: b.sim.waves.length, gains, newlyUnlocked, mapName: b.map.name },
+      { won, wave: b.sim.wave, total: b.sim.waves.length, gains, newlyUnlocked, mapName: b.map.name, gifts },
       () => startBattle(),
       goHome,
     );

@@ -56,6 +56,7 @@ src/
     enemies.ts       Layered enemies, rbe() = total layers
     maps.ts          Maps (path, palette, blurb, difficulty, unlock) + WAVES
     dialogues.ts     Chat episodes (node graph, Bond 1/3/5/7/9 per heroine) + PROLOGUE
+    gifts.ts         Gift items, heroine tastes, gift XP, battle drops, reaction lines
     lore.ts          Codex entries, bestiary text, per-heroine story entries unlocked by Bond
     progression.ts   Bond XP thresholds, gallery slots, art file naming
   game/
@@ -73,6 +74,7 @@ src/
   ui/                DOM UI over the canvas
     Hud.ts           Sidebar (landscape) / dock (portrait): stats, controls, shop, placing; heroine panel floating over the map
     upgradeTree.ts   Full-screen BTD6-style upgrade tree (battle: buys, pauses; profile: preview); emblems.ts draws its badges
+    bond.ts          Messages: heroine select, her Bond screen (diary of episodes, Talk, Gift); giftArt.ts draws gift badges
     preload.ts       Image preloading + known-missing art (chats wait for their moods)
     screens.ts       Home, roster, profile, codex, gallery, results, pause, options, settings
     chat.ts          Visual-novel chat player (scenes, ambient canvas, voice blips, log/auto/skip, end card)

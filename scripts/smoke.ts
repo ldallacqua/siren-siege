@@ -126,8 +126,37 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.locator('.lobby-bubble.on').waitFor({ timeout: 2000 });
   await shot('1b-lobby-talk');
   await page.getByRole('button', { name: 'Messages' }).click();
-  await page.locator('.msg').first().waitFor();
+  await page.locator('.bond-card').first().waitFor();
+  assert((await page.locator('.bond-card').count()) === 4, 'Messages should list one card per heroine');
   await shot('1c-messages');
+  // Her Bond screen: gift (raises Bond, updates in place), diary in episode order
+  await page.locator('button.bond-card').first().click();
+  await page.locator('.screen.bond .bs-panel').waitFor();
+  await page.waitForTimeout(700);
+  await shot('1d-bond');
+  const bondXp = () => page.evaluate(() => JSON.parse(localStorage.getItem('sirensiege.save.v1') ?? '{}').heroines?.scarlet?.xp ?? 0);
+  const xp0 = await bondXp();
+  const bondScreen = await page.evaluate(() => ((window as any).__bond = document.querySelector('.screen.bond')));
+  void bondScreen;
+  await page.getByRole('button', { name: /^Gift/ }).click();
+  await page.locator('.bs-sheet .gift').first().waitFor();
+  await shot('1e-gift');
+  await page.getByRole('button', { name: /^Give / }).click();
+  await page.locator('.bs-bubble.show').waitFor({ timeout: 2000 });
+  assert((await bondXp()) > xp0, 'giving a gift did not add Bond XP');
+  assert(
+    await page.evaluate(() => (window as any).__bond === document.querySelector('.screen.bond')),
+    'giving a gift re-rendered the screen',
+  );
+  await page.waitForTimeout(600);
+  await shot('1f-gifted');
+  await page.getByRole('button', { name: 'Diary' }).click();
+  await page.locator('.diary li').first().waitFor();
+  assert((await page.locator('.diary li').count()) === 5, 'diary should list her 5 episodes in order');
+  await shot('1g-diary');
+  await page.locator('.bs-sheet').getByRole('button', { name: 'Close' }).click();
+  await page.getByTitle('Back', { exact: true }).click();
+  await page.locator('.bond-card').first().waitFor();
   await page.getByTitle('Back', { exact: true }).click();
 
   await page.getByRole('button', { name: /Play/ }).click();

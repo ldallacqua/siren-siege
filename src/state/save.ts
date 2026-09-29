@@ -1,11 +1,17 @@
 import { HEROINES } from '../data/heroines.ts';
 import { bondLevel } from '../data/progression.ts';
+import { giftXp, type Taste } from '../data/gifts.ts';
 
 const KEY = 'sirensiege.save.v1';
+
+/** Every Commander starts with a few gifts so the gift screen isn't empty. */
+const STARTER_GIFTS: Record<string, number> = { dango: 1, tea: 1, rose: 1 };
 
 export interface HeroineProgress {
   xp: number;
   chatsDone: string[];
+  /** Gifts she has been given at least once (so the UI can show her known tastes). */
+  gifted?: string[];
 }
 
 export interface SaveData {
@@ -16,6 +22,8 @@ export interface SaveData {
   settings: Settings;
   /** The story prologue has been shown (first Play). */
   seenPrologue?: boolean;
+  /** Gift inventory by gift id (added after v0.4; older saves get the starter pack). */
+  gifts?: Record<string, number>;
 }
 
 export interface Settings {
@@ -36,6 +44,7 @@ function fresh(): SaveData {
     heroines: Object.fromEntries(HEROINES.map((h) => [h.id, { xp: 0, chatsDone: [] }])),
     bestWave: {},
     wins: 0,
+    gifts: { ...STARTER_GIFTS },
     settings: { autoStart: false, speed: 1, musicVolume: 0.5, sfxVolume: 0.7, muted: false, reducedMotion: null },
   };
 }
@@ -50,6 +59,7 @@ function load(): SaveData {
       ...base,
       ...data,
       heroines: { ...base.heroines, ...(data.heroines ?? {}) },
+      gifts: data.gifts ?? base.gifts,
       settings: { ...base.settings, ...(data.settings ?? {}) },
     } as SaveData;
   } catch {
@@ -118,4 +128,27 @@ export function isMapUnlocked(map: { unlock?: { map: string; wave: number } }): 
 
 export function unlockedIds(): string[] {
   return HEROINES.filter((h) => isUnlocked(h.id)).map((h) => h.id);
+}
+
+// ------------------------------------------------------------------ gifts
+
+/** How many of a gift the Commander holds (dev mode: plenty). */
+export function giftCount(id: string): number {
+  return dev ? 99 : (save.gifts?.[id] ?? 0);
+}
+
+export function addGifts(found: Record<string, number | undefined>): void {
+  const inv = (save.gifts ??= {});
+  for (const [id, n] of Object.entries(found)) if (n) inv[id] = (inv[id] ?? 0) + n;
+  persist();
+}
+
+/** Give one gift to a heroine: spend it, add Bond XP, remember that she's had it. */
+export function giveGift(hero: string, gift: string): { xp: number; taste: Taste; before: number; after: number } | null {
+  if (giftCount(gift) <= 0) return null;
+  const { xp, taste } = giftXp(hero, gift);
+  if (!dev) save.gifts![gift] = giftCount(gift) - 1;
+  const p = (save.heroines[hero] ??= { xp: 0, chatsDone: [] });
+  if (!(p.gifted ??= []).includes(gift)) p.gifted.push(gift);
+  return { xp, taste, ...addXp(hero, xp) };
 }

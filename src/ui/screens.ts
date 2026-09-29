@@ -14,6 +14,9 @@ import { artChain, bondBar, closeScreens, show, topbar } from './common.ts';
 import { h, hex, toast } from './dom.ts';
 import { applyCalm, parallax, stagger, tilt } from './motion.ts';
 import { showUpgradeTree } from './upgradeTree.ts';
+import { showMessages } from './bond.ts';
+import { GIFT_BY_ID } from '../data/gifts.ts';
+import { giftIcon } from './giftArt.ts';
 
 export { closeScreens };
 import { icon, type IconName } from './icons.ts';
@@ -158,7 +161,7 @@ export function showHome(a: HomeActions): void {
     h(
       'nav',
       { class: 'lobby-rail left', 'aria-label': 'Places' },
-      tile('Messages', 'chat', () => showMessages(a), fresh),
+      tile('Messages', 'chat', () => showMessages(() => showHome(a)), fresh),
       tile('Gallery', 'image', () => showGallery(a), `${got}/${GALLERY.length}`),
       tile('Codex', 'book', () => showCodex(a)),
     ),
@@ -216,47 +219,6 @@ export function showHome(a: HomeActions): void {
   heroWrap.dataset.depth = '14';
   show(screen);
   parallax(screen);
-}
-
-/** Every chat the player can read, newest first. */
-export function showMessages(a: HomeActions): void {
-  const rows = HEROINES.filter((d) => isUnlocked(d.id)).flatMap((d) =>
-    episodesFor(d.id).map((ep) => ({
-      d,
-      ep,
-      open: heroineLevel(d.id) >= ep.level,
-      done: (save.heroines[d.id]?.chatsDone ?? []).includes(ep.id),
-    })),
-  );
-  const rank = (r: (typeof rows)[number]) => (r.open && !r.done ? 0 : r.open ? 1 : 2);
-  rows.sort((x, y) => rank(x) - rank(y) || x.ep.level - y.ep.level);
-  const fresh = rows.filter((r) => r.open && !r.done).length;
-  show(
-    h(
-      'section',
-      { class: 'screen list messages' },
-      topbar('Messages', () => showHome(a), fresh ? `${fresh} new` : 'All caught up'),
-      stagger(
-        h(
-          'div',
-          { class: 'screen-inner msg-list from-left' },
-          ...rows.map(({ d, ep, open, done }) =>
-            h(
-              'button',
-              {
-                class: `msg ${open ? '' : 'locked'} ${open && !done ? 'new' : ''}`,
-                style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
-                onclick: () => (open ? playChat(ep, () => showMessages(a)) : toast(`Reach Bond ${ep.level} with ${d.name.split(' ')[0]}`)),
-              },
-              artChain([portraitFile(d.id)], d.id, d.name, true, 'msg-av'),
-              h('span', { class: 'msg-body' }, h('b', null, d.name), h('span', null, open ? ep.title : `Locked · Bond ${ep.level}`)),
-              h('span', { class: 'msg-tag' }, open ? (done ? 'Read' : 'New') : icon('lock')),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
 }
 
 /** Arena select: one card per map with a painted preview. */
@@ -650,6 +612,8 @@ export interface ResultInfo {
   gains: { id: string; xp: number; before: number; after: number }[];
   newlyUnlocked: string[];
   mapName?: string;
+  /** Gifts found this battle (gift id → count). */
+  gifts?: Record<string, number | undefined>;
 }
 
 export function showResults(r: ResultInfo, again: () => void, home: () => void): void {
@@ -692,6 +656,7 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
       ),
       ...r.newlyUnlocked.map((id) => h('p', { class: 'new-hero' }, icon('sparkle'), `New heroine unlocked: ${HEROINE_BY_ID[id].name}`)),
       stagger(h('div', { class: 'result-rows' }, ...(rows.length ? rows : [h('p', null, 'Deploy heroines to earn bond.')]))),
+      giftsFound(r.gifts),
       h(
         'div',
         { class: 'row center' },
@@ -699,6 +664,33 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
         h('button', { class: 'btn big', onclick: home }, 'Home'),
       ),
     ),
+  );
+}
+
+/** "Gifts found" strip on the results screen. */
+function giftsFound(found: ResultInfo['gifts']): HTMLElement | null {
+  const items = Object.entries(found ?? {}).filter(([, n]) => n);
+  if (!items.length) return null;
+  return h(
+    'div',
+    { class: 'gifts-found' },
+    h('div', { class: 'label' }, 'Gifts found'),
+    stagger(
+      h(
+        'div',
+        { class: 'gift-chips' },
+        ...items.map(([id, n]) =>
+          h(
+            'span',
+            { class: `gift-chip ${GIFT_BY_ID[id]?.rare ? 'rare' : ''}` },
+            giftIcon(id),
+            GIFT_BY_ID[id]?.name ?? id,
+            n! > 1 ? h('b', null, `×${n}`) : null,
+          ),
+        ),
+      ),
+    ),
+    h('p', { class: 'fine' }, 'Give them to your heroines in Messages to raise Bond.'),
   );
 }
 
