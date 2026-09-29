@@ -6010,3 +6010,99 @@ button.diary-row:hover {
     left: calc(100% - min(440px, 44%) - 24px - 64px);
   }
 }
+
+/* title card: loading bar while the art preloads */
+.splash-load {
+  position: relative;
+  width: min(220px, 60vw);
+  height: 2px;
+  margin-top: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  transition: opacity 0.4s;
+}
+.splash-load i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--rose), var(--gold));
+  transition: width 0.25s ease-out;
+}
+.splash.ready .splash-load {
+  opacity: 0;
+}
+.splash:not(.ready) {
+  cursor: progress;
+}
+.splash:not(.ready) .splash-go {
+  animation: fade 1s ease-out 0.6s backwards;
+  color: var(--text-3);
+}
+
+/* home, portrait: center her in the space between the top bar and her name */
+@media (max-aspect-ratio: 1/1) {
+  .lobby-hero {
+    align-items: center;
+    padding: calc(64px + env(safe-area-inset-top)) 0 calc(236px + env(safe-area-inset-bottom));
+  }
+  .home-hero {
+    margin-top: 0;
+    max-height: 100%;
+  }
+}
+
+/* chat: a solid name plate so the box's top line never shows through it */
+.chat-name {
+  z-index: 2;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--c) 85%, #000), color-mix(in srgb, var(--c) 45%, #0c0712)), #0c0712;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* diary: our own journal look (dark cover, gold edge, moon clasp) */
+.bs-diary {
+  width: 104px;
+  padding: 10px 8px 8px;
+  gap: 4px;
+  transform: none;
+  border: 1px solid rgba(232, 193, 112, 0.55);
+  border-left: 6px solid color-mix(in srgb, var(--c) 70%, #1a0f22);
+  border-radius: 3px 8px 8px 3px;
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%),
+    linear-gradient(160deg, #2a1a34, #140b1c);
+  color: var(--text);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 3px rgba(232, 193, 112, 0.12);
+}
+.bs-diary:hover {
+  transform: translateY(-2px);
+}
+.bs-diary-moon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 40%, transparent 52%, var(--gold-hi) 54%);
+  filter: drop-shadow(0 0 6px rgba(232, 193, 112, 0.6));
+}
+.bs-diary-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.bs-diary-text small {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.bs-diary .bs-diary-text > span {
+  color: var(--gold-hi);
+}
+.bs-diary .bs-diary-text .ic {
+  color: var(--gold);
+}
+.bs-diary b {
+  color: var(--text-2);
+}

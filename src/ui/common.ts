@@ -50,6 +50,8 @@ export function show(el: HTMLElement): void {
     retire(prev, back ? 'leave-back' : 'leave-fwd');
   } else prev?.remove();
   r.append(el);
+  // The page itself never scrolls (screens scroll inside); undo any stray scroll-into-view.
+  document.scrollingElement?.scrollTo(0, 0);
   el.querySelector<HTMLElement>('[autofocus], button')?.focus({ preventScroll: true });
 }
 

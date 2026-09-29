@@ -13,7 +13,8 @@ import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
 import { playChat } from './ui/chat.ts';
 import { applyCalm, wipe } from './ui/motion.ts';
-import { warmArt } from './ui/preload.ts';
+import { preload, warmArt } from './ui/preload.ts';
+import { portraitFile } from './data/progression.ts';
 import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions, showMapSelect } from './ui/screens.ts';
 
 applyCalm();
@@ -302,18 +303,39 @@ checkForUpdate();
  * lobby music starts exactly as the lobby animates in.
  */
 function showSplash(): void {
+  const goLabel = h('div', { class: 'splash-go' }, 'Loading');
+  const loadBar = h('div', { class: 'splash-load', 'aria-hidden': 'true' }, h('i'));
   const el = h(
     'button',
     { class: 'splash', 'aria-label': 'Tap to begin', autofocus: true },
     h('div', { class: 'splash-moon' }),
     h('div', { class: 'splash-logo' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
     h('div', { class: 'splash-tag' }, 'A moonlit tower defense'),
-    h('div', { class: 'splash-go' }, matchMedia('(pointer: coarse)').matches ? 'Tap to begin' : 'Click to begin'),
+    goLabel,
+    loadBar,
     h('div', { class: 'splash-foot' }, 'All characters are adults (21+)'),
   );
+  // Load every heroine's portrait and battle sprite behind the title card, so
+  // the lobby never pops art in on the first heroine switch. Capped at 8 s.
+  let ready = false;
+  const files = HEROINES.flatMap((d) => [portraitFile(d.id), `art/${d.id}/chibi.webp`]);
+  let loaded = 0;
+  const finish = () => {
+    if (ready) return;
+    ready = true;
+    el.classList.add('ready');
+    goLabel.textContent = matchMedia('(pointer: coarse)').matches ? 'Tap to begin' : 'Click to begin';
+  };
+  for (const f of files)
+    void preload(f).then(() => {
+      loaded++;
+      (loadBar.firstChild as HTMLElement).style.width = `${Math.round((100 * loaded) / files.length)}%`;
+      if (loaded === files.length) finish();
+    });
+  window.setTimeout(finish, 8000);
   let gone = false;
   const go = () => {
-    if (gone) return;
+    if (gone || !ready) return;
     gone = true;
     window.removeEventListener('keydown', onKey, true);
     sound.unlock();

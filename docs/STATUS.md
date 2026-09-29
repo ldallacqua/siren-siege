@@ -65,7 +65,9 @@
 
 - Owner (iPhone 17 Pro Max, installed PWA): a band of a different color at the bottom of the app; Messages mixed every heroine's chats in one list with no order. Asked for a character select then her messages in order (NIKKE Advise), and a gift system.
 - Done: `fitStandalone()` + `html.fullh` CSS; `data/gifts.ts` (+ `tests/gifts.test.ts`); save `gifts` inventory + `gifted` per heroine (`giftCount/addGifts/giveGift` in `save.ts`); drops in `finishBattle` + results strip; `ui/giftArt.ts` badges; `ui/bond.ts` (`showMessages(back)`, `showBond(id, back)`, diary + gift sheets inside the screen, updated in place). Smoke: 4 cards, gift raises XP without re-render, diary has 5 rows (`1c`–`1g` screenshots).
-- Unverified: the iOS band fix could only be reasoned about (no iOS device in CI); if the band remains, check `--app-h` in Safari Web Inspector.
+- Follow-up (owner feedback): the title card now preloads every portrait + chibi with a loading bar before "Tap to begin" (capped 8 s); home heroine centered in portrait; chat name plate is solid (the box line showed through); diary restyled as our own dark journal (moon clasp) and "Rank" renamed "Bond" so the Bond screen doesn't echo NIKKE's look; `show()` resets any stray page scroll.
+- Owner confirmed: the iOS bottom band is gone.
+- Previously unverified: the iOS band fix could only be reasoned about (no iOS device in CI); if the band remains, check `--app-h` in Safari Web Inspector.
 - Earlier today: heroine panel over the map, preloading, PWA, bigger outlined heroines, upgrade tree.
 
 ## Next up

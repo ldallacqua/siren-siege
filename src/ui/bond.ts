@@ -63,8 +63,8 @@ export function showMessages(back: () => void): void {
       h(
         'span',
         { class: 'bc-text' },
-        h('span', { class: 'bc-kicker' }, icon('heart'), 'Bond'),
-        h('b', { class: 'bc-rank' }, `Rank ${p.level}`),
+        h('span', { class: 'bc-kicker' }, icon('heart'), 'Affection'),
+        h('b', { class: 'bc-rank' }, `Bond ${p.level}`),
         h('b', { class: 'bc-name' }, d.name),
         h('span', { class: 'bc-bar' }, h('i', { style: `width:${pct}%` })),
         h('span', { class: 'bc-meta' }, icon('book'), `${readCount(d.id)}/${eps.length} episodes`),
@@ -111,7 +111,7 @@ export function showBond(id: string, back: () => void): void {
   const refresh = (animateFrom?: number) => {
     const xp = save.heroines[id]?.xp ?? 0;
     const p = bondProgress(xp);
-    rank.textContent = `Rank ${p.level}`;
+    rank.textContent = `Bond ${p.level}`;
     const pct = p.level >= MAX_BOND ? 100 : Math.round((100 * p.into) / p.need);
     fill.style.width = `${pct}%`;
     if (animateFrom !== undefined && p.level < MAX_BOND && !calm()) {
@@ -276,7 +276,7 @@ export function showBond(id: string, back: () => void): void {
       sound.play('heart');
       for (let k = 0; k < 5; k++) window.setTimeout(() => sound.play('blip', VOICE[id] ?? 1.5), 250 + k * 70);
       refresh(before);
-      toast(`+${gold(r.xp)} Bond${r.after > r.before ? ` · Rank ${r.after}!` : ''}`);
+      toast(`+${gold(r.xp)} Bond${r.after > r.before ? ` · Bond ${r.after}!` : ''}`);
       if (r.after > r.before) window.setTimeout(() => sound.play('bondUp'), 400);
     };
     paint();
@@ -325,7 +325,7 @@ export function showBond(id: string, back: () => void): void {
         h(
           'div',
           null,
-          h('span', { class: 'bs-kicker' }, icon('heart'), 'Bond'),
+          h('span', { class: 'bs-kicker' }, icon('heart'), 'Affection'),
           rank,
           h('h1', null, d.name),
           h('span', { class: 'bs-title' }, d.title),
@@ -333,8 +333,8 @@ export function showBond(id: string, back: () => void): void {
         h(
           'button',
           { class: 'bs-diary', onclick: openDiary, 'aria-label': 'Diary' },
-          artChain([portraitFile(id)], id, d.name, true, 'bs-diary-art'),
-          h('span', null, icon('book'), 'Diary'),
+          h('span', { class: 'bs-diary-moon', 'aria-hidden': 'true' }),
+          h('span', { class: 'bs-diary-text' }, h('small', null, 'Her memories'), h('span', null, icon('book'), 'Diary')),
           diaryCount,
         ),
       ),

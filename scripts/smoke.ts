@@ -102,7 +102,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     assert(pwa.icon && pwa.sw && pwa.display, `PWA not installable: ${JSON.stringify(pwa)}`);
   }
   // Title card: the first tap unlocks audio and reveals the lobby
-  await page.getByRole('button', { name: 'Tap to begin' }).waitFor();
+  await page.locator('.splash.ready').waitFor({ timeout: 15000 }); // art preloaded behind the title
   await shot('0-title');
   await page.getByRole('button', { name: 'Tap to begin' }).click();
   await page.locator('.splash').waitFor({ state: 'detached' });
