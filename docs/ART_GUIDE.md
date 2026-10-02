@@ -65,7 +65,7 @@ Follow these rules or faces get cut off:
 
 - **Portraits (`portrait*.webp`)**
   - Framing: **full body**, head to feet, centered, standing, facing the viewer, with a small margin above her head and below her shoes. Nothing cropped (not her hair ornaments, not her heels).
-  - The home screen and profile show her whole. Small cards, avatars and the chat zoom in on her upper body automatically, so her face should be near the top (it is, in a standing full-body pose).
+  - Full body is the source so no screen ever cuts her off at a hard edge; the game still frames her **head to mid-thigh** on the home screen and profile (fading out below), zooms further in on cards, avatars and the chat, and shows her whole in "View full art".
   - After adding a heroine's first full-body portrait, add her id to `FULL_BODY` in `src/data/progression.ts` (that switches her small views to the zoomed framing). Older thighs-up art still works without it.
   - The background must be **transparent** (a box behind her looks bad on the home screen). Image generators rarely give real transparency, so ask for a **flat solid pure green (#00FF00)** background instead: `npm run art` detects green corners and removes the green automatically, edges included.
   - **All moods must match `portrait.webp` exactly** (same pose, crop, outfit, size and position). Only the face and maybe the arms change. In chats, the game swaps one mood image for another, so if the body moves she will visibly "jump".

@@ -6117,8 +6117,8 @@ button.diary-row:hover {
 /* ── Portrait framing ──────────────────────────────────────────────────────
    Round avatars (.head-art, .result-art) wrap an .av-img so full-body art can be
    zoomed to her face inside the circle. Full-body portraits (.full, see FULL_BODY
-   in progression.ts) zoom into her upper body wherever the view crops, so they read
-   like the thighs-up art; big views show her whole, head to feet. */
+   in progression.ts) are framed on her upper body everywhere (the owner wants that
+   focus); the full body only shows in the lightbox. */
 .av-img {
   display: block;
   width: 100%;
@@ -6137,19 +6137,44 @@ button.diary-row:hover {
   transform-origin: 50% 2%;
   scale: 2.4;
 }
-/* Full-body art has a real transparent background, so no edge feathering. */
+/* Home: full-body art is framed head to mid-thigh like a key visual (the owner
+   prefers the upper-body focus), fading out at the bottom of her area. The image is
+   ~1.6× the visible height and anchored at the top, so on any screen shape she is cut
+   by the fade, never by a hard edge. --hero-top / --hero-bottom bound her area. */
+.lobby-hero:has(.full) {
+  --hero-top: clamp(36px, 6vh, 72px);
+  --hero-bottom: 0px;
+  padding: var(--hero-top) 0 0;
+  align-items: flex-start;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--hero-bottom) - 22%), transparent calc(100% - var(--hero-bottom)));
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--hero-bottom) - 22%), transparent calc(100% - var(--hero-bottom)));
+}
 .full.home-hero {
+  /* real transparent background: no edge feathering */
   mask-image: none;
   -webkit-mask-image: none;
+  flex: none;
+  width: auto;
+  max-width: none;
+  max-height: none;
+  margin-top: 0;
+  height: calc((100% - var(--hero-bottom)) * 1.6);
+  object-fit: contain;
+  transform-origin: 50% 30%;
 }
-/* Landscape home: stand her between the title and the big buttons, boots visible. */
-@media (min-aspect-ratio: 1/1) {
+@media (max-aspect-ratio: 1/1) {
   .lobby-hero:has(.full) {
-    padding: clamp(40px, 7vh, 84px) 0 clamp(92px, 14vh, 168px);
+    --hero-top: calc(64px + env(safe-area-inset-top));
+    --hero-bottom: calc(200px + env(safe-area-inset-bottom));
   }
 }
+/* Profile: the same upper-body focus; "View full art" shows her head to feet. */
 .full.profile-art {
-  object-fit: contain;
-  object-position: 50% 100%;
-  padding-top: 12px;
+  object-position: 50% 0;
+  transform-origin: 50% 2%;
+  scale: 1.35;
+}
+.profile-art-wrap:has(.full) {
+  overflow: hidden;
 }

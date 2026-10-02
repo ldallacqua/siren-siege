@@ -8,7 +8,7 @@
 
 - Full match loop on _Moonlit Shrine_: 20 waves, win/lose, results screen with Bond XP and unlock notices.
 - 4 heroines (Scarlet, Yuki, Kaede, Selene), 3 upgrade paths × 3 tiers, BTD6 crosspath rule, targeting modes, sell 70%.
-- Scarlet has full-body art (portrait + all 9 moods); `npm run art` removes a green-screen background; agents can generate art via Codex CLI (ART_GUIDE §9).
+- Scarlet and Yuki have full-body art (portrait + all 9 moods); `npm run art` removes a green-screen background; agents can generate art via Codex CLI (ART_GUIDE §9).
 - Enemies: 5 layered types, armored Iron Husk (immune to physical), Blight Colossus boss with HP bar.
 - Controls: speed 1×/2×/3×, auto-start, pause (auto-pauses when the tab is hidden), keyboard shortcuts.
 - Bond 1–10 (+2% attack rate/level), 8 chat episodes (2 per heroine, Bond 1 and 3), 20 gallery slots (Bond 2/4/6/8/10).
@@ -62,17 +62,17 @@
 
 ## Last session
 
-**2026-10-02 — Scarlet full-body art generated via Codex CLI (Claude, cloud session)**
+**2026-10-02 — Scarlet and Yuki full-body art generated via Codex CLI (Claude, cloud session)**
 
 - Owner asked whether an agent could use his ChatGPT plan to make the art. Answer: Codex CLI signs in with the plan (`codex login --device-auth`) and has image generation; workflow documented in `docs/ART_GUIDE.md` §9. Owner also asked for **full-body** portraits so legs are never cropped.
 - Done: Scarlet's new `portrait.webp` (full body, approved by the owner; second take fixed her trigger fingers) and all 9 moods, generated with her portrait as reference on a flat green background. Silhouettes differ from the base by < 0.5 %, so she doesn't jump between moods in chats.
-- `npm run art` now removes a green screen (corners pure green → keyed; each green-tinted pixel is unmixed against the nearest solid colour up to 6 px away, which keeps soft hair and translucent cloth). Yuki's full-body portrait is generated (scratch only) and awaiting owner approval.
-- `FULL_BODY` in `progression.ts` marks heroines with full-body art; `artImg`/`artChain` add `.full`, and CSS zooms small views (shop card, roster, avatars, Messages card, tree) to her upper body while home and profile show her head to feet. Round avatars (`.head-art`, `.result-art`) now wrap an `.av-img`. Bond (portrait) and chat stay close-ups.
-- Not done: Yuki, Kaede and Selene are still thighs-up; Scarlet's chibi and gallery are unchanged.
+- `npm run art` now removes a green screen (corners pure green → keyed; each green-tinted pixel is unmixed against the nearest solid colour up to 6 px away, which keeps soft hair and translucent cloth). Yuki's full-body portrait (approved) + 9 moods are in, same method (moods within 0.5 % of the base silhouette).
+- `FULL_BODY` in `progression.ts` marks heroines with full-body art; `artImg`/`artChain` add `.full`, and CSS frames her upper body everywhere: home and profile head to mid-thigh with a bottom fade (owner preference, after a first version showed her whole), cards/avatars closer; "View full art" shows the full body. Round avatars (`.head-art`, `.result-art`) now wrap an `.av-img`. Bond (portrait) and chat stay close-ups.
+- Not done: Kaede and Selene are still thighs-up; Scarlet's chibi and gallery are unchanged.
 - Previously (2026-09-29, local session): focus-ring and locked-chat fixes, `.githooks/pre-push` runs check + smoke before a push (D-024), generated README images (`npm run shots`, D-025).
 
 ## Next up
 
-1. **Full-body art for Yuki, Kaede, Selene** (owner wants them all; same Codex workflow, §9 of ART_GUIDE; add each id to `FULL_BODY`; when all four are done, drop the set and make full body the default framing; re-run `npm run shots` so the README shows the new art). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+1. **Full-body art for Kaede, Selene** (owner wants them all; same Codex workflow, §9 of ART_GUIDE; add each id to `FULL_BODY`; when all four are done, drop the set and make full body the default framing; re-run `npm run shots` so the README shows the new art). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
 2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
 3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.
