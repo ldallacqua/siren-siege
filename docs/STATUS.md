@@ -44,7 +44,7 @@
 - **Installable PWA:** `public/manifest.webmanifest` (fullscreen, PNG + maskable icons from `scripts/make-icons.ts`), `public/sw.js` (network-first pages, stale-while-revalidate assets → offline play), registered in production builds only.
 - **Battlefield readability:** chibis are drawn 30% larger (1.5 tiles tall) with a baked "sticker" outline (dark edge + a rim in her colour), on a solid coloured base; enemies drawn 15% larger with a dark outline; tapping a heroine's head selects her.
 - Save in localStorage; `?dev` mode.
-- Tooling: unit tests (40), balance bot, real-browser smoke test (3 viewports), Prettier, CI on PRs, auto-deploy to GitHub Pages from `main`.
+- Tooling: unit tests (53), balance bot, real-browser smoke test (3 viewports) in a pre-push hook, Prettier, CI on PRs, auto-deploy to GitHub Pages from `main` (~1 min). README images regenerate with `npm run shots`.
 
 ## Known issues / limitations
 
@@ -69,9 +69,10 @@
 - `npm run art` now removes a green screen (corners pure green → keyed; edge colour unmixed from the nearest solid pixels, only within 3 px of the screen).
 - `FULL_BODY` in `progression.ts` marks heroines with full-body art; `artImg`/`artChain` add `.full`, and CSS zooms small views (shop card, roster, avatars, Messages card, tree) to her upper body while home and profile show her head to feet. Round avatars (`.head-art`, `.result-art`) now wrap an `.av-img`. Bond (portrait) and chat stay close-ups.
 - Not done: Yuki, Kaede and Selene are still thighs-up; Scarlet's chibi and gallery are unchanged.
+- Previously (2026-09-29, local session): focus-ring and locked-chat fixes, `.githooks/pre-push` runs check + smoke before a push (D-024), generated README images (`npm run shots`, D-025).
 
 ## Next up
 
-1. **Full-body art for Yuki, Kaede, Selene** (owner wants them all; same Codex workflow, §9 of ART_GUIDE; add each id to `FULL_BODY`; when all four are done, drop the set and make full body the default framing). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+1. **Full-body art for Yuki, Kaede, Selene** (owner wants them all; same Codex workflow, §9 of ART_GUIDE; add each id to `FULL_BODY`; when all four are done, drop the set and make full body the default framing; re-run `npm run shots` so the README shows the new art). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
 2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
 3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

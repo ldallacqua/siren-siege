@@ -94,6 +94,14 @@ No plugin (vite-plugin-pwa would be a new dependency): `public/sw.js` is ~50 lin
 
 Following NIKKE's Advise screen: Messages first picks a heroine, then shows her Bond screen with episodes in Bond order (a diary), so order and progress are obvious. Gifts give Bond XP outside battle but are **earned in battle** (1 per 5 waves, +2 on a win), so fighting stays the main loop and there's no new currency or shop to balance. Each heroine loves 2 gifts and likes 1 (from LORE); tastes are hidden until you've given that gift once, which makes gifting a small discovery game. Sheets (gift, diary) live inside the Bond screen instead of going through `show()`, because `show()` replaces the current screen with a modal.
 
-### D-024 · 2026-10-02 · Portraits are full body; agents generate art through Codex CLI; green screen keyed at import
+### D-024 · 2026-09-29 · Smoke test runs in a pre-push hook, not in the deploy
+
+The smoke test took ~11 min on the 2-core GitHub runner (software WebGL) and ran twice per session (branch CI + deploy), so every deploy waited on it. It takes ~1:45 on a dev machine (viewports in parallel when there are 4+ cores). `.githooks/pre-push` runs `npm run check` + `npm run smoke` against the exact commit being pushed (a temporary worktree if the checkout is dirty), remembers trees that passed in `.git/siren-smoke-ok` so branch + main pushes cost one run, and only runs Prettier for docs-only pushes. No husky: `npm install`'s `prepare` sets `core.hooksPath`. CI keeps `npm run check` (~11 s) as the safety net before deploying; pull requests (Dependabot, contributors) still get the smoke test since they never pass through the hook. Trade-off: `git push --no-verify` can ship an unsmoked build.
+
+### D-025 · 2026-09-29 · README images are generated, not hand-made
+
+`npm run shots` stages the game (dev mode for unlocks, dev label removed, a wave-12 battle with upgraded heroines) and writes `docs/readme/*.webp`: banner, screenshots, heroine cards and an animated battle clip. Chromium encodes the WebPs (canvas) and the script muxes the animated WebP itself, so no image tools or new dependencies. Re-run it when the look changes.
+
+### D-026 · 2026-10-02 · Portraits are full body; agents generate art through Codex CLI; green screen keyed at import
 
 Owner wanted no cropped legs. Portraits are now generated full body (2:3), and the game picks the framing per view: home and profile show her whole, small cards and avatars zoom to the upper body with CSS `scale` (Safari-safe, unlike `object-view-box`), chat and Bond stay close-ups. A `FULL_BODY` set marks converted heroines so old thighs-up art keeps its framing during the transition. Generators rarely return real transparency, so prompts ask for flat #00FF00 and `npm run art` keys it (no new image dependency; it runs in the smoke-test Chromium). Codex CLI was chosen over an API key or browser automation because it uses the owner's existing ChatGPT plan and is an official OpenAI client (ChatGPT web automation would break its terms).

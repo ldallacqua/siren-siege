@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Pre-push gate: the full check + real-browser smoke test run here, on your machine
+# (~2 min), instead of on every deploy in CI (~11 min on a 2-core runner).
+#
+# - Runs against exactly the commit being pushed (a throwaway worktree if your
+#   checkout has other changes), so uncommitted work can't make a bad push pass.
+# - A commit whose tree already passed is not re-tested, so pushing the same work to
+#   a branch and then to main costs one run.
+# - Docs-only pushes (*.md, docs/, images under docs/) only run the Prettier check.
+#
+# Escape hatches: SKIP_SMOKE=1 git push  (check only)  ·  git push --no-verify  (nothing)
+# Installed by `npm install` / `npm ci` (package.json "prepare" sets core.hooksPath).
+set -euo pipefail
+
+# GUI git clients don't load your shell profile: find node via nvm if it isn't on PATH.
+if ! command -v npm >/dev/null 2>&1 && [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
+  # shellcheck disable=SC1091
+  . "${NVM_DIR:-$HOME/.nvm}/nvm.sh" >/dev/null
+fi
+command -v npm >/dev/null 2>&1 || { echo "pre-push: npm not found on PATH" >&2; exit 1; }
+
+root=$(git rev-parse --show-toplevel)
+gitdir=$(git rev-parse --absolute-git-dir)
+stamp="$gitdir/siren-smoke-ok"
+zero=0000000000000000000000000000000000000000
+
+# Commits to verify, one per pushed ref (deleting a ref needs no check).
+shas=()
+docs_only=1
+while read -r _lref lsha _rref rsha; do
+  [ "$lsha" = "$zero" ] && continue
+  shas+=("$lsha")
+  if [ "$rsha" = "$zero" ]; then
+    base=$(git merge-base "$lsha" origin/main 2>/dev/null || true)
+  else
+    base=$rsha
+  fi
+  if [ -z "$base" ]; then
+    docs_only=0
+  else
+    changed=$(git diff --name-only "$base" "$lsha")
+    if grep -vqE '\.md$|^docs/' <<<"$changed"; then docs_only=0; fi
+  fi
+done
+if [ ${#shas[@]} -eq 0 ]; then exit 0; fi
+
+# Every ref in one push usually points at the same commit; test each distinct tree once.
+for sha in $(printf '%s\n' "${shas[@]}" | sort -u); do
+  tree=$(git rev-parse "$sha^{tree}")
+  if [ -f "$stamp" ] && grep -qx "$tree" "$stamp"; then
+    echo "pre-push: ${sha:0:7} already passed check + smoke"
+    continue
+  fi
+
+  dir=$root
+  cleanup=:
+  if [ "$(git -C "$root" rev-parse HEAD)" != "$sha" ] || [ -n "$(git -C "$root" status --porcelain --untracked-files=no)" ]; then
+    dir=$(mktemp -d "${TMPDIR:-/tmp}/siren-push.XXXXXX")
+    git worktree add --quiet --detach "$dir" "$sha"
+    ln -s "$root/node_modules" "$dir/node_modules"
+    cleanup="git -C '$root' worktree remove --force '$dir'"
+  fi
+  trap "$cleanup" EXIT
+
+  cd "$dir"
+  if [ "$docs_only" = 1 ]; then
+    echo "pre-push: docs-only push, running the Prettier check"
+    npm run --silent format:check
+  else
+    echo "pre-push: npm run check (${sha:0:7})"
+    npm run --silent check
+    if [ "${SKIP_SMOKE:-}" = 1 ]; then
+      echo "pre-push: SKIP_SMOKE=1, smoke test skipped"
+    else
+      echo "pre-push: npm run smoke (~2 min; screenshots in artifacts/smoke/)"
+      npm run --silent smoke
+      echo "$tree" >>"$stamp"
+    fi
+  fi
+  cd "$root"
+  if [ "$dir" != "$root" ] && [ -d "$dir/artifacts/smoke" ]; then
+    mkdir -p artifacts && rm -rf artifacts/smoke && cp -R "$dir/artifacts/smoke" artifacts/
+  fi
+  eval "$cleanup"
+  trap - EXIT
+done

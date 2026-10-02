@@ -6,6 +6,7 @@
 // sandboxes/cloud sessions where browser downloads are blocked), then Playwright's own Chromium
 // (`npx playwright-core install chromium`).
 import { existsSync, mkdirSync } from 'node:fs';
+import { availableParallelism } from 'node:os';
 import { chromium, type Page } from 'playwright-core';
 import { preview } from 'vite';
 
@@ -382,9 +383,10 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
 const server = await preview({ preview: { port: 4174, strictPort: false }, logLevel: 'silent' });
 const base = server.resolvedUrls!.local[0];
 let failed = 0;
-for (const v of VIEWS) {
-  // A fresh browser per viewport: serverless Chromium builds run single-process and exit
-  // when their last context closes.
+// Each viewport gets a fresh browser: serverless Chromium builds run single-process and exit
+// when their last context closes. Rendering is CPU-bound, so viewports run in parallel only
+// with cores to spare (a dev machine); a 2-core CI runner goes one at a time.
+const runOne = async (v: (typeof VIEWS)[number]) => {
   const browser = await launch();
   try {
     await runView(browser, base, v);
@@ -395,7 +397,9 @@ for (const v of VIEWS) {
   } finally {
     await browser.close().catch(() => {});
   }
-}
+};
+if (availableParallelism() >= 4) await Promise.all(VIEWS.map(runOne));
+else for (const v of VIEWS) await runOne(v);
 await server.close();
 console.log(`screenshots: ${OUT}/`);
 process.exit(failed ? 1 : 0);

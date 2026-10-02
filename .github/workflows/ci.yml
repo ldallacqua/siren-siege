@@ -1,6 +1,6 @@
 name: CI
 
-# Full gate on pull requests and on every branch except main (main runs deploy.yml).
+# Gate on pull requests and on every branch except main (main runs deploy.yml).
 on:
   pull_request:
   push:
@@ -22,10 +22,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      # Pushes already ran the smoke test in .githooks/pre-push; pull requests (Dependabot,
+      # contributors) haven't, so they get it here.
       - name: Smoke test (desktop, phone portrait, phone landscape)
+        if: github.event_name == 'pull_request'
         run: npm run smoke
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         with:
           name: smoke-screenshots
           path: artifacts/smoke/

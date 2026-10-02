@@ -447,18 +447,23 @@ export function showProfile(id: string, a: HomeActions): void {
   const d = HEROINE_BY_ID[id];
   const lvl = heroineLevel(id);
   const done = new Set(save.heroines[id]?.chatsDone ?? []);
+  // A heroine you haven't recruited yet starts at Bond 1, but her chats stay sealed until she joins.
+  const recruited = isUnlocked(id);
   const chats = episodesFor(id).map((ep) => {
-    const open = lvl >= ep.level;
+    const open = recruited && lvl >= ep.level;
     const seen = done.has(ep.id);
+    const why = recruited
+      ? `Reach Bond ${ep.level} with ${d.name.split(' ')[0]}`
+      : `Unlock ${d.name.split(' ')[0]} first: ${d.unlock?.label ?? ''}`;
     return h(
       'button',
       {
         class: `chat-item ${open ? '' : 'locked'} ${seen ? 'done' : ''}`,
-        onclick: () => (open ? playChat(ep, () => showProfile(id, a)) : toast(`Reach Bond ${ep.level} with ${d.name.split(' ')[0]}`)),
+        onclick: () => (open ? playChat(ep, () => showProfile(id, a)) : toast(why)),
       },
       icon(open ? 'chat' : 'lock'),
       h('b', null, ep.title),
-      h('span', null, ...(open ? (seen ? ['Replay'] : [icon('sparkle'), 'New']) : [`Bond ${ep.level}`])),
+      h('span', null, ...(open ? (seen ? ['Replay'] : [icon('sparkle'), 'New']) : [recruited ? `Bond ${ep.level}` : 'Locked'])),
     );
   });
   const gallery = GALLERY.filter((g) => g.heroine === id).map((g) => galleryThumb(g, lvl));
