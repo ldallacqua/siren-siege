@@ -108,14 +108,16 @@ async function banner() {
     .bg { position: absolute; inset: 0; background:
       radial-gradient(ellipse 60% 70% at 50% 58%, rgba(255, 79, 139, .22), transparent 70%),
       radial-gradient(circle at 50% 20%, rgba(255, 236, 246, .08), transparent 45%), #07040b; }
-    .row { position: absolute; left: 0; right: 0; bottom: -30px; height: 560px; display: flex; justify-content: center; }
-    .h { position: relative; width: 330px; margin: 0 -26px; }
-    .h img { position: absolute; bottom: 0; left: 50%; height: 100%; transform: translateX(-50%);
-      -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent), linear-gradient(0deg, transparent, #000 30%);
-      -webkit-mask-composite: source-in; filter: saturate(1.05); }
-    .h::after { content: ''; position: absolute; inset: auto 12% 0; height: 50%;
+    /* The portraits are full body; the banner frames head to mid-thigh (the owner wants
+       the upper-body focus), so each image is ~1.7x the banner height, anchored at the top. */
+    .row { position: absolute; left: 0; right: 0; top: 14px; height: 900px; display: flex; justify-content: center; }
+    .h { position: relative; width: 330px; margin: 0 -14px; }
+    .h img { position: absolute; top: 0; left: 50%; height: 100%; transform: translateX(-50%);
+      -webkit-mask-image: linear-gradient(90deg, transparent 10%, #000 30%, #000 70%, transparent 89%);
+      filter: saturate(1.05); }
+    .h::after { content: ''; position: absolute; inset: 250px 12% auto; height: 260px;
       background: radial-gradient(ellipse at 50% 100%, var(--c), transparent 70%); opacity: .22; mix-blend-mode: screen; }
-    .shade { position: absolute; inset: 0; background: linear-gradient(0deg, #07040b 4%, rgba(7, 4, 11, .82) 30%, transparent 62%); }
+    .shade { position: absolute; inset: 0; background: linear-gradient(0deg, #07040b 4%, rgba(7, 4, 11, .8) 22%, transparent 46%); }
     .title { position: absolute; left: 0; right: 0; bottom: 70px; text-align: center; font: 700 96px/1 Cinzel; letter-spacing: .12em; }
     .title span:first-child { background: linear-gradient(180deg, #fff, #ffd6e7); -webkit-background-clip: text; color: transparent; }
     .title span:last-child { background: linear-gradient(180deg, #ff8fb6, #e83e7c); -webkit-background-clip: text; color: transparent; }
@@ -293,10 +295,13 @@ async function phone() {
 try {
   console.log('banner');
   await banner();
-  console.log('desktop');
-  await desktop();
-  console.log('phone');
-  await phone();
+  // `npm run shots -- --banner` stops here: the banner and heroine cards only.
+  if (!process.argv.includes('--banner')) {
+    console.log('desktop');
+    await desktop();
+    console.log('phone');
+    await phone();
+  }
 } finally {
   await browser.close();
   await server.close();

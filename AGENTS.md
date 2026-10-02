@@ -32,18 +32,18 @@ The next agent has **no memory of your session** — if it isn't in the repo, it
 
 ## 4. Commands
 
-| Command          | What it does                                                                                             |
-| ---------------- | -------------------------------------------------------------------------------------------------------- |
-| `npm run dev`    | Dev server on :5173. Open `/?dev` for dev mode (all unlocked, 20k gold, `window.siren` debug hook)       |
-| `npm run check`  | **The gate.** Prettier check + typecheck (app and node) + unit tests + balance sim + production build    |
-| `npm test`       | Vitest unit tests (`tests/`): data integrity + simulation behavior                                       |
-| `npm run sim`    | Headless balance bot plays all 20 waves and prints per-wave lives/cash (`npm run sim -- scarlet yuki`)   |
-| `npm run smoke`  | Build + real-browser test at 1280×720, 390×844 touch, 844×390 touch; screenshots → `artifacts/smoke/`    |
-| `npm run fx`     | Build + fires each heroine's effects for 5 upgrade builds side by side; screenshots → `artifacts/fx/`    |
-| `npm run format` | Prettier write                                                                                           |
-| `npm run shots`  | Build + regenerate the README images in `docs/readme/` (banner, screenshots, heroine cards, battle clip) |
-| `npm run art`    | Convert PNG/JPG in `public/art/<id>/` to correctly sized WebP, delete sources, list misnamed files       |
-| `npm run build`  | Typecheck + Vite build to `dist/`                                                                        |
+| Command          | What it does                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `npm run dev`    | Dev server on :5173. Open `/?dev` for dev mode (all unlocked, 20k gold, `window.siren` debug hook)     |
+| `npm run check`  | **The gate.** Prettier check + typecheck (app and node) + unit tests + balance sim + production build  |
+| `npm test`       | Vitest unit tests (`tests/`): data integrity + simulation behavior                                     |
+| `npm run sim`    | Headless balance bot plays all 20 waves and prints per-wave lives/cash (`npm run sim -- scarlet yuki`) |
+| `npm run smoke`  | Build + real-browser test at 1280×720, 390×844 touch, 844×390 touch; screenshots → `artifacts/smoke/`  |
+| `npm run fx`     | Build + fires each heroine's effects for 5 upgrade builds side by side; screenshots → `artifacts/fx/`  |
+| `npm run format` | Prettier write                                                                                         |
+| `npm run shots`  | Build + regenerate the README images in `docs/readme/` (`-- --banner`: banner and heroine cards only)  |
+| `npm run art`    | Convert PNG/JPG in `public/art/<id>/` to correctly sized WebP, delete sources, list misnamed files     |
+| `npm run build`  | Typecheck + Vite build to `dist/`                                                                      |
 
 **Look at the smoke screenshots** (`artifacts/smoke/*.png`) after UI changes — that's how you "see" the game. The smoke test finds Chromium via `$CHROME_PATH`, then `@sparticuz/chromium` (bundled via npm, works in sandboxed/cloud Linux where browser downloads are blocked), then Playwright's own (`npx playwright-core install chromium` on macOS/Windows).
 

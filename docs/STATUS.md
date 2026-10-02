@@ -8,7 +8,7 @@
 
 - Full match loop on _Moonlit Shrine_: 20 waves, win/lose, results screen with Bond XP and unlock notices.
 - 4 heroines (Scarlet, Yuki, Kaede, Selene), 3 upgrade paths × 3 tiers, BTD6 crosspath rule, targeting modes, sell 70%.
-- All four heroines have full-body art (portrait + all 9 moods); `npm run art` removes a green-screen background (or a blue one, used for Kaede's fire); agents can generate art via Codex CLI (ART_GUIDE §9).
+- All four heroines have full-body art (portrait + all 9 moods) and two gallery pictures (`gallery-1` First Impression, `gallery-2` Off Duty); `npm run art` removes a green-screen background (or a blue one, used for Kaede's fire); agents can generate art via Codex CLI (ART_GUIDE §9).
 - Enemies: 5 layered types, armored Iron Husk (immune to physical), Blight Colossus boss with HP bar.
 - Controls: speed 1×/2×/3×, auto-start, pause (auto-pauses when the tab is hidden), keyboard shortcuts.
 - Bond 1–10 (+2% attack rate/level), 8 chat episodes (2 per heroine, Bond 1 and 3), 20 gallery slots (Bond 2/4/6/8/10).
@@ -48,7 +48,7 @@
 
 ## Known issues / limitations
 
-- **Art scope:** every mood portrait exists now; gallery slots 2–5 still show placeholders, and the chibis and `gallery-1` pictures predate the full-body portraits (Selene's still show her old closed-neck gown). The owner explicitly deferred the full 64-image set. Optional follow-up: B-01.
+- **Art scope:** every mood portrait exists now; gallery slots 3–5 still show placeholders, and the chibis and `gallery-1` pictures predate the full-body portraits (Selene's still show her old closed-neck gown). The owner explicitly deferred the full 64-image set. Optional follow-up: B-01.
 - Audio is synthesized placeholder quality (no recorded samples). 60 fps with 200 enemies on a mid phone is **not yet measured** (sounds are rate-limited to 24 voices, particles capped at 400).
 - Balance only validated by the naive bot (`npm run sim`: loses around wave 19–20). No human playtest data yet.
 - Upgrade tiers stop at 3 (BTD6 has 5). No camo/regrow enemies, no hero abilities.
@@ -61,7 +61,12 @@
 
 ## Last session
 
-**2026-10-02 — Selene full-body portrait and 9 moods; all four heroines are full body (Claude, local Windows session)**
+**2026-10-02 — README banner framing; Off Duty gallery pictures (Claude, local Windows session)**
+
+- README banner: the owner wanted the upper bodies in focus now that the portraits are full body. The banner in `scripts/readme-shots.ts` frames each heroine head to mid-thigh (image 900 px tall in the 520 px banner, anchored at the top). `npm run shots -- --banner` regenerates only the banner and heroine cards.
+- Gallery: the owner wants two new gallery pictures per heroine, matching the lore, each approved by him. `gallery-2` (Off Duty, Bond 4) is in for all four, approved on the first take; scenes and the prompt recipe are in `docs/ART_ASSETS.md`. The second picture is `gallery-3` (Poolside, Bond 6): see "Next up" for its state.
+
+**Previously, 2026-10-02 — Selene full-body portrait and 9 moods; all four heroines are full body (Claude, local Windows session)**
 
 - Done: Selene's full-body `portrait.webp` and all 9 moods (Codex, green screen), and `'selene'` added to `FULL_BODY`. The owner asked for cleavage like the other heroines, so her gown has an open V neckline now (D-026 update). It took three rounds: he picked the hand-on-shoulder pose from round 1, rejected its long bow, found the compact bows of round 2 too small, and approved round 3 (that pose with the tall bow of another round-1 candidate, hands redrawn with clear lilac nails). He asked for the hands and nails to be checked zoomed in; both hands were, on every candidate and every mood.
 - Moods: silhouettes differ from the base by 0.37–0.40 % (0.28–0.31 % below the head); hands are unchanged in all nine. The image tool refused `tease` once (its filter); a retry with plainer wording passed. The owner has seen the base portrait but not the moods yet.
@@ -91,6 +96,6 @@
 
 ## Next up
 
-1. **Owner check of Kaede's and Selene's moods** (open a chat with each; any face he dislikes is one Codex image to redo with her `portrait.webp` as the reference, Kaede on blue, Selene on green). Then **T-08** (drop the `FULL_BODY` set, full body becomes the default framing). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+1. **Gallery 3 (Poolside) for all four**: candidates were being generated when this was written; the owner approves or rejects each one, and nothing goes into `public/art/` before he approves. Then **Owner check of Kaede's and Selene's moods** (open a chat with each; any face he dislikes is one Codex image to redo with her `portrait.webp` as the reference, Kaede on blue, Selene on green). Then **T-08** (drop the `FULL_BODY` set, full body becomes the default framing). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
 2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
 3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

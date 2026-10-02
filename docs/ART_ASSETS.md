@@ -25,6 +25,19 @@ Kaede's approved design, for future art of her: left hand on her hip with the el
 
 Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below, which her chibi and `gallery-1` still show). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
+## Gallery 2, "Off Duty" (2026-10-02)
+
+`gallery-2.webp` for all four heroines (1536×1024, opaque), each approved by the owner on the first take. Generated through the Codex CLI with her full-body `portrait.webp` as the identity reference; scenes follow `docs/LORE.md`.
+
+| Heroine | Scene                                                                                                                                                                       |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scarlet | Her room at the shrine at night: lounging on a red velvet chaise in an open black silk shirt and shorts, red wine in hand, her two silver revolvers laid out for cleaning   |
+| Yuki    | By a round shrine window on a snowy night: oversized cream sweater off one shoulder, a steaming cup of tea held in both hands, frost flowers on the glass, a warm lantern   |
+| Kaede   | The shrine veranda at dusk after training: black cropped tank top and red shorts, towel around her neck, raising a sake cup, her gourd and a lantern she lit with her flame |
+| Selene  | The shrine library window seat: lilac cardigan over a white satin slip dress, an old book on her lap, moon-phase fortune cards spread out, one card held up to the viewer   |
+
+Prompt recipe (one Codex call per picture, `-i portrait.webp`): the portrait is the identity reference (list her face, hair, eyes, skin and signature details); "draw the same woman in a new pose, a new outfit and a full illustrated scene"; the theme; the scene paragraph (place, clothes, what each hand is doing, props from her lore, light, expression); the setting note (Moonlit Isles, Japanese-inspired fantasy under a huge moon, no modern objects); a HANDS paragraph asking for carefully drawn hands and nails; the style and adult-character lines from ART_GUIDE §5.1; wide 3:2 with a full painted background and her face near the centre. Kaede's hair came out longer than in her portrait; the owner approved it as is, but say "short-to-mid length as in the reference" in future prompts.
+
 ## Visual reference and prompt set
 
 Use each committed `portrait.webp` as the identity reference for future art. Follow [ART_DIRECTION.md](ART_DIRECTION.md) and [ART_GUIDE.md](ART_GUIDE.md), with these production choices:
