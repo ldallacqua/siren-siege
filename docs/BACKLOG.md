@@ -84,7 +84,7 @@ Alternate outfits unlocked at Bond 7; outfit picker in profile; art file naming 
 The MVP pass is complete: 19 assets (all four portraits/chibis/First Impression scenes plus seven expressions). See `docs/ART_ASSETS.md`. The owner explicitly requested the most important images only; completing all 64 is not a release gate.
 
 - When requested: add missing expressions and `gallery-2` … `gallery-5`, reusing each committed main portrait as the character reference.
-- Preserve Selene's covered ceremonial bodice and the established character designs.
+- Follow the approved full-body portraits (designs in `docs/ART_ASSETS.md`). Selene's chibi and `gallery-1` still show her old closed-neck gown and small bow, and Kaede's show her old pose: redo them from the new portraits when this item is picked up.
 - Accept: no body/framing jump between expressions, proper alpha, no face cropping in cards, gallery lightboxes and all three smoke viewports verified.
 
 ### B-16 · P2 · Main story chapters
@@ -101,6 +101,8 @@ The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price,
 - T-01 · Split `ui/screens.ts` into one file per screen when it passes ~600 lines.
 - T-02 · Lazy-load Phaser after the home screen renders to speed up first paint.
 - T-03 · Replace per-frame `Graphics.clear()` redraw with pooled sprites once real sprites exist (only if profiling shows a need).
+- T-08 · Drop the `FULL_BODY` set now that all four heroines are full body: make the `.full` framing in `style.css` the default for portraits and remove the class from `art.ts` / `common.ts`. Check the generated SVG placeholders (a new heroine without art) still frame sensibly in cards, avatars, home and profile.
+- T-09 · `.screen.home` is `overflow: hidden` but wider than the viewport inside (scaled picker avatars, the hero image), so a programmatic scroll-into-view can shift the whole lobby sideways (seen with Playwright's `click()` at 390×844; a real tap does not). `overflow: clip` on the screen would rule it out; check Safari support and the smoke screenshots.
 - T-04 · Smarter balance bot (buys tier 3s, positions by role) so balance targets are closer to real players.
 
 ### B-17 · P3 · Heroine look changes with upgrades on the map

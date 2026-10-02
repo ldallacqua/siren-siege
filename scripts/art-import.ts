@@ -105,7 +105,6 @@ if (jobs.length) {
           // hair edges and translucent cloth (see-through instead of green) and leaves no
           // green or olive fringe. Rule for the art: nothing on her may be the screen colour.
           const BLUE = C === 2;
-          const R = BLUE ? 12 : 6;
           const SOLID = 4; // greenness at or below this is her own colour…
           const N = W * H;
           const gr = new Int16Array(N);
@@ -114,12 +113,18 @@ if (jobs.length) {
           // blended with it (red hair + green = olive) is unmixed too. Gold and orange
           // (red well above the screen channel) and anything farther inside stay as drawn.
           const nearScreen = (r: number) => {
+            // square of side 2r+1 around every clear-screen pixel, as two 1-D passes
+            const row = new Uint8Array(N);
             const near = new Uint8Array(N);
             for (let y = 0; y < H; y++)
               for (let x = 0; x < W; x++) {
                 if (gr[y * W + x] <= 40) continue;
-                for (let yy = Math.max(0, y - r); yy <= Math.min(H - 1, y + r); yy++)
-                  for (let xx = Math.max(0, x - r); xx <= Math.min(W - 1, x + r); xx++) near[yy * W + xx] = 1;
+                for (let xx = Math.max(0, x - r); xx <= Math.min(W - 1, x + r); xx++) row[y * W + xx] = 1;
+              }
+            for (let y = 0; y < H; y++)
+              for (let x = 0; x < W; x++) {
+                if (!row[y * W + x]) continue;
+                for (let yy = Math.max(0, y - r); yy <= Math.min(H - 1, y + r); yy++) near[yy * W + x] = 1;
               }
             return near;
           };
@@ -128,13 +133,32 @@ if (jobs.length) {
           // green but not bluer than red, and several pixels deep where a flame is
           // translucent. Within 8 px of clear screen that purple is unmixed as well.
           // Rule for the art: a heroine keyed on blue has no saturated purple at her edges.
-          const wide = BLUE ? nearScreen(8) : null;
+          // On a green screen the same happens to lilac and pink (Selene's hair): blended
+          // with green they turn teal, greener than red but not greener than blue. That
+          // is only safe to unmix for a heroine with no teal or ice-blue of her own, so it
+          // is switched on by her palette: under 1 % of her pixels deeper than 16 px inside
+          // are greener than red. (Yuki's ice-blue fails that test and is left alone.)
+          let tealFree = false;
+          if (!BLUE) {
+            const edge = nearScreen(16);
+            let inside = 0;
+            let teal = 0;
+            for (let n = 0; n < N; n++) {
+              if (edge[n] || gr[n] > SOLID) continue;
+              inside++;
+              if (px[n * 4 + 1] > px[n * 4] + 12) teal++;
+            }
+            tealFree = inside > 0 && teal / inside < 0.01;
+          }
+          const wide = BLUE || tealFree ? nearScreen(8) : null;
+          const R = wide ? 12 : 6;
           const solid = new Uint8Array(N);
           for (let n = 0; n < N; n++) {
             const i = n * 4;
             const olive = near[n] && px[i + C] >= px[i] - 15 && px[i + C] > px[i + O2] + 20;
-            const purple = wide !== null && wide[n] && px[i + 2] > px[i + 1] + 24 && px[i + 1] < 150;
-            solid[n] = gr[n] <= SOLID && !olive && !purple ? 1 : 0;
+            const purple = BLUE && wide !== null && wide[n] && px[i + 2] > px[i + 1] + 24 && px[i + 1] < 150;
+            const teal = tealFree && wide !== null && wide[n] && px[i + 1] > px[i] + 12;
+            solid[n] = gr[n] <= SOLID && !olive && !purple && !teal ? 1 : 0;
           }
           const out = new Uint8ClampedArray(px);
           for (let y = 0; y < H; y++) {

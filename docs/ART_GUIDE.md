@@ -180,9 +180,12 @@ Character: Kaede Emberhorn, "the Oni Flame Dancer". A 29-year-old adult oni woma
 Character: Selene Moonwhisper, "the Moon Priestess". A 26-year-old adult woman.
 - Long lavender hair in a loose side braid, violet eyes, crescent-moon hair
   ornament, elegant curvy figure.
-- Outfit: backless white-and-lilac priestess gown with gold trim, sheer layered skirt
-  with a thigh slit, detached sleeves, moon-phase jewelry.
-- Weapon: an elegant bow made of glowing moonlight.
+- Outfit: white-and-lilac priestess gown with gold filigree trim and an open plunging
+  V neckline that shows her cleavage (halter straps, bare shoulders, a small crescent
+  pendant), sheer layered skirt with a thigh slit, detached sheer sleeves, moon-phase
+  jewelry, gold heeled sandals. Glossy lilac almond-shaped nails.
+- Weapon: a tall ornate moon bow, silver-white and gold with lilac limbs and a large
+  gold crescent above the grip (solid and opaque, no glow).
 - Signature color: lilac (#c79bff), with white and gold.
 - Personality/default expression: gentle, serene, with a quietly mischievous smile.
 ```
@@ -348,6 +351,6 @@ OpenAI's Codex CLI signs in with the owner's ChatGPT plan (no API key) and has a
    ```
    codex exec --skip-git-repo-check -s workspace-write -C <dir> -i ref.png -- "Use your image generation tool to create ONE image, then save it in this directory as smile.png. …" < /dev/null
    ```
-   Each image takes about 5–7 minutes (about 2 on the owner's PC); three in parallel works. Ask for the green background (§5.1 PORTRAIT RULES) and say the body must stay exactly in place for moods. For a heroine with fire or yellow (Kaede), ask for pure blue (#0000FF) instead, and for a solid, opaque flame that floats clear of her hand: a see-through flame lets the screen colour into the fire.
+   Each image takes about 5–7 minutes (about 2 on the owner's PC); three in parallel works. Ask for the green background (§5.1 PORTRAIT RULES) and say the body must stay exactly in place for moods. For a heroine with fire or yellow (Kaede), ask for pure blue (#0000FF) instead, and for a solid, opaque flame that floats clear of her hand: a see-through flame lets the screen colour into the fire. If the image tool refuses a mood, retry once with plainer wording for the expression (Selene's `tease` passed as "a playful, amused smile with one eyebrow slightly raised"); don't push past a second refusal.
 3. Show the owner the main portrait before making moods from it. Check moods line up (Scarlet's differed from the base by < 0.5 % of the silhouette).
 4. Copy the PNGs into `public/art/<id>/` with their final names and run `npm run art` (green is removed there), then `npm run smoke` and look at home, profile, chat and Bond screenshots.

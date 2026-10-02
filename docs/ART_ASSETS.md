@@ -19,9 +19,11 @@ The owner explicitly reduced the full 64-image brief to an MVP pass. Other expre
 
 ## Full-body sets (2026-10-02)
 
-Scarlet, Yuki and Kaede now have a full-body `portrait.webp` and all nine `portrait-<mood>.webp` (1024×1536 with alpha), replacing the thighs-up files above. They were generated through the Codex CLI (ART_GUIDE §9) and keyed by `npm run art`: Scarlet and Yuki on green, Kaede on blue because of her flame. Each mood was generated from the approved portrait with only the face changing. Selene still has the MVP files.
+All four heroines now have a full-body `portrait.webp` and all nine `portrait-<mood>.webp` (1024×1536 with alpha), replacing the thighs-up files above. They were generated through the Codex CLI (ART_GUIDE §9) and keyed by `npm run art`: Scarlet, Yuki and Selene on green, Kaede on blue because of her flame. Each mood was generated from the approved portrait with only the face changing. Chibis and `gallery-1` are still the MVP files.
 
 Kaede's approved design, for future art of her: left hand on her hip with the elbow out, the happi jacket off both shoulders, a flame floating above her open right palm, a layered black-and-red skirt with a braided rope belt, a red marking on her left thigh, the sake gourd hanging at her left hip.
+
+Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below, which her chibi and `gallery-1` still show). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
 ## Visual reference and prompt set
 
