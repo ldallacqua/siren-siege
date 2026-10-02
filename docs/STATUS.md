@@ -66,7 +66,7 @@
 
 - Owner asked whether an agent could use his ChatGPT plan to make the art. Answer: Codex CLI signs in with the plan (`codex login --device-auth`) and has image generation; workflow documented in `docs/ART_GUIDE.md` §9. Owner also asked for **full-body** portraits so legs are never cropped.
 - Done: Scarlet's new `portrait.webp` (full body, approved by the owner; second take fixed her trigger fingers) and all 9 moods, generated with her portrait as reference on a flat green background. Silhouettes differ from the base by < 0.5 %, so she doesn't jump between moods in chats.
-- `npm run art` now removes a green screen (corners pure green → keyed; edge colour unmixed from the nearest solid pixels, only within 3 px of the screen).
+- `npm run art` now removes a green screen (corners pure green → keyed; each green-tinted pixel is unmixed against the nearest solid colour up to 6 px away, which keeps soft hair and translucent cloth). Yuki's full-body portrait is generated (scratch only) and awaiting owner approval.
 - `FULL_BODY` in `progression.ts` marks heroines with full-body art; `artImg`/`artChain` add `.full`, and CSS zooms small views (shop card, roster, avatars, Messages card, tree) to her upper body while home and profile show her head to feet. Round avatars (`.head-art`, `.result-art`) now wrap an `.av-img`. Bond (portrait) and chat stay close-ups.
 - Not done: Yuki, Kaede and Selene are still thighs-up; Scarlet's chibi and gallery are unchanged.
 - Previously (2026-09-29, local session): focus-ring and locked-chat fixes, `.githooks/pre-push` runs check + smoke before a push (D-024), generated README images (`npm run shots`, D-025).

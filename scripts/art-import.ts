@@ -91,60 +91,60 @@ if (jobs.length) {
         const corners = [0, W - 1, (H - 1) * W, H * W - 1].map((n) => n * 4);
         const keyed = cut && corners.every((i) => greenness(i) > 120 && px[i + 3] > 200);
         if (keyed) {
-          // Pixels near the screen are a mix of her colour F and pure green: P = a·F + (1−a)·G.
-          // F is the average of the nearest solid pixels (radius 3), which gives the alpha
-          // (from the green channel) and the true colour, so edges have no green or olive fringe.
-          // Only pixels within 3 px of clear screen are touched, so gold or yellow details
-          // inside her silhouette stay as drawn.
-          const R = 3;
-          const SOLID = 6; // g − avg(r, b) at or below this is her own colour
+          // A green-tinted pixel is a mix of her colour F and the screen G = (0,255,0):
+          // P = a·F + (1−a)·G. F is the average of the nearest solid (not green-tinted)
+          // pixels, up to 6 px away; a is P projected onto the G→F line. That keeps soft
+          // hair edges and translucent cloth (see-through instead of green) and leaves no
+          // green or olive fringe. Rule for the art: nothing on her may be green.
+          const R = 6;
+          const SOLID = 4; // greenness at or below this is her own colour…
           const N = W * H;
-          const screen = new Uint8Array(N);
-          const tint = new Int16Array(N);
-          for (let n = 0; n < N; n++) {
-            const i = n * 4;
-            screen[n] = greenness(i) > 40 ? 1 : 0;
-            tint[n] = px[i + 1] - ((px[i] + px[i + 2]) >> 1);
-          }
+          const gr = new Int16Array(N);
+          for (let n = 0; n < N; n++) gr[n] = greenness(n * 4);
+          // …except yellow-green next to the screen (within 3 px of clear green): that is
+          // a warm colour (red hair) blended with green, so it is unmixed too. Gold and
+          // orange (red well above green) and anything farther inside stay as drawn.
           const near = new Uint8Array(N);
           for (let y = 0; y < H; y++)
             for (let x = 0; x < W; x++) {
-              if (!screen[y * W + x]) continue;
-              for (let dy = -R; dy <= R; dy++) {
-                const yy = y + dy;
-                if (yy < 0 || yy >= H) continue;
-                for (let dx = -R; dx <= R; dx++) {
-                  const xx = x + dx;
-                  if (xx >= 0 && xx < W) near[yy * W + xx] = 1;
-                }
-              }
+              if (gr[y * W + x] <= 40) continue;
+              for (let yy = Math.max(0, y - 3); yy <= Math.min(H - 1, y + 3); yy++)
+                for (let xx = Math.max(0, x - 3); xx <= Math.min(W - 1, x + 3); xx++) near[yy * W + xx] = 1;
             }
-          const solid = (m: number) => !screen[m] && tint[m] <= SOLID;
+          const solid = new Uint8Array(N);
+          for (let n = 0; n < N; n++) {
+            const i = n * 4;
+            const olive = near[n] && px[i + 1] >= px[i] - 15 && px[i + 1] > px[i + 2] + 20;
+            solid[n] = gr[n] <= SOLID && !olive ? 1 : 0;
+          }
           const out = new Uint8ClampedArray(px);
           for (let y = 0; y < H; y++) {
             for (let x = 0; x < W; x++) {
               const n = y * W + x;
-              if (!near[n] || solid(n)) continue;
+              if (solid[n]) continue;
               const i = n * 4;
               let fr = 0,
                 fg = 0,
                 fb = 0,
                 cnt = 0;
-              for (let r = 1; r <= R && !cnt; r++)
+              for (let r = 1; r <= R && !cnt; r++) {
+                // ring at Chebyshev distance r
                 for (let dy = -r; dy <= r; dy++) {
                   const yy = y + dy;
                   if (yy < 0 || yy >= H) continue;
-                  for (let dx = -r; dx <= r; dx++) {
+                  const step = dy === -r || dy === r ? 1 : 2 * r;
+                  for (let dx = -r; dx <= r; dx += step) {
                     const xx = x + dx;
                     if (xx < 0 || xx >= W) continue;
                     const m = yy * W + xx;
-                    if (!solid(m)) continue;
+                    if (!solid[m]) continue;
                     fr += px[m * 4];
                     fg += px[m * 4 + 1];
                     fb += px[m * 4 + 2];
                     cnt++;
                   }
                 }
+              }
               if (!cnt) {
                 out[i + 3] = 0; // open screen
                 continue;
@@ -152,15 +152,17 @@ if (jobs.length) {
               fr /= cnt;
               fg /= cnt;
               fb /= cnt;
-              const a = Math.max(0, Math.min(1, (255 - px[i + 1]) / Math.max(1, 255 - fg)));
+              const dr = fr,
+                dg = fg - 255,
+                db = fb;
+              const len2 = dr * dr + dg * dg + db * db;
+              const a = len2 < 1 ? 0 : Math.max(0, Math.min(1, (px[i] * dr + (px[i + 1] - 255) * dg + px[i + 2] * db) / len2));
               out[i] = fr;
               out[i + 1] = fg;
               out[i + 2] = fb;
               out[i + 3] = Math.round(px[i + 3] * a);
             }
           }
-          // Anything still clearly screen (big gaps far from her) goes fully transparent.
-          for (let n = 0; n < N; n++) if (screen[n] && !near[n]) out[n * 4 + 3] = 0;
           data.data.set(out);
           sg.putImageData(data, 0, 0);
         }
