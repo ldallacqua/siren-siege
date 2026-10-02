@@ -6,9 +6,10 @@
 //
 // Sizing: images are scaled down (never up, never cropped) to fit the box for their
 // kind — portraits 1200×1600, gallery 1600×1200, chibi 256×256. Transparency is kept.
-// Green screen: a portrait or chibi whose four corners are flat pure green (how we ask
-// image generators for a cut-out, since they rarely return real transparency) gets the
-// green keyed out to transparent, with green spill removed from her edges.
+// Green/blue screen: a portrait or chibi whose four corners are flat pure green (or pure
+// blue, for heroines with fire or yellow, where a green fringe would show) gets the
+// screen keyed out to transparent, with the screen colour unmixed from her edges. That is
+// how we ask image generators for a cut-out, since they rarely return real transparency.
 // Uses the same browser as the smoke test (no image library dependency).
 import { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
@@ -85,25 +86,32 @@ if (jobs.length) {
         const data = sg.getImageData(0, 0, src.width, src.height);
         const px = data.data;
         // "How much greener than it is red or blue" — high on the screen, ~0 on her.
-        const greenness = (i: number) => px[i + 1] - Math.max(px[i], px[i + 2]);
         const W = src.width;
         const H = src.height;
         const corners = [0, W - 1, (H - 1) * W, H * W - 1].map((n) => n * 4);
-        const keyed = cut && corners.every((i) => greenness(i) > 120 && px[i + 3] > 200);
-        if (keyed) {
+        // The screen channel: 1 = green, 2 = blue. o2 is the other non-red channel.
+        const keyOf = (c: number) => {
+          const o2 = c === 1 ? 2 : 1;
+          return (i: number) => px[i + c] - Math.max(px[i], px[i + o2]);
+        };
+        const C = [1, 2].find((c) => cut && corners.every((i) => keyOf(c)(i) > 120 && px[i + 3] > 200));
+        const keyed = C !== undefined;
+        if (C !== undefined) {
+          const O2 = C === 1 ? 2 : 1;
+          const greenness = keyOf(C); // "how much screen colour", whichever screen it is
           // A green-tinted pixel is a mix of her colour F and the screen G = (0,255,0):
           // P = a·F + (1−a)·G. F is the average of the nearest solid (not green-tinted)
           // pixels, up to 6 px away; a is P projected onto the G→F line. That keeps soft
           // hair edges and translucent cloth (see-through instead of green) and leaves no
-          // green or olive fringe. Rule for the art: nothing on her may be green.
+          // green or olive fringe. Rule for the art: nothing on her may be the screen colour.
           const R = 6;
           const SOLID = 4; // greenness at or below this is her own colour…
           const N = W * H;
           const gr = new Int16Array(N);
           for (let n = 0; n < N; n++) gr[n] = greenness(n * 4);
-          // …except yellow-green next to the screen (within 3 px of clear green): that is
-          // a warm colour (red hair) blended with green, so it is unmixed too. Gold and
-          // orange (red well above green) and anything farther inside stay as drawn.
+          // …except next to the screen (within 3 px of clear screen), where a warm colour
+          // blended with it (red hair + green = olive) is unmixed too. Gold and orange
+          // (red well above the screen channel) and anything farther inside stay as drawn.
           const near = new Uint8Array(N);
           for (let y = 0; y < H; y++)
             for (let x = 0; x < W; x++) {
@@ -114,7 +122,7 @@ if (jobs.length) {
           const solid = new Uint8Array(N);
           for (let n = 0; n < N; n++) {
             const i = n * 4;
-            const olive = near[n] && px[i + 1] >= px[i] - 15 && px[i + 1] > px[i + 2] + 20;
+            const olive = near[n] && px[i + C] >= px[i] - 15 && px[i + C] > px[i + O2] + 20;
             solid[n] = gr[n] <= SOLID && !olive ? 1 : 0;
           }
           const out = new Uint8ClampedArray(px);
@@ -152,11 +160,15 @@ if (jobs.length) {
               fr /= cnt;
               fg /= cnt;
               fb /= cnt;
+              // project P − K onto F − K, K = the pure screen colour
+              const kg = C === 1 ? 255 : 0;
+              const kb = C === 2 ? 255 : 0;
               const dr = fr,
-                dg = fg - 255,
-                db = fb;
+                dg = fg - kg,
+                db = fb - kb;
               const len2 = dr * dr + dg * dg + db * db;
-              const a = len2 < 1 ? 0 : Math.max(0, Math.min(1, (px[i] * dr + (px[i + 1] - 255) * dg + px[i + 2] * db) / len2));
+              const dot = px[i] * dr + (px[i + 1] - kg) * dg + (px[i + 2] - kb) * db;
+              const a = len2 < 1 ? 0 : Math.max(0, Math.min(1, dot / len2));
               out[i] = fr;
               out[i + 1] = fg;
               out[i + 2] = fb;
@@ -167,7 +179,7 @@ if (jobs.length) {
           sg.putImageData(data, 0, 0);
         }
         const k = Math.min(1, box.w / W, box.h / H);
-        if (isWebp && k === 1 && !keyed) return { skip: true, keyed, w: W, h: H, url: '' };
+        if (isWebp && k === 1 && !keyed) return { skip: true, keyed: C === 1 ? 'green' : C === 2 ? 'blue' : '', w: W, h: H, url: '' };
         const w = Math.round(W * k);
         const h = Math.round(H * k);
         const c = document.createElement('canvas');
@@ -176,7 +188,7 @@ if (jobs.length) {
         const g = c.getContext('2d')!;
         g.imageSmoothingQuality = 'high';
         g.drawImage(src, 0, 0, w, h);
-        return { skip: false, keyed, w, h, url: c.toDataURL('image/webp', 0.85) };
+        return { skip: false, keyed: C === 1 ? 'green' : C === 2 ? 'blue' : '', w, h, url: c.toDataURL('image/webp', 0.85) };
       },
       { dataUrl, box: j.box, isWebp: mime === 'image/webp', cut: j.box.w !== 1600 },
     );
@@ -188,7 +200,7 @@ if (jobs.length) {
     writeFileSync(j.out, Buffer.from(res.url.split(',')[1], 'base64'));
     if (!KEEP && j.src !== j.out) unlinkSync(j.src);
     converted++;
-    console.log(`✓ ${j.src} → ${j.out} ${res.w}×${res.h}${res.keyed ? '  (green screen removed)' : ''}${note}`);
+    console.log(`✓ ${j.src} → ${j.out} ${res.w}×${res.h}${res.keyed ? `  (${res.keyed} screen removed)` : ''}${note}`);
   }
   await browser.close();
 }
