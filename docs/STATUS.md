@@ -2,7 +2,7 @@
 
 > Living handoff document. **Every session updates this before finishing** (see AGENTS.md §3).
 
-**Version:** 0.4.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-09-29
+**Version:** 0.4.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-10-02
 
 ## What works
 
@@ -62,7 +62,14 @@
 
 ## Last session
 
-**2026-10-02 — Scarlet and Yuki full-body art generated via Codex CLI (Claude, cloud session)**
+**2026-10-02 — Kaede full-body portrait, round 2 (Claude, local Windows session, branch `wip/kaede-art`)**
+
+- Half-done, on `wip/kaede-art` only: **Kaede's full-body portrait is not approved yet.** The owner rejected the first candidate (her left arm had no upper arm or elbow; a stray digit and a purple patch inside the flame). Three new candidates were generated from it through Codex, on blue, with the arm and flame hand redrawn: `wip-art/kaede/v2-a-hand-on-hip.png`, `v2-b-relaxed-arm.png`, `v2-c-hand-on-hip-take2.png`, compared in `wip-art/kaede/candidates-v2.png`. A and B key cleanly; C's flame keeps grey patches. Next steps are in `wip-art/kaede/README.md`. The game still ships Kaede's old thighs-up art and she is not in `FULL_BODY`.
+- `npm run art`, blue screen: fire and red hair blended with blue turn purple, which the keyer kept as her own colour (purple fringe on the flame). On a blue screen, saturated purple within 8 px of clear screen is now unmixed too, and the search for her nearest solid colour reaches 12 px. Green-screen behaviour is unchanged. Rule for the art: a heroine keyed on blue has no saturated purple at her edges.
+- `npm run smoke` failed here at all three viewports on "a pan drag must not select a heroine": the test pressed Escape and dragged without waiting for the heroine panel to close. It now waits for the panel to detach, and passes.
+- Local Windows notes: the art and smoke scripts run with `CHROME_PATH` pointing at Edge (`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`); Codex CLI is installed and already signed in on this machine, and an image took about 2 minutes.
+
+**Previously, 2026-10-02 — Scarlet and Yuki full-body art generated via Codex CLI (Claude, cloud session)**
 
 - Owner asked whether an agent could use his ChatGPT plan to make the art. Answer: Codex CLI signs in with the plan (`codex login --device-auth`) and has image generation; workflow documented in `docs/ART_GUIDE.md` §9. Owner also asked for **full-body** portraits so legs are never cropped.
 - Done: Scarlet's new `portrait.webp` (full body, approved by the owner; second take fixed her trigger fingers) and all 9 moods, generated with her portrait as reference on a flat green background. Silhouettes differ from the base by < 0.5 %, so she doesn't jump between moods in chats.
@@ -74,6 +81,6 @@
 
 ## Next up
 
-1. **Full-body art for Kaede, Selene** (owner wants them all; same Codex workflow, §9 of ART_GUIDE; add each id to `FULL_BODY`; when all four are done, drop the set and make full body the default framing; re-run `npm run shots` so the README shows the new art). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+1. **Full-body art for Kaede, Selene** (Kaede is in progress on `wip/kaede-art`: the owner picks one of the round-2 candidates, see `wip-art/kaede/README.md`; owner wants them all; same Codex workflow, §9 of ART_GUIDE; add each id to `FULL_BODY`; when all four are done, drop the set and make full body the default framing; re-run `npm run shots` so the README shows the new art). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
 2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
 3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

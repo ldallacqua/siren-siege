@@ -1,0 +1,15 @@
+Use your image generation tool to create ONE image, then save it in this directory as OUTNAME. Do not write code or edit any other file.
+
+The attached image is the current full-body portrait of Kaede Emberhorn, a heroine of my tower-defense game "Siren Siege". Redraw this same image. Keep everything the same: her face, wink and big grin, messy orange-red hair, red horns, bells and braided cords, red tribal markings, every costume detail and colour, her body pose, legs, tabi and geta sandals, proportions, art style, framing, her size and position in the canvas. Fix exactly two things:
+
+1. HER LEFT ARM (on the viewer's right, the arm without fire) is anatomically broken in the attached image: the forearm pokes out from under the sleeve with no upper arm or elbow behind it, as if the arm were snapped. Redraw this arm with correct anatomy and natural proportions, the same length as her other arm: the upper arm comes down from her shoulder, a clearly readable elbow bent outward, and the forearm comes back in to a hand resting confidently on her hip. The wide happi sleeve hangs from the upper arm and elbow in a believable way, and you can trace the whole arm from shoulder to fingertips. The forearm, wrist wrap and hand are fully visible. The hand has five fingers and rests on her hip just above the sake gourd, which hangs from the rope belt.
+
+2. HER RIGHT HAND holding the flame (on the viewer's left): redraw it as a clean open hand, palm up, five fingers, relaxed and natural, correct anatomy. The flame floats just above the palm with a small gap, not wrapped around the fingers. Nothing finger-like inside or behind the flame: no extra digits, no stumps. The flame is a solid, opaque cel-shaded shape in orange, yellow and white only, with a crisp outer edge: no see-through parts, no holes, and no blue or purple in it or around it.
+
+Character: Kaede Emberhorn, "the Oni Flame Dancer". A 29-year-old adult oni woman, athletic curvy build, sun-kissed skin, amber eyes. Outfit: cropped red-and-black festival happi jacket with gold patterns worn open and off the shoulders over a white sarashi chest wrap, short black-and-red layered skirt with a red-and-black braided rope belt and tassels, tabi socks and wooden geta sandals, a sake gourd on her hip. Loud, cheerful, cocky.
+
+Style: high-quality anime / gacha-game key art, clean lineart, cel shading with soft gradients, soft rim light, glossy highlights, detailed eyes. Clearly an adult woman, mature face and proportions, alluring, tasteful fan service, no nudity, nothing explicit. Correct hands: five fingers each. No text, logos, watermark, frame.
+
+FRAMING: tall 2:3 portrait image (1024x1536). FULL BODY from the tips of her horns to the soles of her sandals, nothing cropped, small empty margin above her horns and below her feet. Centered, standing, facing the viewer, exactly as in the attached image.
+
+Background: a perfectly flat, uniform solid pure blue (#0000FF) filling the whole image, exactly as in the attached image. No glow, gradient, shadow, floor or vignette, no blue light spilling onto her. Crisp clean edges everywhere.

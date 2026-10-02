@@ -278,6 +278,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.locator('.hpanel').waitFor({ timeout: 3000 }); // tap still hits the right heroine when zoomed
   await shot('8-zoomed');
   await page.keyboard.press('Escape');
+  await page.locator('.hpanel').waitFor({ state: 'detached' });
   const box = (await page.locator('#stage').boundingBox())!;
   const from = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   const to = { x: from.x - 60, y: from.y - 60 };
