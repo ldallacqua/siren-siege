@@ -589,8 +589,7 @@ body.in-battle .zoom-ctl {
   width: 54px;
   height: 54px;
   border-radius: 50%;
-  object-fit: cover;
-  object-position: 50% 6%;
+  overflow: hidden;
   background: var(--a, var(--ink-3));
   box-shadow:
     0 0 0 2px var(--ink-1),
@@ -2867,11 +2866,11 @@ body.in-battle .zoom-ctl {
   font-size: 16px;
 }
 .result-art {
+  flex: none;
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  object-fit: cover;
-  object-position: 50% 6%;
+  overflow: hidden;
   box-shadow:
     0 0 0 2px var(--ink-1),
     0 0 0 3px var(--c);
@@ -6105,4 +6104,44 @@ button.diary-row:hover {
 }
 .bs-diary b {
   color: var(--text-2);
+}
+
+/* ── Portrait framing ──────────────────────────────────────────────────────
+   Round avatars (.head-art, .result-art) wrap an .av-img so full-body art can be
+   zoomed to her face inside the circle. Full-body portraits (.full, see FULL_BODY
+   in progression.ts) zoom into her upper body wherever the view crops, so they read
+   like the thighs-up art; big views show her whole, head to feet. */
+.av-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 6%;
+}
+.full:is(.av-img, .card-art, .roster-art, .ut-art-img, .bc-face) {
+  object-position: 50% 0;
+  transform-origin: 50% 2%;
+  scale: 1.5;
+}
+.full.av-img,
+.pick img.full {
+  object-position: 50% 0;
+  transform-origin: 50% 2%;
+  scale: 2.4;
+}
+/* Full-body art has a real transparent background, so no edge feathering. */
+.full.home-hero {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+/* Landscape home: stand her between the title and the big buttons, boots visible. */
+@media (min-aspect-ratio: 1/1) {
+  .lobby-hero:has(.full) {
+    padding: clamp(40px, 7vh, 84px) 0 clamp(92px, 14vh, 168px);
+  }
+}
+.full.profile-art {
+  object-fit: contain;
+  object-position: 50% 100%;
+  padding-top: 12px;
 }

@@ -6,6 +6,9 @@
 //
 // Sizing: images are scaled down (never up, never cropped) to fit the box for their
 // kind — portraits 1200×1600, gallery 1600×1200, chibi 256×256. Transparency is kept.
+// Green screen: a portrait or chibi whose four corners are flat pure green (how we ask
+// image generators for a cut-out, since they rarely return real transparency) gets the
+// green keyed out to transparent, with green spill removed from her edges.
 // Uses the same browser as the smoke test (no image library dependency).
 import { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
@@ -70,23 +73,110 @@ if (jobs.length) {
     const mime = j.src.endsWith('.png') ? 'image/png' : j.src.endsWith('.webp') ? 'image/webp' : 'image/jpeg';
     const dataUrl = `data:${mime};base64,${readFileSync(j.src).toString('base64')}`;
     const res = await page.evaluate(
-      async ({ dataUrl, box, isWebp }) => {
+      async ({ dataUrl, box, isWebp, cut }) => {
         const img = new Image();
         img.src = dataUrl;
         await img.decode();
-        const k = Math.min(1, box.w / img.naturalWidth, box.h / img.naturalHeight);
-        if (isWebp && k === 1) return { skip: true, w: img.naturalWidth, h: img.naturalHeight, url: '' };
-        const w = Math.round(img.naturalWidth * k);
-        const h = Math.round(img.naturalHeight * k);
+        const src = document.createElement('canvas');
+        src.width = img.naturalWidth;
+        src.height = img.naturalHeight;
+        const sg = src.getContext('2d', { willReadFrequently: true })!;
+        sg.drawImage(img, 0, 0);
+        const data = sg.getImageData(0, 0, src.width, src.height);
+        const px = data.data;
+        // "How much greener than it is red or blue" — high on the screen, ~0 on her.
+        const greenness = (i: number) => px[i + 1] - Math.max(px[i], px[i + 2]);
+        const W = src.width;
+        const H = src.height;
+        const corners = [0, W - 1, (H - 1) * W, H * W - 1].map((n) => n * 4);
+        const keyed = cut && corners.every((i) => greenness(i) > 120 && px[i + 3] > 200);
+        if (keyed) {
+          // Pixels near the screen are a mix of her colour F and pure green: P = a·F + (1−a)·G.
+          // F is the average of the nearest solid pixels (radius 3), which gives the alpha
+          // (from the green channel) and the true colour, so edges have no green or olive fringe.
+          // Only pixels within 3 px of clear screen are touched, so gold or yellow details
+          // inside her silhouette stay as drawn.
+          const R = 3;
+          const SOLID = 6; // g − avg(r, b) at or below this is her own colour
+          const N = W * H;
+          const screen = new Uint8Array(N);
+          const tint = new Int16Array(N);
+          for (let n = 0; n < N; n++) {
+            const i = n * 4;
+            screen[n] = greenness(i) > 40 ? 1 : 0;
+            tint[n] = px[i + 1] - ((px[i] + px[i + 2]) >> 1);
+          }
+          const near = new Uint8Array(N);
+          for (let y = 0; y < H; y++)
+            for (let x = 0; x < W; x++) {
+              if (!screen[y * W + x]) continue;
+              for (let dy = -R; dy <= R; dy++) {
+                const yy = y + dy;
+                if (yy < 0 || yy >= H) continue;
+                for (let dx = -R; dx <= R; dx++) {
+                  const xx = x + dx;
+                  if (xx >= 0 && xx < W) near[yy * W + xx] = 1;
+                }
+              }
+            }
+          const solid = (m: number) => !screen[m] && tint[m] <= SOLID;
+          const out = new Uint8ClampedArray(px);
+          for (let y = 0; y < H; y++) {
+            for (let x = 0; x < W; x++) {
+              const n = y * W + x;
+              if (!near[n] || solid(n)) continue;
+              const i = n * 4;
+              let fr = 0,
+                fg = 0,
+                fb = 0,
+                cnt = 0;
+              for (let r = 1; r <= R && !cnt; r++)
+                for (let dy = -r; dy <= r; dy++) {
+                  const yy = y + dy;
+                  if (yy < 0 || yy >= H) continue;
+                  for (let dx = -r; dx <= r; dx++) {
+                    const xx = x + dx;
+                    if (xx < 0 || xx >= W) continue;
+                    const m = yy * W + xx;
+                    if (!solid(m)) continue;
+                    fr += px[m * 4];
+                    fg += px[m * 4 + 1];
+                    fb += px[m * 4 + 2];
+                    cnt++;
+                  }
+                }
+              if (!cnt) {
+                out[i + 3] = 0; // open screen
+                continue;
+              }
+              fr /= cnt;
+              fg /= cnt;
+              fb /= cnt;
+              const a = Math.max(0, Math.min(1, (255 - px[i + 1]) / Math.max(1, 255 - fg)));
+              out[i] = fr;
+              out[i + 1] = fg;
+              out[i + 2] = fb;
+              out[i + 3] = Math.round(px[i + 3] * a);
+            }
+          }
+          // Anything still clearly screen (big gaps far from her) goes fully transparent.
+          for (let n = 0; n < N; n++) if (screen[n] && !near[n]) out[n * 4 + 3] = 0;
+          data.data.set(out);
+          sg.putImageData(data, 0, 0);
+        }
+        const k = Math.min(1, box.w / W, box.h / H);
+        if (isWebp && k === 1 && !keyed) return { skip: true, keyed, w: W, h: H, url: '' };
+        const w = Math.round(W * k);
+        const h = Math.round(H * k);
         const c = document.createElement('canvas');
         c.width = w;
         c.height = h;
         const g = c.getContext('2d')!;
         g.imageSmoothingQuality = 'high';
-        g.drawImage(img, 0, 0, w, h);
-        return { skip: false, w, h, url: c.toDataURL('image/webp', 0.85) };
+        g.drawImage(src, 0, 0, w, h);
+        return { skip: false, keyed, w, h, url: c.toDataURL('image/webp', 0.85) };
       },
-      { dataUrl, box: j.box, isWebp: mime === 'image/webp' },
+      { dataUrl, box: j.box, isWebp: mime === 'image/webp', cut: j.box.w !== 1600 },
     );
     const ratio = res.w / res.h;
     const want = j.box.w / j.box.h;
@@ -96,7 +186,7 @@ if (jobs.length) {
     writeFileSync(j.out, Buffer.from(res.url.split(',')[1], 'base64'));
     if (!KEEP && j.src !== j.out) unlinkSync(j.src);
     converted++;
-    console.log(`✓ ${j.src} → ${j.out} ${res.w}×${res.h}${note}`);
+    console.log(`✓ ${j.src} → ${j.out} ${res.w}×${res.h}${res.keyed ? '  (green screen removed)' : ''}${note}`);
   }
   await browser.close();
 }

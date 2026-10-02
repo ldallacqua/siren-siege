@@ -630,7 +630,7 @@ export function showResults(r: ResultInfo, again: () => void, home: () => void):
     return h(
       'div',
       { class: 'result-row', style: `--c:${hex(d.color)}` },
-      artChain([portraitFile(g.id)], g.id, d.name, true, 'result-art'),
+      h('span', { class: 'result-art' }, artChain([portraitFile(g.id)], g.id, d.name, true, 'av-img')),
       h(
         'div',
         { class: 'grow' },

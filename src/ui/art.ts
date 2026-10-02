@@ -2,6 +2,7 @@ import { icon } from './icons.ts';
 import { calm, flipFrom } from './motion.ts';
 import { present } from './preload.ts';
 import { HEROINE_BY_ID } from '../data/heroines.ts';
+import { FULL_BODY } from '../data/progression.ts';
 
 const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
 const cache = new Map<string, string>();
@@ -49,6 +50,7 @@ function escapeXml(s: string): string {
 export function artImg(file: string, heroineId: string, label: string, portrait = true, className = ''): HTMLImageElement {
   const img = document.createElement('img');
   img.className = className;
+  if (portrait && FULL_BODY.has(heroineId)) img.classList.add('full');
   img.alt = label;
   img.decoding = 'async';
   img.loading = 'lazy';
@@ -56,6 +58,7 @@ export function artImg(file: string, heroineId: string, label: string, portrait 
   img.src = file;
   img.onerror = () => {
     img.onerror = null;
+    img.classList.remove('full');
     img.src = placeholderArt(heroineId, label, portrait);
   };
   return img;

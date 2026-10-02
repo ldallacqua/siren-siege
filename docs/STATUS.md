@@ -8,6 +8,7 @@
 
 - Full match loop on _Moonlit Shrine_: 20 waves, win/lose, results screen with Bond XP and unlock notices.
 - 4 heroines (Scarlet, Yuki, Kaede, Selene), 3 upgrade paths × 3 tiers, BTD6 crosspath rule, targeting modes, sell 70%.
+- Scarlet has full-body art (portrait + all 9 moods); `npm run art` removes a green-screen background; agents can generate art via Codex CLI (ART_GUIDE §9).
 - Enemies: 5 layered types, armored Iron Husk (immune to physical), Blight Colossus boss with HP bar.
 - Controls: speed 1×/2×/3×, auto-start, pause (auto-pauses when the tab is hidden), keyboard shortcuts.
 - Bond 1–10 (+2% attack rate/level), 8 chat episodes (2 per heroine, Bond 1 and 3), 20 gallery slots (Bond 2/4/6/8/10).
@@ -61,17 +62,16 @@
 
 ## Last session
 
-**2026-09-29 — Messages redesign + gift system, iOS PWA band (Claude, cloud session)**
+**2026-10-02 — Scarlet full-body art generated via Codex CLI (Claude, cloud session)**
 
-- Owner (iPhone 17 Pro Max, installed PWA): a band of a different color at the bottom of the app; Messages mixed every heroine's chats in one list with no order. Asked for a character select then her messages in order (NIKKE Advise), and a gift system.
-- Done: `fitStandalone()` + `html.fullh` CSS; `data/gifts.ts` (+ `tests/gifts.test.ts`); save `gifts` inventory + `gifted` per heroine (`giftCount/addGifts/giveGift` in `save.ts`); drops in `finishBattle` + results strip; `ui/giftArt.ts` badges; `ui/bond.ts` (`showMessages(back)`, `showBond(id, back)`, diary + gift sheets inside the screen, updated in place). Smoke: 4 cards, gift raises XP without re-render, diary has 5 rows (`1c`–`1g` screenshots).
-- Follow-up (owner feedback): the title card now preloads every portrait + chibi with a loading bar before "Tap to begin" (capped 8 s); home heroine centered in portrait; chat name plate is solid (the box line showed through); diary restyled as our own dark journal (moon clasp) and "Rank" renamed "Bond" so the Bond screen doesn't echo NIKKE's look; `show()` resets any stray page scroll.
-- Owner confirmed: the iOS bottom band is gone.
-- Previously unverified: the iOS band fix could only be reasoned about (no iOS device in CI); if the band remains, check `--app-h` in Safari Web Inspector.
-- Earlier today: heroine panel over the map, preloading, PWA, bigger outlined heroines, upgrade tree.
+- Owner asked whether an agent could use his ChatGPT plan to make the art. Answer: Codex CLI signs in with the plan (`codex login --device-auth`) and has image generation; workflow documented in `docs/ART_GUIDE.md` §9. Owner also asked for **full-body** portraits so legs are never cropped.
+- Done: Scarlet's new `portrait.webp` (full body, approved by the owner; second take fixed her trigger fingers) and all 9 moods, generated with her portrait as reference on a flat green background. Silhouettes differ from the base by < 0.5 %, so she doesn't jump between moods in chats.
+- `npm run art` now removes a green screen (corners pure green → keyed; edge colour unmixed from the nearest solid pixels, only within 3 px of the screen).
+- `FULL_BODY` in `progression.ts` marks heroines with full-body art; `artImg`/`artChain` add `.full`, and CSS zooms small views (shop card, roster, avatars, Messages card, tree) to her upper body while home and profile show her head to feet. Round avatars (`.head-art`, `.result-art`) now wrap an `.av-img`. Bond (portrait) and chat stay close-ups.
+- Not done: Yuki, Kaede and Selene are still thighs-up; Scarlet's chibi and gallery are unchanged.
 
 ## Next up
 
-1. **Owner check on iPhone:** is the bottom band gone in the installed app? Try Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+1. **Full-body art for Yuki, Kaede, Selene** (owner wants them all; same Codex workflow, §9 of ART_GUIDE; add each id to `FULL_BODY`; when all four are done, drop the set and make full body the default framing). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
 2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
 3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

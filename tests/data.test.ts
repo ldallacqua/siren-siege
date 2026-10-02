@@ -4,7 +4,7 @@ import { EPISODES, PROLOGUE } from '../src/data/dialogues.ts';
 import { ENEMIES, ENEMY_BY_ID, rbe } from '../src/data/enemies.ts';
 import { HEROINES } from '../src/data/heroines.ts';
 import { MAPS, WAVES } from '../src/data/maps.ts';
-import { BOND_XP, GALLERY, MAX_BOND } from '../src/data/progression.ts';
+import { BOND_XP, FULL_BODY, GALLERY, MAX_BOND } from '../src/data/progression.ts';
 import { Path } from '../src/game/sim/path.ts';
 
 /** Moods the art pipeline knows about (docs/ART_DIRECTION.md). */
@@ -176,5 +176,12 @@ describe('progression', () => {
       expect(g.level).toBeLessThanOrEqual(MAX_BOND);
       expect(g.file).toMatch(new RegExp(`^art/${g.heroine}/gallery-\\d+\\.webp$`));
     }
+  });
+});
+
+describe('art framing', () => {
+  it('FULL_BODY only names real heroines', () => {
+    const ids = new Set(HEROINES.map((h) => h.id));
+    for (const id of FULL_BODY) expect(ids.has(id), id).toBe(true);
   });
 });

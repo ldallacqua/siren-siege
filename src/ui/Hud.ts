@@ -117,7 +117,7 @@ export class Hud {
           });
         },
       },
-      artImg(portraitFile(def.id), def.id, def.name, true, 'head-art'),
+      h('span', { class: 'head-art' }, artImg(portraitFile(def.id), def.id, def.name, true, 'av-img')),
     );
   }
 

@@ -10,6 +10,8 @@ This is the hands-on companion to [`ART_DIRECTION.md`](ART_DIRECTION.md) (the st
 > 4. Ask ChatGPT to convert them all to correctly named WebP files (§6, Option A), **or** just upload the PNGs with the right names and ask a coding agent to run `npm run art` (Option B).
 > 5. Upload into `public/art/<heroine>/` on GitHub (§6.3). The site redeploys by itself in about 3 minutes.
 
+> **Agents can generate the art themselves** with the owner's ChatGPT plan through the Codex CLI: see §9.
+
 ---
 
 ## 1. What the game needs
@@ -18,8 +20,8 @@ There are 4 heroines. Each uses the same set of files. **Everything is optional*
 
 | File                                | Ideal size      | Pick in ChatGPT        | Background                  | Where it appears                                                 |
 | ----------------------------------- | --------------- | ---------------------- | --------------------------- | ---------------------------------------------------------------- |
-| `portrait.webp`                     | 1200×1600 (3:4) | Portrait / tall (2:3)  | **Transparent**             | Shop cards, home screen, roster, profile, results, battle panel  |
-| `portrait-<mood>.webp` (×9 moods)   | 1200×1600 (3:4) | Portrait / tall (2:3)  | **Transparent**             | Chat scenes: her expression changes line by line                 |
+| `portrait.webp`                     | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Shop cards, home screen, roster, profile, results, battle panel  |
+| `portrait-<mood>.webp` (×9 moods)   | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Chat scenes: her expression changes line by line                 |
 | `chibi.webp`                        | 256×256 (1:1)   | Square                 | **Transparent**             | Her little figure standing on the battlefield (the actual tower) |
 | `gallery-1.webp` … `gallery-5.webp` | 1600×1200 (4:3) | Landscape / wide (3:2) | Full scene (no transparent) | Unlockable gallery pictures (Bond levels 2, 4, 6, 8, 10)         |
 
@@ -62,9 +64,10 @@ public/art/
 Follow these rules or faces get cut off:
 
 - **Portraits (`portrait*.webp`)**
-  - Small UI cards crop from the **top** down, so her **face must be in the top third** of the image, with a little space above her head.
-  - Framing: **thighs-up**, centered, facing the viewer. Don't crop the top of her head or her hair ornaments.
-  - Chat scenes show the **whole** image, anchored to the bottom of the screen and layered over a dark background. That is why the background must be **transparent** (a white box behind her looks bad). A plain dark background is the next-best option.
+  - Framing: **full body**, head to feet, centered, standing, facing the viewer, with a small margin above her head and below her shoes. Nothing cropped (not her hair ornaments, not her heels).
+  - The home screen and profile show her whole. Small cards, avatars and the chat zoom in on her upper body automatically, so her face should be near the top (it is, in a standing full-body pose).
+  - After adding a heroine's first full-body portrait, add her id to `FULL_BODY` in `src/data/progression.ts` (that switches her small views to the zoomed framing). Older thighs-up art still works without it.
+  - The background must be **transparent** (a box behind her looks bad on the home screen). Image generators rarely give real transparency, so ask for a **flat solid pure green (#00FF00)** background instead: `npm run art` detects green corners and removes the green automatically, edges included.
   - **All moods must match `portrait.webp` exactly** (same pose, crop, outfit, size and position). Only the face and maybe the arms change. In chats, the game swaps one mood image for another, so if the body moves she will visibly "jump".
 - **Chibi (`chibi.webp`)**
   - It is drawn about **one map tile tall**, which is tiny (roughly 40–80 px on screen). It needs a bold silhouette, big head, simple shapes, her signature color and weapon, and no fine details.
@@ -111,9 +114,10 @@ Style for every image:
 - No text, no logos, no watermark, no signature, no UI, no frame.
 
 Rules I'll reference:
-- "PORTRAIT RULES": tall 2:3 image, thighs-up, centered, facing the viewer, face in
-  the top third with a little space above the head, TRANSPARENT background (no
-  scenery, no floor, no shadow).
+- "PORTRAIT RULES": tall 2:3 image, FULL BODY from the top of the head to the soles of
+  the shoes, nothing cropped, small margin above the head and below the feet,
+  centered, standing, facing the viewer. Background: perfectly flat solid pure green
+  (#00FF00), no glow, gradient, floor or shadow, no green light on her.
 - "CHIBI RULES": square image, cute 2.5-heads-tall chibi version of her, full body,
   3/4 view with her body and weapon facing to the RIGHT side of the image, feet near
   the bottom edge, bold simple shapes that read at 64 px, TRANSPARENT background, no
@@ -183,7 +187,7 @@ Character: Selene Moonwhisper, "the Moon Priestess". A 26-year-old adult woman.
 ### 5.3 Main portrait → `portrait.webp`
 
 ```
-Generate her main portrait following the PORTRAIT RULES. Thighs-up, standing in a
+Generate her main portrait following the PORTRAIT RULES. Full body, standing in a
 confident relaxed pose, holding her weapon/magic, looking at the viewer with her
 default expression. This will be the reference image for every other picture of her,
 so make the outfit and hair clear and complete.
@@ -198,7 +202,7 @@ Send one message per mood:
 ```
 Using the exact same character, pose, outfit, framing, size and position as the
 approved main portrait, change ONLY her facial expression (and her hands/arms if
-needed) to: [EXPRESSION]. Keep the PORTRAIT RULES and transparent background. Her
+needed) to: [EXPRESSION]. Keep the PORTRAIT RULES and the green background. Her
 body must stay in exactly the same place so the images can be swapped seamlessly.
 ```
 
@@ -326,3 +330,21 @@ Uploading a file with the same name replaces the old picture, so re-doing an ima
 - Every heroine is an adult (the age is stated in the prompts). The ceiling is **suggestive, never nude or explicit**. This keeps the game hostable.
 - Don't use copyrighted characters or a living artist's name as a style reference.
 - If you ever sell the game, keep the ChatGPT conversations: they record that the images are yours to use under OpenAI's terms.
+
+## 9. Generating art from a coding agent (Codex CLI)
+
+OpenAI's Codex CLI signs in with the owner's ChatGPT plan (no API key) and has a built-in image generator, so a cloud agent can make the art directly. This is how Scarlet's full-body set was made.
+
+1. Install and sign in (the cloud container is wiped between sessions, so this is needed each session; never store the login in the repo):
+   ```
+   npm i --prefix "$SCRATCH" @openai/codex
+   "$SCRATCH/node_modules/.bin/codex" login --device-auth
+   ```
+   It prints a link and a one-time code (15 minutes). Give both to the owner; he approves on his phone. `codex login status` confirms.
+2. Generate one image per call, with the approved image as reference (`-i`). Put the prompt **after `--`**: `-i` takes several files and would swallow it otherwise.
+   ```
+   codex exec --skip-git-repo-check -s workspace-write -C <dir> -i ref.png -- "Use your image generation tool to create ONE image, then save it in this directory as smile.png. …" < /dev/null
+   ```
+   Each image takes about 5–7 minutes; three in parallel works. Ask for the green background (§5.1 PORTRAIT RULES) and say the body must stay exactly in place for moods.
+3. Show the owner the main portrait before making moods from it. Check moods line up (Scarlet's differed from the base by < 0.5 % of the silhouette).
+4. Copy the PNGs into `public/art/<id>/` with their final names and run `npm run art` (green is removed there), then `npm run smoke` and look at home, profile, chat and Bond screenshots.

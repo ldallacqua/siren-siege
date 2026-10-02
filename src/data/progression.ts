@@ -41,6 +41,14 @@ export const GALLERY: GalleryItem[] = HEROINES.flatMap((h) =>
   })),
 );
 
+/**
+ * Heroines whose portraits (and all their moods) are full body, head to feet, rather
+ * than the older thighs-up framing. Small cropped views zoom in on their upper body;
+ * big views (home, chat, Bond, lightbox) show them whole. Remove the set once every
+ * heroine has full-body art and make it the default framing in style.css.
+ */
+export const FULL_BODY: ReadonlySet<string> = new Set(['scarlet']);
+
 /** Portrait used in shop, chat and roster. Mood variants: portrait-<mood>.webp */
 export function portraitFile(heroine: string, mood?: string): string {
   return mood ? `art/${heroine}/portrait-${mood}.webp` : `art/${heroine}/portrait.webp`;

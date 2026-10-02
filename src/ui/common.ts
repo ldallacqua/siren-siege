@@ -1,4 +1,4 @@
-import { MAX_BOND, bondProgress } from '../data/progression.ts';
+import { FULL_BODY, MAX_BOND, bondProgress } from '../data/progression.ts';
 import { save } from '../state/save.ts';
 import { placeholderArt } from './art.ts';
 import { present } from './preload.ts';
@@ -58,12 +58,14 @@ export function show(el: HTMLElement): void {
 /** Image with a chain of candidate files, ending in the generated placeholder. */
 export function artChain(files: string[], heroine: string, label: string, portrait = true, className = ''): HTMLImageElement {
   const img = h('img', { class: className, alt: label, draggable: false, decoding: 'async' });
+  if (portrait && FULL_BODY.has(heroine)) img.classList.add('full');
   files = present(files);
   let i = 0;
   const next = () => {
     if (i < files.length) img.src = files[i++];
     else {
       img.onerror = null;
+      img.classList.remove('full');
       img.src = placeholderArt(heroine, label, portrait);
     }
   };
