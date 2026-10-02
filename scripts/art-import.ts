@@ -104,7 +104,8 @@ if (jobs.length) {
           // pixels, up to 6 px away; a is P projected onto the G→F line. That keeps soft
           // hair edges and translucent cloth (see-through instead of green) and leaves no
           // green or olive fringe. Rule for the art: nothing on her may be the screen colour.
-          const R = 6;
+          const BLUE = C === 2;
+          const R = BLUE ? 12 : 6;
           const SOLID = 4; // greenness at or below this is her own colour…
           const N = W * H;
           const gr = new Int16Array(N);
@@ -112,18 +113,28 @@ if (jobs.length) {
           // …except next to the screen (within 3 px of clear screen), where a warm colour
           // blended with it (red hair + green = olive) is unmixed too. Gold and orange
           // (red well above the screen channel) and anything farther inside stay as drawn.
-          const near = new Uint8Array(N);
-          for (let y = 0; y < H; y++)
-            for (let x = 0; x < W; x++) {
-              if (gr[y * W + x] <= 40) continue;
-              for (let yy = Math.max(0, y - 3); yy <= Math.min(H - 1, y + 3); yy++)
-                for (let xx = Math.max(0, x - 3); xx <= Math.min(W - 1, x + 3); xx++) near[yy * W + xx] = 1;
-            }
+          const nearScreen = (r: number) => {
+            const near = new Uint8Array(N);
+            for (let y = 0; y < H; y++)
+              for (let x = 0; x < W; x++) {
+                if (gr[y * W + x] <= 40) continue;
+                for (let yy = Math.max(0, y - r); yy <= Math.min(H - 1, y + r); yy++)
+                  for (let xx = Math.max(0, x - r); xx <= Math.min(W - 1, x + r); xx++) near[yy * W + xx] = 1;
+              }
+            return near;
+          };
+          const near = nearScreen(3);
+          // On a blue screen, fire and red hair blended with it turn purple: bluer than
+          // green but not bluer than red, and several pixels deep where a flame is
+          // translucent. Within 8 px of clear screen that purple is unmixed as well.
+          // Rule for the art: a heroine keyed on blue has no saturated purple at her edges.
+          const wide = BLUE ? nearScreen(8) : null;
           const solid = new Uint8Array(N);
           for (let n = 0; n < N; n++) {
             const i = n * 4;
             const olive = near[n] && px[i + C] >= px[i] - 15 && px[i + C] > px[i + O2] + 20;
-            solid[n] = gr[n] <= SOLID && !olive ? 1 : 0;
+            const purple = wide !== null && wide[n] && px[i + 2] > px[i + 1] + 24 && px[i + 1] < 150;
+            solid[n] = gr[n] <= SOLID && !olive && !purple ? 1 : 0;
           }
           const out = new Uint8ClampedArray(px);
           for (let y = 0; y < H; y++) {

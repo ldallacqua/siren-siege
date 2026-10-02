@@ -162,11 +162,14 @@ Character: Yuki Frostveil, "the Snow Witch". A 24-year-old adult yuki-onna (snow
 
 ```
 Character: Kaede Emberhorn, "the Oni Flame Dancer". A 29-year-old adult oni woman.
-- Short-to-mid-length messy orange-red hair, two red horns, amber eyes, athletic
-  curvy build, sun-kissed skin with red tribal markings on arms and cheeks.
-- Outfit: cropped red-and-black festival happi jacket worn open over a white sarashi
-  chest wrap, short hakama, tabi socks and geta sandals, sake gourd on her hip.
-- Magic: flames dancing in her hand.
+- Short-to-mid-length messy orange-red hair with red braided cords and gold bells,
+  two red horns, amber eyes, athletic curvy build, sun-kissed skin with red tribal
+  markings on her arms, cheeks and one thigh.
+- Outfit: cropped red-and-black festival happi jacket with gold patterns worn open
+  and off the shoulders over a white sarashi chest wrap, short black-and-red layered
+  skirt with a red-and-black braided rope belt and tassels, tabi socks and geta
+  sandals, sake gourd on her hip.
+- Magic: a flame floating above her open palm (solid and opaque, clear of her hand).
 - Signature color: ember-orange (#ff7a1a), with red and black.
 - Personality/default expression: loud, cheerful, cocky; big grin and a wink.
 ```
@@ -345,6 +348,6 @@ OpenAI's Codex CLI signs in with the owner's ChatGPT plan (no API key) and has a
    ```
    codex exec --skip-git-repo-check -s workspace-write -C <dir> -i ref.png -- "Use your image generation tool to create ONE image, then save it in this directory as smile.png. …" < /dev/null
    ```
-   Each image takes about 5–7 minutes; three in parallel works. Ask for the green background (§5.1 PORTRAIT RULES) and say the body must stay exactly in place for moods.
+   Each image takes about 5–7 minutes (about 2 on the owner's PC); three in parallel works. Ask for the green background (§5.1 PORTRAIT RULES) and say the body must stay exactly in place for moods. For a heroine with fire or yellow (Kaede), ask for pure blue (#0000FF) instead, and for a solid, opaque flame that floats clear of her hand: a see-through flame lets the screen colour into the fire.
 3. Show the owner the main portrait before making moods from it. Check moods line up (Scarlet's differed from the base by < 0.5 % of the silhouette).
 4. Copy the PNGs into `public/art/<id>/` with their final names and run `npm run art` (green is removed there), then `npm run smoke` and look at home, profile, chat and Bond screenshots.

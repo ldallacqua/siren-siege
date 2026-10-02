@@ -17,6 +17,12 @@ All paths below are relative to `public/art/`.
 
 The owner explicitly reduced the full 64-image brief to an MVP pass. Other expressions intentionally fall back to the matching main portrait; gallery slots 2–5 retain their placeholders. Do not treat the remaining 45 images as a release blocker.
 
+## Full-body sets (2026-10-02)
+
+Scarlet, Yuki and Kaede now have a full-body `portrait.webp` and all nine `portrait-<mood>.webp` (1024×1536 with alpha), replacing the thighs-up files above. They were generated through the Codex CLI (ART_GUIDE §9) and keyed by `npm run art`: Scarlet and Yuki on green, Kaede on blue because of her flame. Each mood was generated from the approved portrait with only the face changing. Selene still has the MVP files.
+
+Kaede's approved design, for future art of her: left hand on her hip with the elbow out, the happi jacket off both shoulders, a flame floating above her open right palm, a layered black-and-red skirt with a braided rope belt, a red marking on her left thigh, the sake gourd hanging at her left hip.
+
 ## Visual reference and prompt set
 
 Use each committed `portrait.webp` as the identity reference for future art. Follow [ART_DIRECTION.md](ART_DIRECTION.md) and [ART_GUIDE.md](ART_GUIDE.md), with these production choices:
