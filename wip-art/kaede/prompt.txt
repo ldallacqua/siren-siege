@@ -1,0 +1,11 @@
+Use your image generation tool to create ONE image, then save it in this directory as v1.png. Do not write code or edit any other file.
+
+The attached image is the reference character, Kaede Emberhorn, from my tower-defense game "Siren Siege". Keep her look: face, amber eyes, red horns, messy orange-red hair with red braided cords and gold bells, red tribal markings, outfit, colors, the flame in her hand and the sake gourd. Fix any messy details of the reference: clean, coherent costume construction, clean anatomy.
+
+Character: Kaede Emberhorn, "the Oni Flame Dancer". A 29-year-old adult oni woman. Short-to-mid-length messy orange-red hair, two red horns, amber eyes, athletic curvy build, sun-kissed skin with red tribal markings on her arms, cheeks and one thigh. Outfit: cropped red-and-black festival happi jacket with gold patterns worn open and off the shoulders over a white sarashi chest wrap, a short black-and-red layered skirt with a red-and-black braided rope belt and tassels, tabi socks and wooden geta sandals, a sake gourd hanging on her hip. A small flame dancing above her raised open hand. Signature color ember-orange (#ff7a1a) with red and black. Loud, cheerful, cocky: big confident grin and a wink.
+
+Style: high-quality anime / gacha-game key art, clean lineart, cel shading with soft gradients, soft rim light, glossy highlights, detailed eyes. Clearly an adult woman, mature face and proportions, alluring, tasteful fan service, no nudity, nothing explicit. Correct hands: five fingers each, natural poses. No text, logos, watermark, frame.
+
+FRAMING (most important): tall 2:3 portrait image (1024x1536). FULL BODY from the tips of her horns to the soles of her sandals, nothing cropped. Small empty margin above her horns and below her feet. Centered, standing in a confident relaxed pose, facing the viewer.
+
+Background: a perfectly flat, uniform solid pure green (#00FF00) filling the whole image. No glow, gradient, shadow, floor or vignette, no green light spilling onto her. Crisp clean edges. Keep the flame orange and yellow (no green in it).
