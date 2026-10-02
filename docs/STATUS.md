@@ -68,6 +68,7 @@
 - Done: Scarlet's new `portrait.webp` (full body, approved by the owner; second take fixed her trigger fingers) and all 9 moods, generated with her portrait as reference on a flat green background. Silhouettes differ from the base by < 0.5 %, so she doesn't jump between moods in chats.
 - `npm run art` now removes a green screen (corners pure green → keyed; each green-tinted pixel is unmixed against the nearest solid colour up to 6 px away, which keeps soft hair and translucent cloth). Yuki's full-body portrait (approved) + 9 moods are in, same method (moods within 0.5 % of the base silhouette).
 - `FULL_BODY` in `progression.ts` marks heroines with full-body art; `artImg`/`artChain` add `.full`, and CSS frames her upper body everywhere: home and profile head to mid-thigh with a bottom fade (owner preference, after a first version showed her whole), cards/avatars closer; "View full art" shows the full body. Round avatars (`.head-art`, `.result-art`) now wrap an `.av-img`. Bond (portrait) and chat stay close-ups.
+- Service worker: art is now network-first and the cache is `v2` (the owner's phone showed old Yuki art inside the new framing).
 - Not done: Kaede and Selene are still thighs-up; Scarlet's chibi and gallery are unchanged.
 - Previously (2026-09-29, local session): focus-ring and locked-chat fixes, `.githooks/pre-push` runs check + smoke before a push (D-024), generated README images (`npm run shots`, D-025).
 
