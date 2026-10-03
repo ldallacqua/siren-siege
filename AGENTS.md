@@ -8,7 +8,7 @@ This file is the single source of truth for any AI coding agent (Claude Code, Co
 
 - Live: https://ldallacqua.github.io/siren-siege/ (served from the `gh-pages` branch, deployed by CI on every push to `main`)
 - Owner: Lucas (ldallacqua). Talks to agents in English or Portuguese.
-- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · **UI look: `docs/UI_STYLE.md` (read before any UI/CSS/battlefield change)** · **Story canon: `docs/LORE.md` (read before writing chats, bios or enemies)** · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names)
+- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · **UI look: `docs/UI_STYLE.md` (read before any UI/CSS/battlefield change)** · **Story canon: `docs/LORE.md` (read before writing chats, bios or enemies)** · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names) + **`docs/ART_QA.md` (the gate every heroine's art must pass)**
 
 ## 2. Resume protocol (do this first, every session)
 
@@ -32,18 +32,19 @@ The next agent has **no memory of your session** — if it isn't in the repo, it
 
 ## 4. Commands
 
-| Command          | What it does                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------------ |
-| `npm run dev`    | Dev server on :5173. Open `/?dev` for dev mode (all unlocked, 20k gold, `window.siren` debug hook)     |
-| `npm run check`  | **The gate.** Prettier check + typecheck (app and node) + unit tests + balance sim + production build  |
-| `npm test`       | Vitest unit tests (`tests/`): data integrity + simulation behavior                                     |
-| `npm run sim`    | Headless balance bot plays all 20 waves and prints per-wave lives/cash (`npm run sim -- scarlet yuki`) |
-| `npm run smoke`  | Build + real-browser test at 1280×720, 390×844 touch, 844×390 touch; screenshots → `artifacts/smoke/`  |
-| `npm run fx`     | Build + fires each heroine's effects for 5 upgrade builds side by side; screenshots → `artifacts/fx/`  |
-| `npm run format` | Prettier write                                                                                         |
-| `npm run shots`  | Build + regenerate the README images in `docs/readme/` (`-- --banner`: banner and heroine cards only)  |
-| `npm run art`    | Convert PNG/JPG in `public/art/<id>/` to correctly sized WebP, delete sources, list misnamed files     |
-| `npm run build`  | Typecheck + Vite build to `dist/`                                                                      |
+| Command             | What it does                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`       | Dev server on :5173. Open `/?dev` for dev mode (all unlocked, 20k gold, `window.siren` debug hook)                        |
+| `npm run check`     | **The gate.** Prettier check + typecheck (app and node) + unit tests + balance sim + production build                     |
+| `npm test`          | Vitest unit tests (`tests/`): data integrity + simulation behavior                                                        |
+| `npm run sim`       | Headless balance bot plays all 20 waves and prints per-wave lives/cash (`npm run sim -- scarlet yuki`)                    |
+| `npm run smoke`     | Build + real-browser test at 1280×720, 390×844 touch, 844×390 touch; screenshots → `artifacts/smoke/`                     |
+| `npm run fx`        | Build + fires each heroine's effects for 5 upgrade builds side by side; screenshots → `artifacts/fx/`                     |
+| `npm run format`    | Prettier write                                                                                                            |
+| `npm run shots`     | Build + regenerate the README images in `docs/readme/` (`-- --banner`: banner and heroine cards only)                     |
+| `npm run art`       | Convert PNG/JPG in `public/art/<id>/` to correctly sized WebP, delete sources, list misnamed files, then run the art gate |
+| `npm run art:check` | **The art gate** (`docs/ART_QA.md`): measured checks per heroine + review sheets → `artifacts/art-check/`                 |
+| `npm run build`     | Typecheck + Vite build to `dist/`                                                                                         |
 
 **Look at the smoke screenshots** (`artifacts/smoke/*.png`) after UI changes — that's how you "see" the game. The smoke test finds Chromium via `$CHROME_PATH`, then `@sparticuz/chromium` (bundled via npm, works in sandboxed/cloud Linux where browser downloads are blocked), then Playwright's own (`npx playwright-core install chromium` on macOS/Windows).
 
@@ -87,7 +88,7 @@ src/
   state/save.ts    localStorage save (versioned), bond XP, unlocks, ?dev flag
   main.ts          Boot, DPR-aware resize, app flow (home ↔ battle ↔ results), match XP awards
   style.css        All styling; orientation handled with aspect-ratio media queries
-scripts/           balance-sim.ts, smoke.ts, art-import.ts, make-icons.ts (PWA icons), session-start.sh
+scripts/           balance-sim.ts, smoke.ts, art-import.ts + art-check.ts (the art gate; chroma.ts keying, artSpec.ts file spec, browser.ts), make-icons.ts (PWA icons), session-start.sh
 public/sw.js       Service worker (installable PWA, offline); public/manifest.webmanifest
 tests/             data, sim, chibi, camera and audio tests
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
@@ -107,7 +108,7 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 
 **Write a chat:** read `docs/LORE.md` first. Add a `ChatEpisode` (with a `scene`) to `EPISODES` using the `her()/nar()/pick()/you()/end()` helpers. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of: smile, tease, smirk, wink, laugh, blush, shy, pout, grin. Tests verify links, reachability and endings.
 
-**Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots.
+**Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots. Art is not done until it passes the art gate (`docs/ART_QA.md`): `npm run art:check` green, the review sheets looked at (count fingers on every hand), and the owner's sign-off recorded in the ART_QA status table.
 
 **Add a new screen:** add a `showX()` in `ui/screens.ts` that builds DOM with `h()` and calls `show()`. Style in `style.css` with a portrait and a short-landscape variant.
 

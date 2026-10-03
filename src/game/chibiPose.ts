@@ -67,6 +67,39 @@ export interface FrameMetrics {
   legsX: number;
 }
 
+/**
+ * Where the figure sits in a chibi image, in pixels of the image (divide by its size
+ * for FrameMetrics). `rgba` is the image's pixel data; "her" is alpha above 128.
+ */
+export function measureFigure(rgba: ArrayLike<number>, w: number, h: number): FrameMetrics {
+  const solid = (i: number, y: number) => rgba[(y * w + i) * 4 + 3] > 128;
+  let feet = h;
+  find: for (let y = h - 1; y >= 0; y--)
+    for (let i = 0; i < w; i++)
+      if (solid(i, y)) {
+        feet = y + 1;
+        break find;
+      }
+  // Top of her head: the middle columns only, so weapons and effects off to the side don't count.
+  let top = 0;
+  find2: for (let y = 0; y < h; y++)
+    for (let i = Math.round(w * 0.3); i < w * 0.65; i++)
+      if (solid(i, y)) {
+        top = y;
+        break find2;
+      }
+  // Middle of her legs: mean opaque column over the bottom 15 % of the figure.
+  let sum = 0;
+  let n = 0;
+  for (let y = Math.max(0, Math.round(feet - (feet - top) * 0.15)); y < feet; y++)
+    for (let i = 0; i < w; i++)
+      if (solid(i, y)) {
+        sum += i;
+        n++;
+      }
+  return { feet, top, legsX: n ? sum / n : w / 2 };
+}
+
 /** Front-frame origin (fraction of the texture) that the battlefield anchors at her ground spot. */
 export const BASE_ORIGIN = { x: 0.5, y: 0.82 };
 

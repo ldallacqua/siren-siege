@@ -2344,6 +2344,25 @@ body.in-battle .zoom-ctl {
   mask-image: linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
   -webkit-mask-image: linear-gradient(90deg, transparent, black 14%, black 86%, transparent);
 }
+/* Desktop and tall landscape: full-body art framed head to mid-thigh (1.6× the area,
+   top-anchored, the dialogue box covers her legs), like the home screen. Without a
+   sized grid track the image used to show at its natural 1536 px whatever the screen:
+   head-to-waist on a laptop, and stretched 2× (blurry) at 200 % display scaling.
+   --art-max (set by chat.ts) keeps her from being stretched past MAX_UPSCALE; on such
+   screens she shows a little smaller, sharp. Phones keep her whole figure. */
+@media (min-aspect-ratio: 1/1) and (min-height: 521px) {
+  .chat-portrait {
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  }
+  .chat-portrait .chat-art.full {
+    height: min(160%, var(--art-max, 160%));
+    width: auto;
+    max-width: none;
+    align-self: start;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
 .chat-portrait .chat-art.enter {
   animation:
     mood-in 0.26s ease-out,
@@ -6224,6 +6243,14 @@ button.diary-row:hover {
   height: calc((100% - var(--hero-bottom)) * 1.6);
   object-fit: contain;
   transform-origin: 50% 30%;
+}
+/* Desktop-shaped screens: never stretched past MAX_UPSCALE (--art-max, set by
+   capUpscale() in common.ts), so 200 % display scaling doesn't blur her. Phones are
+   dense enough that the stretch doesn't show, and keep their framing. */
+@media (min-aspect-ratio: 1/1) and (min-height: 521px) {
+  .full.home-hero {
+    height: min(calc((100% - var(--hero-bottom)) * 1.6), var(--art-max, 9999px));
+  }
 }
 @media (max-aspect-ratio: 1/1) {
   .lobby-hero:has(.full) {

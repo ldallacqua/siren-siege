@@ -10,7 +10,7 @@ import type { ChatEpisode, GalleryItem } from '../data/types.ts';
 import { dev, heroineLevel, isMapUnlocked, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
 import { openLightbox } from './art.ts';
 import { playChat, startAmbient, type Ambient } from './chat.ts';
-import { artChain, bondBar, closeScreens, show, topbar } from './common.ts';
+import { artChain, bondBar, capUpscale, closeScreens, show, topbar } from './common.ts';
 import { h, hex, toast } from './dom.ts';
 import { applyCalm, parallax, stagger, tilt } from './motion.ts';
 import { showUpgradeTree } from './upgradeTree.ts';
@@ -67,7 +67,7 @@ export function showHome(a: HomeActions): void {
     );
 
   const heroFor = (id: string) => {
-    const img = artChain([portraitFile(id)], id, HEROINE_BY_ID[id].name, true, 'home-hero');
+    const img = capUpscale(artChain([portraitFile(id)], id, HEROINE_BY_ID[id].name, true, 'home-hero'));
     img.draggable = false;
     return img;
   };

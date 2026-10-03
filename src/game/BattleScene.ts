@@ -13,6 +13,7 @@ import {
   chibiPose,
   frameFit,
   frameSuffix,
+  measureFigure,
   towerPresence,
   type ChibiFrame,
   type Facing,
@@ -95,33 +96,7 @@ function measure(img: HTMLImageElement): { feet: number; top: number; legsX: num
   c.height = hgt;
   const x = c.getContext('2d', { willReadFrequently: true })!;
   x.drawImage(img, 0, 0);
-  const d = x.getImageData(0, 0, w, hgt).data;
-  const solid = (i: number, y: number) => d[(y * w + i) * 4 + 3] > 128;
-  let feet = hgt;
-  find: for (let y = hgt - 1; y >= 0; y--)
-    for (let i = 0; i < w; i++)
-      if (solid(i, y)) {
-        feet = y + 1;
-        break find;
-      }
-  // Top of her head: the middle columns only, so weapons and effects off to the side don't count.
-  let top = 0;
-  find2: for (let y = 0; y < hgt; y++)
-    for (let i = Math.round(w * 0.3); i < w * 0.65; i++)
-      if (solid(i, y)) {
-        top = y;
-        break find2;
-      }
-  // Middle of her legs: mean opaque column over the bottom 15 % of the figure.
-  let sum = 0;
-  let n = 0;
-  for (let y = Math.max(0, Math.round(feet - (feet - top) * 0.15)); y < feet; y++)
-    for (let i = 0; i < w; i++)
-      if (solid(i, y)) {
-        sum += i;
-        n++;
-      }
-  return { feet, top, legsX: n ? sum / n : w / 2 };
+  return measureFigure(x.getImageData(0, 0, w, hgt).data, w, hgt);
 }
 
 /**

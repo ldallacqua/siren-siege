@@ -323,10 +323,10 @@ Upload the PNG or JPG files with the right names (for example `portrait-tease.pn
 
 ```
 npm run art      # converts public/art/**/*.png|jpg → correctly sized .webp, deletes the originals,
-                 # and lists any misnamed files or folders
+                 # lists any misnamed files or folders, then runs the art gate (npm run art:check)
 ```
 
-Then it runs the smoke test, looks at the screenshots, and commits.
+Then it reviews the gate's sheets in `artifacts/art-check/` (hands zoomed in every portrait), runs the smoke test, and shows you what needs your sign-off. Art counts as ready only after the gate: see [ART_QA.md](ART_QA.md).
 
 ### 6.3 Uploading on GitHub (works from the phone browser)
 
@@ -382,3 +382,4 @@ OpenAI's Codex CLI signs in with the owner's ChatGPT plan (no API key) and has a
    Each image takes about 5–7 minutes (about 2 on the owner's PC); three in parallel works. Ask for the green background (§5.1 PORTRAIT RULES) and say the body must stay exactly in place for moods. For a heroine with fire or yellow (Kaede), ask for pure blue (#0000FF) instead, and for a solid, opaque flame that floats clear of her hand: a see-through flame lets the screen colour into the fire. If the image tool refuses a mood, retry once with plainer wording for the expression (Selene's `tease` passed as "a playful, amused smile with one eyebrow slightly raised"); don't push past a second refusal.
 3. Show the owner the main portrait before making moods from it. Check moods line up (Scarlet's differed from the base by < 0.5 % of the silhouette).
 4. Copy the PNGs into `public/art/<id>/` with their final names and run `npm run art` (green is removed there), then `npm run smoke` and look at home, profile, chat and Bond screenshots.
+5. Keep the source PNGs until the owner signs off (`npm run art -- --keep`, or generate in a scratch folder and copy): the keyer improves over time and re-keying from the source is the only clean way to fix an edge problem later (Scarlet's and Yuki's sources were lost). Run the art gate ([ART_QA.md](ART_QA.md)) and fix every ✗ before showing the owner.

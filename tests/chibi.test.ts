@@ -1,6 +1,6 @@
 // Pose math for the optional chibi tower sprites (BattleScene draws them when art exists).
 import { describe, expect, it } from 'vitest';
-import { FLIP_DEADZONE, chibiFrame, chibiPose, frameFit, towerPresence } from '../src/game/chibiPose.ts';
+import { FLIP_DEADZONE, chibiFrame, chibiPose, frameFit, measureFigure, towerPresence } from '../src/game/chibiPose.ts';
 
 describe('chibiPose', () => {
   it('faces the aim direction, with a deadzone for near-vertical aim', () => {
@@ -69,6 +69,17 @@ describe('chibiFrame', () => {
     expect((small.feet - fit.oy) * fit.k).toBeCloseTo(base.feet - 0.82);
     // Measurement failures leave the frame alone
     expect(frameFit(base, { feet: 0.5, top: 0.5, legsX: 0.5 }).k).toBe(1);
+  });
+
+  it('measures feet, head top and legs from the pixels', () => {
+    // 10×10 image: a body column at x = 4..5 from y = 2 to 8, a staff at x = 9 reaching y = 0
+    const w = 10;
+    const px = new Uint8ClampedArray(w * w * 4);
+    const set = (x: number, y: number) => (px[(y * w + x) * 4 + 3] = 255);
+    for (let y = 2; y <= 8; y++) for (const x of [4, 5]) set(x, y);
+    for (let y = 0; y <= 6; y++) set(9, y);
+    // the staff is outside the middle columns: the head top is the body's
+    expect(measureFigure(px, w, w)).toEqual({ feet: 9, top: 2, legsX: 4.5 });
   });
 
   it('does not squash when a drawn attack frame takes over', () => {

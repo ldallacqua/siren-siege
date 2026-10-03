@@ -6,6 +6,21 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ---
 
+### B-18 · P1 · Every heroine through the art gate (owner sign-off)
+
+The art gate (`docs/ART_QA.md`) is in place and every heroine passes its automated half; Nemu is incomplete (no gallery). Remaining is the owner's half, per the ART_QA status table:
+
+- Owner reviews `artifacts/art-check/<id>-*.png` (or the game) and signs off each heroine's moods, chibi front pose and gallery; record it in the ART_QA table.
+- Anything rejected gets redrawn (ART_GUIDE §9) and goes through `npm run art` → `npm run art:check` again.
+- Likely redraws already known: the front chibis of Scarlet, Yuki and Kaede and their `gallery-1` predate the full-body portraits (B-01); Nemu's five gallery pictures.
+- Accept: every row in the ART_QA status table reads "ready".
+
+### B-19 · P3 · Sharper portraits for large high-DPI screens (owner decision)
+
+Portraits are 1536 px tall (the generator's maximum). On a 4K screen at 200 % the chat and home now show her smaller (head to ankle) to stay sharp (`MAX_UPSCALE` 1.25), where 1080p shows head to mid-thigh. Getting that framing back needs portraits ~3000 px tall: an AI upscaler (e.g. Real-ESRGAN anime, a new local tool) or a generator that outputs larger images. Every upscaled portrait goes through the art gate again (hands!).
+
+- Accept: owner chooses; if done, `MAX_UPSCALE` framing on 4K matches 1080p and the gate passes.
+
 ### B-03b · P1 · Juice follow-ups
 
 B-03 shipped (synth SFX + music, particles, floating gold, shake, settings). Remaining:

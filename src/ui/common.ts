@@ -74,6 +74,25 @@ export function artChain(files: string[], heroine: string, label: string, portra
   return img;
 }
 
+/**
+ * Most screen pixels one art pixel may cover where portraits are shown big (home,
+ * chat). Portraits are 1536 px tall; on a 4K screen at 200 % those screens stretched
+ * them 2× (blurry). 1.25 still looks sharp.
+ */
+export const MAX_UPSCALE = 1.25;
+
+/**
+ * Sets --art-max on a big portrait: the tallest it may be drawn (CSS px) without
+ * passing MAX_UPSCALE. The screen's CSS uses it in min(); on high-DPI screens she
+ * shows a little smaller instead of blurry.
+ */
+export function capUpscale(img: HTMLImageElement): HTMLImageElement {
+  const cap = () => img.style.setProperty('--art-max', `${(img.naturalHeight * MAX_UPSCALE) / devicePixelRatio}px`);
+  if (img.complete && img.naturalHeight) cap();
+  img.addEventListener('load', cap);
+  return img;
+}
+
 /** Bond level + progress. With `fromXp`, the fill animates up from that value (results screen). */
 export function bondBar(id: string, fromXp?: number): HTMLElement {
   const xp = save.heroines[id]?.xp ?? 0;

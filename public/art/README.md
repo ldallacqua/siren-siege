@@ -10,4 +10,4 @@ Missing files show generated placeholders.
 
 **How to make these images (ChatGPT prompts), name them and upload them: [docs/ART_GUIDE.md](../../docs/ART_GUIDE.md).** Style bible: docs/ART_DIRECTION.md.
 
-PNG/JPG uploads are fine too: run `npm run art` to convert them to correctly sized WebP (and to list misnamed files).
+PNG/JPG uploads are fine too: run `npm run art` to convert them to correctly sized WebP (and to list misnamed files). Then the art gate runs: see [docs/ART_QA.md](../../docs/ART_QA.md).

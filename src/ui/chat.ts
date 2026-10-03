@@ -4,7 +4,7 @@ import { HEROINE_BY_ID } from '../data/heroines.ts';
 import { GALLERY, MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode, ChatNode, ChatScene } from '../data/types.ts';
 import { addXp, persist, reducedMotion, save } from '../state/save.ts';
-import { artChain, show } from './common.ts';
+import { artChain, capUpscale, show } from './common.ts';
 import { h, hex } from './dom.ts';
 import { icon } from './icons.ts';
 import { chatFiles, preloadAll } from './preload.ts';
@@ -143,6 +143,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     if (m === mood && portrait.firstChild) return;
     mood = m;
     const img = artChain([portraitFile(ep.heroine, m), portraitFile(ep.heroine)], ep.heroine, d.name, true, 'chat-art enter');
+    capUpscale(img);
     // Swap only once the new face is decoded, so the old one never blinks out first.
     const swap = () => {
       if (mood !== m) return;
