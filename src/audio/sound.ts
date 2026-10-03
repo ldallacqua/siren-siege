@@ -77,7 +77,7 @@ const GAP: Partial<Record<SfxName, number>> = {
 };
 
 /** Per-heroine voice pitch multiplier for chat text blips. */
-export const VOICE: Record<string, number> = { scarlet: 1.2, yuki: 2.1, kaede: 1.45, selene: 1.75 };
+export const VOICE: Record<string, number> = { scarlet: 1.2, yuki: 2.1, kaede: 1.45, selene: 1.75, nemu: 1.95 };
 
 interface Player {
   id: string;
@@ -410,6 +410,7 @@ class Sound {
           const L = lookFor(f.hero ?? '', f.tiers);
           if (L.sig === 'sniper') return this.play('sniper');
           if (L.sig === 'starfall') this.play('chime');
+          if (f.hero === 'nemu') return this.play('arrow', 1.5 - L.power * 0.2);
           return this.play(f.hero === 'scarlet' ? 'gun' : f.hero === 'selene' ? 'arrow' : 'bolt', 1.1 - L.power * 0.2);
         }
       case 'hit':

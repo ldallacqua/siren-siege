@@ -311,6 +311,9 @@ export class Vfx {
     } else if (f.hero === 'selene') {
       this.ring({ style: 'flash', x: mx, y: my, r0: 0.05, r1: 0.16 * S, color: L.spark, alpha: 0.8, life: 0.12 });
       if (L.t[2] >= 2) this.ring({ x: mx, y: my, r0: 0.1, r1: 0.45 * S, width: 0.03, color: L.body, life: 0.2 });
+    } else if (f.hero === 'nemu') {
+      this.p({ kind: 'star', x: mx, y: my, z: 0.15, color: 0xf2f4ff, size: 0.08 * S, life: 0.12, drag: 0 });
+      if (L.t[2] >= 2) this.spray(mx, my, n(2), { kind: 'streak', color: L.spark, size: 0.02, life: 0.12, drag: 8 }, 6 * S, a, 0.5);
     } else if (f.hero === 'kaede') {
       this.spray(f.x, f.y, n(2), { kind: 'ember', color: L.spark, size: 0.05, vz: 1, life: 0.35 }, 1.2, a, 1.2);
       if (L.sig === 'oni')
@@ -341,6 +344,30 @@ export class Vfx {
         this.ring({ style: 'burst', x: f.x, y: f.y, r0: 0.1, r1: 0.8, width: 0.04, color: L.spark, alpha: 1, life: 0.3, count: 8 });
         this.spray(f.x, f.y, n(3), { kind: 'star', color: 0xffffff, size: 0.08, vz: 2, grav: 5, life: 0.6, drag: 1 }, 1.4);
       }
+    } else if (f.hero === 'nemu') {
+      this.ring({ x: f.x, y: f.y, r0: 0.05, r1: 0.2 * S, width: 0.03, color: L.body, life: 0.15 });
+      this.spray(f.x, f.y, n(2), { kind: 'dot', color: L.spark, size: 0.05 * S, vz: 0.6, grav: -0.4, life: 0.7, drag: 3 }, 0.6);
+      if (L.sig === 'sweetdreams') {
+        this.ring({ style: 'shock', x: f.x, y: f.y, r0: 0.1, r1: 0.55, width: 0.04, color: 0xf0b0ff, alpha: 0.8, life: 0.35 });
+        this.spray(f.x, f.y, n(3), { kind: 'dot', color: 0xf6d8ff, size: 0.08, vz: 0.8, grav: -0.5, life: 1, drag: 2 }, 0.8);
+      }
+      if (L.sig === 'devour') {
+        // a bite out of the nightmare
+        this.ring({ style: 'flash', x: f.x, y: f.y, r0: 0.05, r1: 0.35, color: 0xff4f9a, alpha: 0.8, life: 0.1 });
+        this.ring({
+          style: 'crescent',
+          x: f.x,
+          y: f.y,
+          r0: 0.15,
+          r1: 0.5,
+          width: 0.09,
+          color: 0x3a0620,
+          alpha: 0.9,
+          life: 0.3,
+          angle: a + Math.PI,
+        });
+      }
+      if (L.sig === 'parade') this.p({ kind: 'star', x: f.x, y: f.y, z: 0.2, vz: 0.8, color: 0xfff0f6, size: 0.09, life: 0.4, drag: 1 });
     } else if (f.hero === 'yuki') {
       this.spray(f.x, f.y, n(2), { kind: 'shard', color: L.spark, size: 0.05 * S, life: 0.35, drag: 4, spin: rand(-10, 10) }, 2.4, a, 1.4);
       if (L.sig === 'shatter') {
@@ -656,7 +683,9 @@ export class Vfx {
         ? 5 + L.t[2] * 3 + (L.sig === 'sniper' ? 8 : 0)
         : hero === 'selene'
           ? 6 + L.t[2] * 2 + (L.sig === 'starfall' ? 8 : 0)
-          : 6 + Math.round(L.power * 6) + (L.sig === 'oni' ? 6 : 0);
+          : hero === 'nemu'
+            ? 4 + L.t[2] * 2
+            : 6 + Math.round(L.power * 6) + (L.sig === 'oni' ? 6 : 0);
     if (running) {
       trail.push({ x: p.x, y: p.y, z });
       while (trail.length > trailLen) trail.shift();
@@ -760,6 +789,29 @@ export class Vfx {
       }
       if (running && Math.random() < 0.3 + L.power * 0.6)
         this.p({ kind: 'star', x: p.x, y: p.y, z, color: L.spark, size: rand(0.03, 0.06) * S, life: 0.4 + L.power * 0.3, drag: 2 });
+      return;
+    }
+
+    if (hero === 'nemu') {
+      const sp = Math.hypot(p.vx, p.vy) || 1;
+      const ux = (v.portrait ? p.vy : p.vx) / sp;
+      const uy = (v.portrait ? p.vx : p.vy) / sp;
+      for (let i = 1; i < trail.length; i++) {
+        const a = trail[i - 1];
+        const b = trail[i];
+        const k = i / trail.length;
+        gl.lineStyle(T * 0.05 * S * k, L.trail, 0.25 * k);
+        gl.lineBetween(X(a), Y(a), X(b), Y(b));
+      }
+      const len = T * 0.3 * S;
+      gl.lineStyle(Math.max(1.5, T * 0.03 * S), 0xf2f4ff, 1);
+      gl.lineBetween(x - ux * len, y - uy * len, x + ux * len * 0.25, y + uy * len * 0.25);
+      gl.fillStyle(L.rim, 0.5);
+      gl.fillCircle(x - ux * len, y - uy * len, T * 0.07 * S);
+      gl.fillStyle(L.body, 1);
+      gl.fillCircle(x - ux * len, y - uy * len, T * 0.045 * S);
+      if (running && L.t[0] > 0 && Math.random() < 0.15 + L.t[0] * 0.1)
+        this.p({ kind: 'dot', x: p.x, y: p.y, z, vz: 0.4, grav: -0.3, color: L.spark, size: rand(0.03, 0.05), life: 0.6, drag: 2 });
       return;
     }
 

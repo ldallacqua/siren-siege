@@ -47,9 +47,9 @@ Easy / Normal / Hard / Impoppable: multipliers on enemy speed, start cash, lives
 
 - Accept: stored per map+difficulty in save (migrate save v1 → v2).
 
-### B-10 · P3 · Heroines 5–8
+### B-10 · P3 · Heroines 6–8
 
-Kunoichi (camo detection, shuriken pierce), mecha pilot (long range, missiles), succubus (charm: enemies walk backwards briefly), pirate captain (economy + cannon). Each needs data, chats, art sheet in ART_DIRECTION.
+Heroine 5 (Nemu, the Dream Eater) shipped 2026-10-03. Ideas for the rest: kunoichi (camo detection, shuriken pierce), mecha pilot (long range, missiles), succubus (charm: enemies walk backwards briefly), pirate captain (economy + cannon). Each needs data, chats, art sheet in ART_DIRECTION.
 
 - Blocked by: B-06 for the kunoichi's identity.
 
@@ -83,7 +83,7 @@ Alternate outfits unlocked at Bond 7; outfit picker in profile; art file naming 
 
 The MVP pass is complete: 19 assets (all four portraits/chibis/First Impression scenes plus seven expressions). See `docs/ART_ASSETS.md`. The owner explicitly requested the most important images only; completing all 64 is not a release gate.
 
-- Follow the approved full-body portraits (designs in `docs/ART_ASSETS.md`). All 20 gallery pictures are done (Selene's `gallery-1` was redone in her new gown). Selene's chibi still shows her old closed-neck gown and small bow, Kaede's chibi and `gallery-1` show her old pose, and Scarlet's and Yuki's `gallery-1` predate their full-body portraits: redo them from the new portraits when this item is picked up.
+- Follow the approved full-body portraits (designs in `docs/ART_ASSETS.md`). Nemu has no gallery pictures yet (all five slots are placeholders; the two portrait poses the owner liked, lollipop-in-mouth with pins on her shoulder and a raised pin, are candidates). The other heroines' 20 gallery pictures are done (Selene's `gallery-1` was redone in her new gown). Selene's chibi still shows her old closed-neck gown and small bow, Kaede's chibi and `gallery-1` show her old pose, and Scarlet's and Yuki's `gallery-1` predate their full-body portraits: redo them from the new portraits when this item is picked up.
 - Accept: no body/framing jump between expressions, proper alpha, no face cropping in cards, gallery lightboxes and all three smoke viewports verified.
 
 ### B-16 · P2 · Main story chapters

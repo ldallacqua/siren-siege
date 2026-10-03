@@ -38,6 +38,8 @@ const AMBIENT: Record<ChatScene, Ambient> = {
   parlor: 'sparkle',
   moongate: 'motes',
   archive: 'dust',
+  teahouse: 'lanterns',
+  dream: 'motes',
 };
 
 const PAUSE: Record<string, number> = { '.': 170, '!': 170, '?': 170, ',': 80, ';': 90, ':': 90, '—': 120 };

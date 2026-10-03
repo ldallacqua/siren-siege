@@ -47,7 +47,7 @@ export const GALLERY: GalleryItem[] = HEROINES.flatMap((h) =>
  * big views (home, chat, Bond, lightbox) show them whole. Remove the set once every
  * heroine has full-body art and make it the default framing in style.css.
  */
-export const FULL_BODY: ReadonlySet<string> = new Set(['scarlet', 'yuki', 'kaede', 'selene']);
+export const FULL_BODY: ReadonlySet<string> = new Set(['scarlet', 'yuki', 'kaede', 'selene', 'nemu']);
 
 /** Portrait used in shop, chat and roster. Mood variants: portrait-<mood>.webp */
 export function portraitFile(heroine: string, mood?: string): string {

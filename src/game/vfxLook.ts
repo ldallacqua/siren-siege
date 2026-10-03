@@ -7,13 +7,28 @@
 
 /** Tier-3 signature effects, one per path per heroine (see heroines.ts path names). */
 export type Signature =
-  'heartseeker' | 'twin' | 'sniper' | 'zero' | 'shatter' | 'tempest' | 'lotus' | 'fireworks' | 'oni' | 'goddess' | 'treasury' | 'starfall';
+  | 'heartseeker'
+  | 'twin'
+  | 'sniper'
+  | 'zero'
+  | 'shatter'
+  | 'tempest'
+  | 'lotus'
+  | 'fireworks'
+  | 'oni'
+  | 'goddess'
+  | 'treasury'
+  | 'starfall'
+  | 'sweetdreams'
+  | 'devour'
+  | 'parade';
 
 const SIGNATURES: Record<string, [Signature, Signature, Signature]> = {
   scarlet: ['heartseeker', 'twin', 'sniper'],
   yuki: ['zero', 'shatter', 'tempest'],
   kaede: ['lotus', 'fireworks', 'oni'],
   selene: ['goddess', 'treasury', 'starfall'],
+  nemu: ['sweetdreams', 'devour', 'parade'],
 };
 
 export interface Look {
@@ -78,6 +93,14 @@ const PALETTES: Record<string, { base: number[]; paths: number[][] }> = {
       [0xffffff, 0xfff0c8, 0xd8b060, 0xfff0c8, 0xffe8a0], // blessing: holy gold-white
       [0xfff8e0, 0xffd23f, 0xb08a20, 0xffe08a, 0xffe3a3], // tribute: coin gold
       [0xffffff, 0xa8c8ff, 0x5a6ae0, 0xd0e0ff, 0xf6eeff], // lunar arrows: starlight blue
+    ],
+  },
+  nemu: {
+    base: [0xffffff, 0xff7ab0, 0xb0185a, 0xe8e8f4, 0xffc0dc],
+    paths: [
+      [0xffffff, 0xf0b0ff, 0x9a5ad0, 0xf6d8ff, 0xffe0f6], // lullaby: dreamy lavender-pink
+      [0xffe0ec, 0xd01a6a, 0x3a0620, 0xff4f9a, 0xff8ac0], // bitter feast: dark nightmare red
+      [0xffffff, 0xffa0c8, 0xe0407a, 0xffffff, 0xfff0f6], // sleepwalker: candy and silver
     ],
   },
 };

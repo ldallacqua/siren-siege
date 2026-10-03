@@ -710,10 +710,32 @@ body.in-battle .zoom-ctl {
     padding: 10px 12px;
   }
   .cards {
-    grid-template-columns: repeat(4, 1fr);
+    /* one row, however many heroines there are */
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 6px;
   }
   .card {
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 3 / 4;
+  }
+  .card-name {
+    font-size: 12px;
+    letter-spacing: 0;
+    padding: 0 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-cost {
+    font-size: 13px;
+    padding: 0 5px 6px;
+  }
+  .card-lvl {
+    top: 4px;
+    right: 4px;
+    font-size: 10px;
+    padding: 1px 4px;
   }
   .paths {
     flex-direction: row;
@@ -748,8 +770,30 @@ body.in-battle .zoom-ctl {
   .btn.icon {
     min-width: 34px;
   }
+  .cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
   .card {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 3 / 4;
+  }
+  .card-name {
+    font-size: 11px;
+    letter-spacing: 0;
+    padding: 0 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .card-cost {
+    font-size: 12px;
+    padding: 0 5px 5px;
+  }
+  .card-lvl {
+    top: 4px;
+    right: 4px;
+    font-size: 10px;
+    padding: 1px 4px;
   }
   .card-key,
   .dock .label,
@@ -2175,6 +2219,24 @@ body.in-battle .zoom-ctl {
   background:
     radial-gradient(circle at 70% 25%, rgba(255, 210, 150, 0.35), transparent 30%),
     repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.35) 0 1%, transparent 1% 9%);
+}
+.scene-teahouse .chat-scene {
+  background: linear-gradient(180deg, #2a0f1e 0%, #160811 70%, #0a0408 100%);
+}
+.scene-teahouse .scene-a {
+  background:
+    radial-gradient(circle at 18% 30%, rgba(255, 120, 170, 0.38), transparent 16%),
+    radial-gradient(circle at 80% 26%, rgba(255, 170, 120, 0.32), transparent 15%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 0.6%, transparent 0.6% 12%);
+  animation: flicker 3.2s ease-in-out infinite;
+}
+.scene-dream .chat-scene {
+  background: linear-gradient(180deg, #3a1f4a 0%, #2a1530 50%, #120a18 100%);
+}
+.scene-dream .scene-a {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 170, 210, 0.3), transparent 30%),
+    radial-gradient(circle at 72% 60%, rgba(190, 170, 255, 0.25), transparent 32%);
 }
 @keyframes flicker {
   0%,

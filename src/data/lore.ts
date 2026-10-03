@@ -116,6 +116,23 @@ export const STORIES: Record<string, StoryEntry[]> = {
       text: 'The old texts say the priestess who sings the final seal on the night of the Crimson Eclipse becomes the Lady’s light. Selene has always assumed it would be her, and decided to enjoy the time she had.',
     },
   ],
+  nemu: [
+    {
+      level: 1,
+      title: 'The dream eater',
+      text: 'A baku from Yumeji, the sleepy tea-house town of the eastern isles, where her family brewed dream tea and she ate whatever nightmares came with it. She is 21, the youngest Siren, and asleep most of the time.',
+    },
+    {
+      level: 4,
+      title: 'Burnt sugar',
+      text: 'Nightmares used to taste like burnt sugar. Since the Blight rose, every one in Yumeji tastes of the Hollow Sea. A baku cannot refuse a bad dream, so she ate them all. The town sleeps soundly; she only naps, and keeps a lollipop in her mouth to kill the taste.',
+    },
+    {
+      level: 8,
+      title: 'No dreams of her own',
+      text: 'Baku never dream. Every night she gets everyone else’s worst ones and none of her own. She says she does not mind. She minds.',
+    },
+  ],
 };
 
 /** Lines she says when you tap her in the lobby (a few unlock with Bond). */
@@ -155,5 +172,14 @@ export const IDLE_LINES: Record<string, { level: number; text: string }[]> = {
     { level: 5, text: 'The cracks close faster when you visit. I shall start charging admission.' },
     { level: 7, text: "Don't look at the scroll. Look at me. Much nicer to read." },
     { level: 9, text: 'I have decided to grow old here and be terribly bossy. You are included.' },
+  ],
+  nemu: [
+    { level: 1, text: '...Mm? Oh. It’s you. Wake me when something explodes.' },
+    { level: 1, text: 'Don’t poke. I bite. Not hard. Still.' },
+    { level: 1, text: 'This is my working face. Yes, the eyes are always like this.' },
+    { level: 3, text: 'Three lollipops per wave. I checked the contract. You owe me two.' },
+    { level: 5, text: 'Warm tea tonight? I’ll tell you a bitter story and you can make a face.' },
+    { level: 7, text: 'You slept fine last night. I made sure. Don’t ask how.' },
+    { level: 9, text: 'I dreamed about you again. Don’t make that face. ...Okay, make it a little.' },
   ],
 };

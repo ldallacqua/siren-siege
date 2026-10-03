@@ -128,7 +128,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await shot('1b-lobby-talk');
   await page.getByRole('button', { name: 'Messages' }).click();
   await page.locator('.bond-card').first().waitFor();
-  assert((await page.locator('.bond-card').count()) === 4, 'Messages should list one card per heroine');
+  assert((await page.locator('.bond-card').count()) === 5, 'Messages should list one card per heroine');
   await shot('1c-messages');
   // Her Bond screen: gift (raises Bond, updates in place), diary in episode order
   await page.locator('button.bond-card').first().click();
@@ -351,7 +351,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     for (const heroine of Object.values(progress) as { xp: number }[]) heroine.xp = 100; // Bond 2
   });
   await page.getByRole('button', { name: 'Gallery', exact: true }).click();
-  const heroineIds = ['scarlet', 'yuki', 'kaede', 'selene'];
+  const heroineIds = ['scarlet', 'yuki', 'kaede', 'selene', 'nemu'];
   for (const [index, id] of heroineIds.entries()) {
     await page
       .locator('.gallery-section')
@@ -366,6 +366,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     }
     await shot(`7-gallery-${id}`);
     await page.locator('.lightbox').click();
+    await page.locator('.lightbox').waitFor({ state: 'detached' });
   }
 
   // Settings: audio sliders and toggles persist in the save

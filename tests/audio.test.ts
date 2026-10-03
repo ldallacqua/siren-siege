@@ -31,7 +31,7 @@ describe('audio tuning', () => {
 
   it('menus and every heroine have a lofi track', () => {
     expect(TRACKS.menu?.style).toBe('lofi');
-    for (const id of ['scarlet', 'yuki', 'kaede', 'selene']) expect(TRACKS[`chat-${id}`]?.style, id).toBe('lofi');
+    for (const id of ['scarlet', 'yuki', 'kaede', 'selene', 'nemu']) expect(TRACKS[`chat-${id}`]?.style, id).toBe('lofi');
   });
 
   it('every track is a real song form, long enough not to feel loopy', () => {

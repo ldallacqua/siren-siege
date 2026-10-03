@@ -26,6 +26,7 @@ const SIGNATURE: Record<string, [string, string, string]> = {
   yuki: ['Frost rune', 'Shattering ice', 'Spinning blizzard'],
   kaede: ['Flame lotus', 'Firework shells', 'Oni meteor'],
   selene: ['Goddess halo', 'Golden tribute', 'Falling stars'],
+  nemu: ['Dream bubbles', 'Nightmare bite', 'Pin parade'],
 };
 
 const ROMAN = ['I', 'II', 'III'];

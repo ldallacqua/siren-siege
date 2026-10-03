@@ -333,6 +333,78 @@ export const HEROINES: HeroineDef[] = [
       },
     ],
   },
+  {
+    id: 'nemu',
+    name: 'Nemu Sugardream',
+    title: 'Dream Eater',
+    age: 21,
+    archetype: 'Baku dream eater — sleepy, deadpan, secretly sweet',
+    bio: 'A baku from the dream-tea houses of Yumeji, who ate a whole town’s nightmares until the bitter taste never left. She naps fourteen hours a day, works for candy, and pins the Blight in place with two silver hairpins. Whatever hits her pins falls asleep.',
+    color: 0xff4f9a,
+    accent: 0x1a0612,
+    cost: 260,
+    base: baseStats({ attack: 'bolt', range: 2.7, rate: 1.25, damage: 1, pierce: 1, projSpeed: 16, stun: 0.25 }),
+    unlock: { wave: 15, label: 'Reach wave 15 on any map' },
+    paths: [
+      {
+        name: 'Lullaby',
+        tiers: [
+          { name: 'Heavy Eyelids', desc: 'Sleep lasts 0.5s.', cost: 220, apply: (s) => void (s.stun = Math.max(s.stun, 0.5)) },
+          { name: 'Counting Sheep', desc: 'Pins pass through 3 more enemies.', cost: 420, apply: (s) => void (s.pierce += 3) },
+          {
+            name: 'Sweet Dreams',
+            desc: 'Hit enemies stay drowsy (slowed 30%) and take +2 damage from everyone.',
+            cost: 1700,
+            apply: (s) => {
+              s.slow = Math.max(s.slow, 0.3);
+              s.slowDur = Math.max(s.slowDur, 1.5);
+              s.bonusVsSlowed += 2;
+            },
+          },
+        ],
+      },
+      {
+        name: 'Bitter Feast',
+        tiers: [
+          { name: 'Sweet Tooth', desc: '+1 damage per pin.', cost: 200, apply: (s) => void (s.damage += 1) },
+          { name: 'Nightmare Venom', desc: 'Pins deal magic damage (hits armor).', cost: 380, apply: (s) => void (s.dtype = 'magic') },
+          {
+            name: 'Devour',
+            desc: '+3 damage, triple damage to bosses.',
+            cost: 2000,
+            apply: (s) => {
+              s.damage += 3;
+              s.bossMult *= 3;
+            },
+          },
+        ],
+      },
+      {
+        name: 'Sleepwalker',
+        tiers: [
+          { name: 'Fidget', desc: '+30% throw rate.', cost: 220, apply: (s) => void (s.rate *= 1.3) },
+          {
+            name: 'Second Pin',
+            desc: 'Throws both pins: 2 per attack.',
+            cost: 480,
+            apply: (s) => {
+              s.multishot = Math.max(s.multishot, 2);
+              s.spread = 0.22;
+            },
+          },
+          {
+            name: 'Night Parade',
+            desc: '3 pins per attack, +40% throw rate.',
+            cost: 1900,
+            apply: (s) => {
+              s.multishot = Math.max(s.multishot, 3);
+              s.rate *= 1.4;
+            },
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export const HEROINE_BY_ID: Record<string, HeroineDef> = Object.fromEntries(HEROINES.map((h) => [h.id, h]));

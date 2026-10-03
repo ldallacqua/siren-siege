@@ -7,12 +7,12 @@
 ## What works
 
 - Full match loop on _Moonlit Shrine_: 20 waves, win/lose, results screen with Bond XP and unlock notices.
-- 4 heroines (Scarlet, Yuki, Kaede, Selene), 3 upgrade paths × 3 tiers, BTD6 crosspath rule, targeting modes, sell 70%.
-- All four heroines have full-body art (portrait + all 9 moods) and all five gallery pictures (First Impression, Off Duty, Poolside, After Hours, Heart Unveiled); `npm run art` removes a green-screen background (or a blue one, used for Kaede's fire); agents can generate art via Codex CLI (ART_GUIDE §9).
+- 5 heroines (Scarlet, Yuki, Kaede, Selene, Nemu), 3 upgrade paths × 3 tiers, BTD6 crosspath rule, targeting modes, sell 70%.
+- All five heroines have full-body art (portrait + all 9 moods) and a chibi; the first four also have all five gallery pictures (First Impression, Off Duty, Poolside, After Hours, Heart Unveiled); `npm run art` removes a green-screen background (or a blue one, used for Kaede's fire); agents can generate art via Codex CLI (ART_GUIDE §9).
 - Enemies: 5 layered types, armored Iron Husk (immune to physical), Blight Colossus boss with HP bar.
 - Controls: speed 1×/2×/3×, auto-start, pause (auto-pauses when the tab is hidden), keyboard shortcuts.
 - Bond 1–10 (+2% attack rate/level), 8 chat episodes (2 per heroine, Bond 1 and 3), 20 gallery slots (Bond 2/4/6/8/10).
-- Unlocks: Kaede after reaching wave 10, Selene after clearing wave 20.
+- Unlocks: Kaede after reaching wave 10, Nemu after wave 15, Selene after clearing wave 20.
 - Responsive: landscape sidebar, portrait bottom dock with transposed map, short-landscape compact mode. Touch/mouse/keyboard.
 - Battlefield chibi sprites: drop `public/art/<id>/chibi.webp` and towers render it (idle bob, recoil on attack, flips toward the target); falls back to colored discs per heroine when missing.
 - **MVP art shipped:** 19 generated WebP assets: portraits, right-facing transparent chibis and First Impression gallery scenes for all four heroines; seven expression variants. See `docs/ART_ASSETS.md` for inventory and prompts.
@@ -61,7 +61,15 @@
 
 ## Last session
 
-**2026-10-03 — Gallery 4 and 5 for all four heroines; Selene's gallery 1 redone (Claude, local Windows session)**
+**2026-10-03 — New heroine: Nemu Sugardream, the Dream Eater (Claude, local Windows session)**
+
+- The owner asked for a fifth heroine who looks like Ellen Joe from Zenless Zone Zero (looks only: he explicitly did not want a shark girl), a petite 21-year-old, with lore and weapon of my choosing; he approved the concept. Nemu is a **baku** (eats nightmares) from Yumeji, the tea-house town of the eastern isles; weapon: two silver kanzashi hairpins that put what they hit to sleep. Canon, arc and relationships are in `docs/LORE.md`.
+- Art: full-body `portrait.webp` (owner picked candidate A of three; he loved the other two poses too but they had hand problems) and all nine moods (silhouettes within 0.6 % of the base, hands checked in every mood), chibi (candidate B of two, not yet confirmed by the owner). No gallery pictures yet: her five slots show placeholders.
+- Game: `heroines.ts` (cost 260, unlock at wave 15, pins stun 0.25 s; paths Lullaby / Bitter Feast / Sleepwalker, signatures Sweet Dreams / Devour / Night Parade), five chats (Bond 1, 3, 5, 7, 9), two new chat scenes (`teahouse`, `dream`), a new gift (Swirl Lollipop; she loves candy and dango, likes tea), codex story entries, lobby lines, chat music (`chat-nemu`), voice pitch, effects (silver pin with a pink bead, sleep bubbles on hit, a bite on Devour), upgrade emblems. Balance sim: Nemu alone loses at wave 9 (Scarlet alone: 10); Nemu + Yuki at 15, same as Kaede + Yuki.
+- Five shop cards: the phone-portrait dock now keeps every card on one row (smaller names), and the short-landscape sidebar uses three columns, so the fifth card no longer falls off screen.
+- Smoke expects five Messages cards and waits for each gallery lightbox to close (Nemu's placeholder opened while Selene's was still closing). `npm run fx` now honours `$CHROME_PATH`.
+
+**Previously, 2026-10-03 — Gallery 4 and 5 for all four heroines; Selene's gallery 1 redone (Claude, local Windows session)**
 
 - The owner asked for `gallery-4` (After Hours, Bond 8) and `gallery-5` (Heart Unveiled, Bond 10) for every heroine, plus Selene's `gallery-1` redone with her cleavage (the old one had her closed-neck gown). All ten are in and approved by him. Scenes follow each heroine's Bond 7 and Bond 9 arcs in `docs/LORE.md`; the table is in `docs/ART_ASSETS.md`.
 - It took three rounds: he rejected five of my first nine for hands I had passed (a nail on the palm side of a finger, a finger lost behind a wine glass, a bad nail and a sticking-out little finger, and cupped hands in front of Selene's chest that read as a third breast). Edits that redraw one hand fixed two; fresh takes with simpler hand poses fixed the rest. Kaede's needed a new setup with no palm-up hand. Lessons in `docs/ART_ASSETS.md`.
@@ -102,6 +110,7 @@
 
 ## Next up
 
-1. **Owner check of Kaede's and Selene's moods** (open a chat with each; any face he dislikes is one Codex image to redo with her `portrait.webp` as the reference, Kaede on blue, Selene on green). Then **T-08** (drop the `FULL_BODY` set, full body becomes the default framing). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
-2. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
-3. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.
+1. **Nemu follow-ups (owner):** confirm her chibi (B, two pins forward, is shipped; A, mid-throw, is the alternative), play her chats, and decide what to do with the two portrait poses he also liked (my suggestion: use them as gallery pictures). Her five gallery pictures are still placeholders (B-01).
+2. **Owner check of Kaede's and Selene's moods** (open a chat with each; any face he dislikes is one Codex image to redo with her `portrait.webp` as the reference, Kaede on blue, Selene on green). Then **T-08** (drop the `FULL_BODY` set, full body becomes the default framing). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
+3. **Art:** more mood portraits now matter more (20 chats use all 9 moods), and scene backgrounds could become real art later (`.scene-*` in `style.css`).
+4. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.

@@ -32,7 +32,7 @@ export interface HomeActions {
 let featured = '';
 
 /** Lobby particles behind each heroine. */
-const LOBBY_FX: Record<string, Ambient> = { scarlet: 'petals', yuki: 'snow', kaede: 'embers', selene: 'sparkle' };
+const LOBBY_FX: Record<string, Ambient> = { scarlet: 'petals', yuki: 'snow', kaede: 'embers', selene: 'sparkle', nemu: 'motes' };
 
 /** Chats the player can open but hasn't finished yet. */
 function newChats(): ChatEpisode[] {
@@ -350,7 +350,7 @@ function audioControls(): HTMLElement {
 function keyList(): HTMLElement {
   const rows: [string, string][] = [
     ['Space', 'Start next wave'],
-    ['1–4', 'Pick a heroine to deploy'],
+    ['1–5', 'Pick a heroine to deploy'],
     ['Q W E', 'Upgrade paths of the selected heroine'],
     ['Tab', 'Change targeting'],
     ['Del', 'Sell'],

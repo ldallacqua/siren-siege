@@ -372,6 +372,42 @@ export const TRACKS: Record<string, Track> = {
     },
     form: ['A:bare', 'A', 'B', 'A', 'C:soft', 'C', 'B', 'A:soft'],
   },
+  // Nemu: Ab major, a slow, sleepy lullaby with long rests.
+  'chat-nemu': {
+    style: 'lofi',
+    bpm: 62,
+    arp: [2, 4, 3, 5, 4, 3, 2, 3],
+    sections: {
+      A: {
+        chords: 'Abmaj7 Fm7 Dbmaj7 Eb6',
+        melody: [
+          [5, -1, -1, 4, -1, -1, -1, -1],
+          [-1, -1, 3, -1, -1, -1, -1, -1],
+          [4, -1, -1, -1, 5, -1, 4, -1],
+          [-1, -1, -1, -1, -1, -1, -1, -1],
+        ],
+      },
+      B: {
+        chords: 'Cm7 Fm7 Bbm7 Eb7',
+        melody: [
+          [-1, -1, 5, -1, -1, 6, -1, -1],
+          [5, -1, -1, -1, -1, -1, -1, -1],
+          [-1, 4, -1, -1, 3, -1, -1, -1],
+          [4, -1, -1, -1, -1, -1, -1, -1],
+        ],
+      },
+      C: {
+        chords: 'Dbmaj7 Cm7 Bbm7 Ebsus',
+        melody: [
+          [-1, -1, -1, -1, 6, -1, -1, -1],
+          [-1, -1, 5, -1, -1, -1, -1, -1],
+          [4, -1, -1, -1, -1, -1, -1, -1],
+          [-1, -1, -1, -1, -1, -1, -1, -1],
+        ],
+      },
+    },
+    form: ['A:bare', 'A', 'B', 'A', 'C:soft', 'C', 'A:soft'],
+  },
 };
 
 export const trackFor = (id: string): Track => TRACKS[id] ?? Object.values(TRACKS)[0];

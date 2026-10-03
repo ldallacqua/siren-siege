@@ -28,7 +28,7 @@ The Blight is what's left when a memory is eaten. Its shapes are **layers** of s
 
 ## Sirens and the Commander
 
-**Sirens** are women born from myth: vampires, snow spirits, oni, moon-touched priestesses. A Siren's power is a song, and a song needs someone to listen. Alone, a Siren slowly fades into legend. **Bound to a mortal who truly listens, she grows stronger.** That bond is _Bond_ (the in-game meter). It's also why Bond gives them a little extra power in battle.
+**Sirens** are women born from myth: vampires, snow spirits, oni, moon-touched priestesses, dream eaters. A Siren's power is a song, and a song needs someone to listen. Alone, a Siren slowly fades into legend. **Bound to a mortal who truly listens, she grows stronger.** That bond is _Bond_ (the in-game meter). It's also why Bond gives them a little extra power in battle.
 
 Mortals who can hold a Siren's bond without being burned, frozen or drained are called **Anchors**. They are extremely rare. **The Commander (the player)** is one. Selene found them in a prophecy, "a heart the Lady can't see through", and sent for them when the old shrine keeper, **Keeper Haruo**, walked down into the Hollow Sea ten years ago to buy the seal more time and never came back.
 
@@ -69,11 +69,24 @@ The Commander's past is deliberately left blank so the player can fill it in. Ne
 - **Voice:** gentle, playful, a little theatrical ("ara~", "my, my"). Loves romance and sincerity. Deflects with jokes when anything gets close to the truth.
 - **Arc:** (B1) a private recital · (B3) fortune telling · (B5) the Moongate: she shows the Commander the cracks and tells them about Haruo · (B7) the Commander finds the old texts; she admits the price · (B9) she chooses to live: "Then we'll find another way. Together. I've decided to be selfish."
 
+### Nemu Sugardream — the Dream Eater
+
+- **Born** a **baku**, a spirit that eats bad dreams, in **Yumeji**, the sleepy tea-house town of the eastern isles. Her family ran the oldest **dream-tea house** there: people came in tired and frightened, drank, slept, and woke up lighter. She is 21, the youngest Siren, and petite.
+- **Weapon:** two long silver kanzashi hairpins. She throws them to "pin a nightmare in place", and whatever they hit falls asleep for a moment.
+- **Wound:** nightmares used to taste like burnt sugar. When the Blight rose, every nightmare in Yumeji started tasting of the Hollow Sea, bitter, like someone's lost memories. A baku can't refuse a bad dream, so she kept eating them until the whole town slept soundly and she couldn't. She naps fourteen hours a day because she is still digesting them, and keeps a lollipop in her mouth to kill the taste.
+- **Secret:** baku never dream. Every night she gets everyone else's worst ones and none of her own. She pretends not to mind.
+- **Voice:** deadpan, lazy, short sentences ("...troublesome." / "Five more minutes."). Blunt and sharp-tongued; works for candy; calls the Commander "pillow" after falling asleep on them. Goes quiet and blushes when someone is kind to her without being asked. Loves sweets, quiet and being looked after; hates being woken up and being called cute.
+- **Arc:** (B1) she falls asleep on the Commander during a briefing · (B3) she negotiates her wages, in candy · (B5) Yumeji, and why everything tastes bitter · (B7) she eats the Commander's nightmare without asking, so she knows their fear (never say what it was), and admits she carries a whole town's · (B9) her first dream ever, and the Commander is in it: "I love you. Okay? Don't make it a thing."
+
 ## Relationships between the heroines
 
 - **Scarlet ↔ Selene:** old rivals in elegance; secretly each other's confidante.
 - **Kaede ↔ Yuki:** Kaede adopted Yuki on day one ("little snowball"), introduced her to hot springs and sake, and is fiercely protective of her.
 - **Scarlet ↔ Kaede:** constant bickering about fire and silver; drinking buddies.
+- **Kaede ↔ Nemu:** Kaede adopted her as a second little sister next to Yuki; Nemu complains and naps on her anyway.
+- **Yuki ↔ Nemu:** silent nap buddies. Yuki's cold keeps Nemu's tea iced, Nemu's quiet suits Yuki fine.
+- **Scarlet ↔ Nemu:** Nemu calls the four-century-old vampire "grandma" to her face; Scarlet pretends to be offended and secretly buys her candy.
+- **Selene ↔ Nemu:** Selene bribes her with sweets to do shrine chores. It works about half the time.
 - **Everyone ↔ the Commander:** a friendly rivalry for their attention, which the heroines tease each other about.
 
 ## Writing rules for chats

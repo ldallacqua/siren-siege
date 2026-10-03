@@ -5,7 +5,7 @@
  * follow docs/LORE.md.
  */
 
-export type GiftId = 'rose' | 'wine' | 'tea' | 'ribbon' | 'fireworks' | 'dango' | 'charm' | 'locket';
+export type GiftId = 'rose' | 'wine' | 'tea' | 'ribbon' | 'fireworks' | 'dango' | 'charm' | 'locket' | 'candy';
 export type Taste = 'love' | 'like' | 'neutral';
 
 export interface GiftDef {
@@ -34,6 +34,14 @@ export const GIFTS: GiftDef[] = [
     rare: false,
     xp: 20,
     color: 0x9fe8ff,
+  },
+  {
+    id: 'candy',
+    name: 'Swirl Lollipop',
+    desc: 'A hand-pulled strawberry lollipop from a Yumeji sweet shop, bigger than your palm.',
+    rare: false,
+    xp: 20,
+    color: 0xff7ab0,
   },
   { id: 'ribbon', name: 'Silk Ribbon', desc: 'A hair ribbon the color of first snow.', rare: false, xp: 20, color: 0xcfe6ff },
   { id: 'rose', name: 'Moon Rose', desc: 'A black-red rose that only opens at night.', rare: false, xp: 20, color: 0xff3b55 },
@@ -64,6 +72,7 @@ export const TASTES: Record<string, { loves: GiftId[]; likes: GiftId[] }> = {
   yuki: { loves: ['tea', 'ribbon'], likes: ['charm'] },
   kaede: { loves: ['fireworks', 'dango'], likes: ['wine'] },
   selene: { loves: ['charm', 'locket'], likes: ['tea'] },
+  nemu: { loves: ['candy', 'dango'], likes: ['tea'] },
 };
 
 const MULT: Record<Taste, number> = { love: 2, like: 1.5, neutral: 1 };
@@ -122,5 +131,10 @@ export const GIFT_LINES: Record<string, Record<Taste, string[]>> = {
     love: ['The Lady herself could not have chosen better.', 'I will keep this close to my heart. Truly.'],
     like: ['How lovely. Thank you, Commander.', 'You always seem to know what brings me peace.'],
     neutral: ['A gift from you is a blessing already.', 'Thank you. I will place it at the shrine.'],
+  },
+  nemu: {
+    love: ['...For me? You remembered the flavour. Okay. You can stay.', 'Sugar. Real sugar. I take back every mean thing I said today.'],
+    like: ['Hm. Not candy, but warm. Acceptable.', 'You thought about me. That tastes nice too.'],
+    neutral: ['A gift? ...Thanks. I will put it somewhere and forget it, lovingly.', 'Okay. Is it edible? No? Still okay.'],
   },
 };

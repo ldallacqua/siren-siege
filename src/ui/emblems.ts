@@ -7,13 +7,29 @@ import { lookFor } from '../game/vfxLook.ts';
  * badge previews the look the upgrade unlocks.
  */
 
-type Glyph = 'heart' | 'twin' | 'scope' | 'flake' | 'crystal' | 'swirl' | 'flame' | 'burst' | 'horns' | 'halo' | 'coin' | 'star';
+type Glyph =
+  | 'heart'
+  | 'twin'
+  | 'scope'
+  | 'flake'
+  | 'crystal'
+  | 'swirl'
+  | 'flame'
+  | 'burst'
+  | 'horns'
+  | 'halo'
+  | 'coin'
+  | 'star'
+  | 'moon'
+  | 'bite'
+  | 'pins';
 
 const GLYPHS: Record<string, [Glyph, Glyph, Glyph]> = {
   scarlet: ['heart', 'twin', 'scope'],
   yuki: ['flake', 'crystal', 'swirl'],
   kaede: ['flame', 'burst', 'horns'],
   selene: ['halo', 'coin', 'star'],
+  nemu: ['moon', 'bite', 'pins'],
 };
 
 // Drawn in a 100×100 box around (50, 50); F = fill color, S = stroke color.
@@ -50,6 +66,17 @@ const SHAPES: Record<Glyph, (F: string, S: string) => string> = {
     `<ellipse cx="50" cy="30" rx="22" ry="8" fill="none" stroke="${F}" stroke-width="6"/><path d="M50 44c-12 0-18 10-18 22v12h36V66c0-12-6-22-18-22z" fill="${S}"/><circle cx="50" cy="44" r="10" fill="${F}"/>`,
   coin: (F, S) =>
     `<circle cx="50" cy="50" r="28" fill="${F}" stroke="${S}" stroke-width="5"/><circle cx="50" cy="50" r="19" fill="none" stroke="${S}" stroke-width="3" opacity=".6"/><path d="M50 36c6 8 6 20 0 28-8-2-12-8-12-14s4-12 12-14z" fill="#fff" opacity=".85"/>`,
+  moon: (F, S) =>
+    `<path d="M62 16a34 34 0 1 0 22 46A28 28 0 0 1 62 16z" fill="${F}" stroke="${S}" stroke-width="4" stroke-linejoin="round"/><path d="M66 30h12l-12 14h12M80 52h8l-8 9h8" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>`,
+  bite: (F, S) =>
+    `<path d="M76 34a30 30 0 1 0 4 30 9 9 0 0 1-5-14 9 9 0 0 1 1-16z" fill="${F}" stroke="${S}" stroke-width="4" stroke-linejoin="round"/><path d="M40 42a12 12 0 0 1 12-10" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".7"/>`,
+  pins: (F, S) =>
+    [-24, 0, 24]
+      .map(
+        (a) =>
+          `<g transform="rotate(${a} 50 84)"><path d="M50 84V26" stroke="${S}" stroke-width="6" stroke-linecap="round"/><path d="M50 84V26" stroke="#f2f4ff" stroke-width="2.5" stroke-linecap="round"/><circle cx="50" cy="22" r="7" fill="${F}" stroke="${S}" stroke-width="3"/></g>`,
+      )
+      .join(''),
   star: (F, S) =>
     `<path d="m50 14 9 22 24 2-18 16 6 24-21-13-21 13 6-24-18-16 24-2z" fill="${F}" stroke="${S}" stroke-width="4" stroke-linejoin="round"/><path d="M20 84 38 66" stroke="${F}" stroke-width="4" stroke-linecap="round" opacity=".7"/>`,
 };

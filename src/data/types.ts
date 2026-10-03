@@ -134,7 +134,9 @@ export type ChatScene =
   | 'roof'
   | 'parlor'
   | 'moongate'
-  | 'archive';
+  | 'archive'
+  | 'teahouse'
+  | 'dream';
 
 export interface ChatEpisode {
   id: string;

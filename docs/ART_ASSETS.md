@@ -55,6 +55,14 @@ What went wrong on the way, for next time:
 - Selene's first take looked back over her shoulder: her torso twisted impossibly and the high-cut swimsuit read as bare. Ask for a front or three-quarter view with the whole body turned the same way, and a normal swimsuit leg line.
 - Small fixes (Selene's finger through the hat brim) work as an edit: attach the picture as image 1 and the portrait as image 2, and ask to redraw image 1 with exactly one thing changed.
 
+## Nemu, the fifth heroine (2026-10-03)
+
+`nemu/portrait.webp`, all nine moods (1024×1536, keyed from green) and `chibi.webp`. Her look follows Ellen Joe from Zenless Zone Zero, by the owner's request, for looks only (not a shark); the character, lore and weapon are original (`docs/LORE.md`).
+
+Nemu's approved design, for future art of her: petite 21-year-old (about 150 cm) with a clearly adult face; short black bob with blunt bangs and hot-pink tips, a striped clip and a white X clip; pink-red half-lidded eyes, a beauty mark under her left eye, one pointed canine; black choker with a silver ring, ear cuffs; an oversized white haori with black trim and hot-pink lining slipping off her shoulders, a black belt with a long loose end, a short black dress with a low neckline (cleavage), black thigh-high socks, black platform geta with pink straps; long glossy hot-pink nails. Right hand holds a pink-and-white swirl lollipop by its stick near her chin; left hand hangs at her side holding her two long silver kanzashi hairpins (black lacquered tops, pink beads, pink tassels) pointing down.
+
+How: one Codex call with Selene's portrait as a **style-only** reference ("use it only for the art style, framing, canvas and green background; draw a completely different character") and the full character sheet in the prompt. Three poses in parallel; the owner picked A and liked B (pins on her shoulder, lollipop in her mouth, hand on hip) and C (a raised pin like a dart) as poses, but both had hand problems. When only the white stick of a lollipop shows in her mouth it reads like a cigarette: ask for the pink candy to be visible. Moods used candidate A as the reference with the usual "only the face changes" prompt; all nine passed on the first try. Chibi: two candidates, B (two pins held forward) shipped.
+
 ## Gallery 4 "After Hours" and Gallery 5 "Heart Unveiled" (2026-10-03)
 
 `gallery-4.webp` and `gallery-5.webp` for all four (1536×1024, opaque), each approved by the owner. Same recipe as gallery 2. After Hours follows each heroine's Bond 7 chat and Heart Unveiled her Bond 9 confession (`docs/LORE.md`).

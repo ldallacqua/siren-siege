@@ -25,6 +25,8 @@ const GLYPH: Record<string, (c: string) => string> = {
     `<path d="M42 12h16v18c8 6 10 12 10 22v34a4 4 0 0 1-4 4H36a4 4 0 0 1-4-4V52c0-10 2-16 10-22z" fill="${c}" stroke="#2a0008" stroke-width="4" stroke-linejoin="round"/><rect x="36" y="54" width="28" height="20" rx="2" fill="#f0e0c0"/><path d="M42 60h16M42 66h10" stroke="#8a4a2a" stroke-width="2.5"/><path d="M40 18h20" stroke="#e8c170" stroke-width="5"/>`,
   charm: (c) =>
     `<path d="M50 10v10" stroke="#e8c170" stroke-width="4"/><rect x="30" y="20" width="40" height="62" rx="6" fill="${c}" stroke="#4a2a7a" stroke-width="4"/><path d="m50 36 5 11 12 1-9 8 3 12-11-7-11 7 3-12-9-8 12-1z" fill="#ffe3a3" stroke="#8a5a20" stroke-width="2"/><path d="M40 86v8M60 86v8" stroke="#ff4f8b" stroke-width="4" stroke-linecap="round"/>`,
+  candy: (c) =>
+    `<path d="M50 52v40" stroke="#f4ecf0" stroke-width="6" stroke-linecap="round"/><circle cx="50" cy="36" r="26" fill="#fff4f8" stroke="#5a1030" stroke-width="4"/><path d="M50 36a5 5 0 0 1 10 0 10 10 0 0 1-20 0 15 15 0 0 1 30 0 20 20 0 0 1-40 0" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`,
   locket: (c) =>
     `<path d="M30 14c6 16 14 22 20 22s14-6 20-22" fill="none" stroke="#b8bcc8" stroke-width="3"/><path d="M50 88 24 62a17 17 0 0 1 26-22 17 17 0 0 1 26 22z" fill="${c}" stroke="#4a4f5e" stroke-width="4" stroke-linejoin="round"/><path d="M50 44v40" stroke="#4a4f5e" stroke-width="2.5"/><circle cx="50" cy="38" r="4" fill="#4a4f5e"/>`,
 };
