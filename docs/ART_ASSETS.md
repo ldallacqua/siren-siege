@@ -25,23 +25,23 @@ Kaede's approved design, for future art of her: left hand on her hip with the el
 
 Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below; her chibi was redone to match on 2026-10-03). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
-## Pose moods (2026-10-03, trial: Scarlet)
+## Pose moods (2026-10-03, Scarlet approved)
 
-The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The other four still have face-only moods and no `angry` or `sad`. **Waiting for the owner's verdict on Scarlet before redoing them (B-20).**
+The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach; the other four follow one at a time (B-20) and until then keep face-only moods and no `angry` or `sad`.
 
 | Mood  | Scarlet's pose                                                                                      |
 | ----- | --------------------------------------------------------------------------------------------------- |
 | smile | revolvers holstered, a hand on her hip, the other tucking hair behind her ear, a soft smile         |
 | laugh | head back, eyes closed, fangs showing, a hand near her mouth, one revolver lowered at her side      |
-| tease | one revolver raised beside her face, barrel up, the other hand at her hip, half-lidded smirk        |
+| tease | revolvers holstered, leaning in, a loose fist under her chin, the other hand on her hip, a smirk    |
 | wink  | one eye closed, a grin, one revolver held up beside her head (barrel up), the other hand on her hip |
-| blush | bright red cheeks, eyes to the side, a hand on her cheek, one revolver hanging in the other hand    |
-| shy   | revolvers holstered, hands clasped in front of her hips, knees together, looking down and away      |
+| blush | bright red cheeks, eyes to the side, a hand on her cheek, the other arm behind her back             |
+| shy   | revolvers holstered, a fist pulling her coat collar up to her cheek, the other arm behind her back  |
 | pout  | revolvers holstered, both hands on her hips, lips pushed out, an annoyed look                       |
 | angry | fighting stance, one revolver aimed out to the side, the other raised, eyes glowing, fangs bared    |
 | sad   | head bowed, eyes downcast, one hand holding her other arm, one revolver hanging at her side         |
 
-Lessons: the first `angry` (wide battle stance, arm fully out) lost a boot to the image edge and was redone with "everything inside the image with a margin"; `smile` and `laugh` came back with red nail polish and `wink` with black, fixed with an edit that changed only the nails (her nails are natural); the filter refused the first `wink` (blowing gun smoke near her lips) and passed a plainer one. Her base `portrait.webp` is still the keyed one whose source is lost (faint warm specks on the thinnest hair strands at high zoom); regenerating it with real transparency would need the owner to approve a new base.
+Lessons: the first `angry` (wide battle stance, arm fully out) lost a boot to the image edge and was redone with "everything inside the image with a margin"; `smile` and `laugh` came back with red nail polish and `wink` with black, fixed with an edit that changed only the nails (her nails are natural); the filter refused the first `wink` (blowing gun smoke near her lips) and passed a plainer one. The owner rejected the first `blush`, `tease` and `shy` for their hands (a hand lying on a revolver instead of gripping it, a second row of knuckles, clasped hands with no countable fingers); the replacements use hand poses the generator gets right: a closed fist, a hand on the hip, an arm behind her back. Her base `portrait.webp` was regenerated with real transparency too (an exact recreation of the keyed one, owner picked take A of two): clean crimson hair edges, halo 0.002 against 0.022.
 
 ## Gallery 2, "Off Duty" (2026-10-02)
 

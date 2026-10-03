@@ -259,8 +259,10 @@ for (const hero of heroes) {
     360,
   );
 
-  // c2) every hand in every portrait, 1.6× (HAND_BOXES): count fingers, look for nails on the palm side
-  const Z = 1.6; // the portrait is drawn 1024·Z wide, whatever its file size, so boxes line up
+  // c2) every hand in every portrait, zoomed (HAND_BOXES): count fingers, look for nails on the palm side
+  // 3×: at 1.6× three hands the owner rejected looked fine (a hand lying on a gun instead
+  // of gripping it, a second row of knuckles, clasped hands with no countable fingers).
+  const Z = 3; // the portrait is drawn 1024·Z wide, whatever its file size, so boxes line up
   const hands = ['portrait', ...MOODS.map((m) => `portrait-${m}`)]
     .filter((f) => existsSync(`${dir}/${f}.webp`))
     .flatMap((f) =>
