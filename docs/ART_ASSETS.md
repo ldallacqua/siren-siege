@@ -25,9 +25,9 @@ Kaede's approved design, for future art of her: left hand on her hip with the el
 
 Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below; her chibi was redone to match on 2026-10-03). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
-## Pose moods (2026-10-03: Scarlet, Yuki and Kaede approved)
+## Pose moods (2026-10-03: Scarlet, Yuki, Kaede and Selene approved)
 
-The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach, then Yuki's and Kaede's; Selene and Nemu follow one at a time (B-20) and until then keep face-only moods and no `angry` or `sad`.
+The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach, then Yuki's, Kaede's and Selene's; Nemu is the last (B-20) and until then keeps face-only moods and no `angry` or `sad`.
 
 | Mood  | Scarlet's pose                                                                                      |
 | ----- | --------------------------------------------------------------------------------------------------- |
@@ -74,6 +74,22 @@ Kaede's poses have no flame (a flame over an open palm is the hand the generator
 | sad   | head bowed, tears welling, one hand holding her other arm, the other a loose fist at her side  |
 
 All nine passed first time: closed fists, a hand on the hip and hidden hands are the reliable hand poses.
+
+Selene holds her bow by its grip in every pose and never draws the string (a string hand is fingers the generator would have to invent). Her lilac nails were asked for in every prompt and came back consistent:
+
+| Mood  | Selene's pose                                                                                |
+| ----- | -------------------------------------------------------------------------------------------- |
+| smile | weight on one leg, bow upright at her side, the other hand on her hip, a soft smile          |
+| laugh | eyes closed, the back of her free hand raised in front of her mouth, bow at her side         |
+| tease | leaning in, chin on the backs of her curled fingers, bow at her side, one eyebrow raised     |
+| wink  | one eye closed, bow resting against her shoulder, the other arm behind her back              |
+| blush | pink cheeks, eyes to the side, a hand on her cheek, bow held close                           |
+| shy   | both hands on the bow grip, half hiding behind it, head lowered, looking away                |
+| pout  | arms crossed with the hands tucked in, bow in the crook of her arm, cheeks puffed            |
+| angry | standing tall, bow held out upright in one hand, the other a fist, hair and gown in the wind |
+| sad   | head bowed, tears welling, bow at her side, her free hand holding her bow arm                |
+
+Lessons from Selene: the first `shy` had a stray finger sticking out beside the grip; an edit that named it ("a stray finger sticks out to the side… remove it; the lower hand is a simple closed grip") removed it and kept everything else. `smile` and `shy` failed once with "Selected model is at capacity": that is not a refusal, just run them again.
 
 ## Gallery 2, "Off Duty" (2026-10-02)
 

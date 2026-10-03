@@ -6,11 +6,11 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ---
 
-### B-20 · P1 · Pose moods for every heroine (Scarlet, Yuki and Kaede done; Selene next)
+### B-20 · P1 · Pose moods for every heroine (only Nemu left)
 
-Moods are whole poses (D-029). The owner approved Scarlet's nine and the approach on 2026-10-03, then Yuki's and Kaede's. All three are on `main` and live. Base portraits are not regenerated (his decision after Yuki's and Kaede's takes changed hands and feet): the approved original is the reference for the poses.
+Moods are whole poses (D-029). The owner approved Scarlet's nine and the approach on 2026-10-03, then Yuki's, Kaede's and Selene's. All four are on `main` and live. Base portraits are not regenerated (his decision after Yuki's and Kaede's takes changed hands and feet): the approved original is the reference for the poses.
 
-For each of Selene and Nemu, one heroine at a time:
+For Nemu:
 
 1. Generate nine poses written for her character (LORE; ART_GUIDE §5.4 and §9, `transparent_background`). Use hand poses the generator gets right (ART_ASSETS "Pose moods" lessons).
 2. `npm run art`, add her to `POSE_MOODS`, give her per-picture `HAND_BOXES` (`scripts/artSpec.ts`), review the hands sheet at 3×.
