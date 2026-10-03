@@ -1,0 +1,384 @@
+<!doctype html>
+<!-- The target look of a story scene (docs/VN_DIRECTION.md).
+     Static, built from the game's own art. ?frame=line | choice | sd -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VN target mock</title>
+<style>
+  @font-face {
+    font-family: 'Cinzel';
+    font-weight: 700;
+    src: url('../../public/fonts/cinzel-latin-700-normal.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'Barlow Semi Condensed';
+    font-weight: 500;
+    src: url('../../public/fonts/barlow-semi-condensed-latin-500-normal.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'Barlow Semi Condensed';
+    font-weight: 700;
+    src: url('../../public/fonts/barlow-semi-condensed-latin-700-normal.woff2') format('woff2');
+  }
+  html,
+  body {
+    margin: 0;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+  .vn {
+    --c: #ff7a1a; /* the speaker's colour */
+    --u: calc(100vh / 1080); /* 1 unit = 1px on a 1080p screen */
+    position: relative;
+    height: 100%;
+    font-family: 'Barlow Semi Condensed', sans-serif;
+    color: #fff;
+    overflow: hidden;
+  }
+  .bg {
+    position: absolute;
+    inset: 0;
+    background: url('../../public/art/scenes/training.webp') center / cover;
+    filter: saturate(1.08) brightness(1.06);
+  }
+  /* a light grade instead of the 40 % dim: the painting stays bright */
+  .bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(20, 8, 30, 0.1), transparent 30%, transparent 55%, rgba(20, 8, 30, 0.35));
+  }
+  .sprite {
+    position: absolute;
+    bottom: calc(-52 * var(--u) * 10);
+    height: calc(150 * var(--u) * 10);
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.45));
+    transition: 0.3s;
+  }
+  .sprite.speaker {
+    left: 30%;
+    translate: -50% 0;
+  }
+  .sprite.listener {
+    left: 71%;
+    translate: -50% 0;
+    height: calc(138 * var(--u) * 10);
+    bottom: calc(-50 * var(--u) * 10);
+    filter: brightness(0.82) saturate(0.92) drop-shadow(0 10px 30px rgba(0, 0, 0, 0.45));
+  }
+  /* chapter ribbon */
+  .ribbon {
+    position: absolute;
+    left: 0;
+    top: calc(34 * var(--u));
+    display: flex;
+    flex-direction: column;
+    padding: calc(10 * var(--u)) calc(54 * var(--u)) calc(10 * var(--u)) calc(30 * var(--u));
+    background: linear-gradient(90deg, color-mix(in srgb, var(--c) 78%, #3a0a14), color-mix(in srgb, var(--c) 55%, #2a0a1e));
+    clip-path: polygon(0 0, calc(100% - 26px * 1) 0, 100% 50%, calc(100% - 26px) 100%, 0 100%);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  }
+  .ribbon small {
+    font-size: calc(15 * var(--u));
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+  .ribbon b {
+    font-family: 'Cinzel', serif;
+    font-size: calc(30 * var(--u));
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+  }
+  .ribbon::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 26px;
+    bottom: 3px;
+    height: 1px;
+    background: rgba(255, 233, 180, 0.7);
+  }
+  /* bond meter, top right */
+  .bond {
+    position: absolute;
+    right: calc(28 * var(--u));
+    top: calc(34 * var(--u));
+    display: flex;
+    align-items: center;
+    gap: calc(10 * var(--u));
+    padding: calc(8 * var(--u)) calc(16 * var(--u));
+    border-radius: 99px;
+    background: rgba(18, 8, 26, 0.55);
+    backdrop-filter: blur(6px);
+    font-size: calc(18 * var(--u));
+    font-weight: 700;
+  }
+  .bond i {
+    width: calc(120 * var(--u));
+    height: calc(6 * var(--u));
+    border-radius: 4px;
+    background: linear-gradient(90deg, #ff4f8b 46%, rgba(255, 255, 255, 0.2) 46%);
+  }
+  /* the text window: no frame, a band of her colour rising from the bottom */
+  .window {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(330 * var(--u));
+    background: linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--c) 34%, rgba(24, 8, 30, 0.94)) 0%,
+      color-mix(in srgb, var(--c) 26%, rgba(24, 8, 30, 0.82)) 45%,
+      transparent
+    );
+  }
+  .face {
+    position: absolute;
+    left: calc(120 * var(--u));
+    bottom: 0;
+    width: calc(250 * var(--u));
+    height: calc(250 * var(--u));
+    overflow: hidden;
+    border-radius: 50% 50% 0 0;
+    mask-image: linear-gradient(0deg, transparent, #000 22%);
+  }
+  .face img {
+    position: absolute;
+    width: 330%;
+    left: -121%;
+    top: -8%;
+  }
+  .speech {
+    position: absolute;
+    left: calc(400 * var(--u));
+    right: calc(330 * var(--u));
+    bottom: calc(64 * var(--u));
+    height: calc(190 * var(--u));
+  }
+  .name {
+    display: flex;
+    align-items: center;
+    gap: calc(14 * var(--u));
+    font-family: 'Cinzel', serif;
+    font-size: calc(38 * var(--u));
+    letter-spacing: 0.03em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  }
+  .name::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 233, 180, 0.8), transparent 70%);
+  }
+  .chip {
+    display: inline-grid;
+    place-items: center;
+    width: calc(34 * var(--u));
+    height: calc(34 * var(--u));
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--c) 70%, #fff);
+    color: #2a0d00;
+    font: 700 calc(18 * var(--u)) 'Barlow Semi Condensed';
+  }
+  .line {
+    margin-top: calc(12 * var(--u));
+    font-size: calc(34 * var(--u));
+    font-weight: 500;
+    line-height: 1.38;
+    text-shadow:
+      0 2px 3px rgba(0, 0, 0, 0.85),
+      0 0 14px rgba(0, 0, 0, 0.5);
+  }
+  .wait {
+    display: inline-block;
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+    margin-left: calc(10 * var(--u));
+    rotate: 45deg;
+    background: #ffe9b4;
+  }
+  .menu {
+    position: absolute;
+    right: calc(30 * var(--u));
+    bottom: calc(18 * var(--u));
+    display: flex;
+    gap: calc(22 * var(--u));
+    font-size: calc(16 * var(--u));
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.82);
+  }
+  /* choices */
+  .choices {
+    position: absolute;
+    left: 50%;
+    top: 56%; /* below the faces: a choice never covers who you are answering */
+    translate: -50% -50%;
+    display: none;
+    flex-direction: column;
+    gap: calc(26 * var(--u));
+    width: min(calc(900 * var(--u)), 86%);
+  }
+  .choice {
+    position: relative;
+    padding: calc(22 * var(--u)) calc(70 * var(--u));
+    text-align: center;
+    font-size: calc(32 * var(--u));
+    font-weight: 500;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c) 46%, rgba(24, 8, 30, 0.92)) 12% 88%, transparent);
+    border-top: 1px solid rgba(255, 233, 180, 0.75);
+    border-bottom: 1px solid rgba(255, 233, 180, 0.75);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+  }
+  .choice::before,
+  .choice::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+    translate: 0 -50%;
+    rotate: 45deg;
+    background: #ffe9b4;
+  }
+  .choice::before {
+    left: 14%;
+  }
+  .choice::after {
+    right: 14%;
+  }
+  /* SD cut-in: a framed panel over the scene for a comic beat */
+  .sd {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    translate: -50% -50%;
+    display: none;
+    width: calc(880 * var(--u));
+    height: calc(500 * var(--u));
+    border: calc(6 * var(--u)) solid #fff;
+    border-radius: calc(10 * var(--u));
+    background:
+      radial-gradient(circle, rgba(255, 255, 255, 0.55) 18%, transparent 20%) 0 0 / calc(44 * var(--u)) calc(44 * var(--u)),
+      linear-gradient(135deg, #ffd7a8, #ffb3c7);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+  }
+  .sd img {
+    position: absolute;
+    bottom: calc(10 * var(--u));
+    height: 86%;
+    image-rendering: auto;
+  }
+  .sd span {
+    position: absolute;
+    left: calc(20 * var(--u));
+    top: calc(14 * var(--u));
+    padding: calc(4 * var(--u)) calc(12 * var(--u));
+    background: rgba(42, 13, 0, 0.7);
+    border-radius: 99px;
+    font-size: calc(15 * var(--u));
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  body[data-frame='choice'] .choices,
+  body[data-frame='sd'] .sd {
+    display: flex;
+  }
+  body[data-frame='choice'] .window {
+    opacity: 0.35;
+  }
+  body[data-frame='choice'] .sprite.speaker,
+  body[data-frame='sd'] .sprite {
+    filter: brightness(0.7);
+  }
+
+  /* portrait screens: one sprite, the listener becomes a small face by the window */
+  @media (max-aspect-ratio: 1/1) {
+    .vn {
+      --u: calc(100vw / 620);
+    }
+    .sprite.speaker {
+      left: 50%;
+      height: 108vh;
+      bottom: -30vh;
+    }
+    .sprite.listener {
+      display: none;
+    }
+    .window {
+      height: calc(380 * var(--u));
+    }
+    .face {
+      display: none;
+    }
+    .speech {
+      left: calc(30 * var(--u));
+      right: calc(30 * var(--u));
+      bottom: calc(86 * var(--u));
+      height: calc(200 * var(--u));
+    }
+    .line {
+      font-size: calc(30 * var(--u));
+    }
+    .menu {
+      left: calc(30 * var(--u));
+      right: calc(30 * var(--u));
+      justify-content: space-between;
+      gap: 0;
+      font-size: calc(17 * var(--u));
+    }
+    .ribbon {
+      top: calc(24 * var(--u));
+    }
+    .bond {
+      top: calc(110 * var(--u));
+      right: auto;
+      left: calc(20 * var(--u));
+    }
+    .choices {
+      top: 64%;
+    }
+    .sd {
+      width: 92%;
+      height: calc(380 * var(--u));
+      top: 34%;
+    }
+  }
+</style>
+<body data-frame="line">
+  <div class="vn">
+    <div class="bg"></div>
+    <img class="sprite listener" src="../../public/art/yuki/portrait-smile.webp" alt="" />
+    <img class="sprite speaker" src="../../public/art/kaede/portrait-pout.webp" alt="" />
+    <div class="ribbon"><small>Kaede · Episode 2</small><b>Horns and Honesty</b></div>
+    <div class="bond">♥ Bond 3 <i></i></div>
+    <div class="sd">
+      <span>SD cut-in (placeholder art)</span>
+      <img src="../../public/art/kaede/chibi.webp" alt="" style="left: 16%" />
+      <img src="../../public/art/yuki/chibi.webp" alt="" style="left: 54%" />
+    </div>
+    <div class="window">
+      <div class="face"><img src="../../public/art/kaede/portrait-pout.webp" alt="" /></div>
+      <div class="speech">
+        <div class="name">Kaede <span class="chip">♪</span><span class="chip">★</span></div>
+        <div class="line">I'm not sulking. Oni don't sulk. ...Snowball, stop patting my head. I mean it.<span class="wait"></span></div>
+      </div>
+      <div class="menu">
+        <span>Log</span><span>Auto</span><span>Skip</span><span>Back</span><span>Hide</span><span>Save</span><span>Config</span>
+      </div>
+    </div>
+    <div class="choices">
+      <div class="choice">Pat her head too.</div>
+      <div class="choice">"I think the horns suit you."</div>
+    </div>
+  </div>
+  <script>
+    document.body.dataset.frame = new URLSearchParams(location.search).get('frame') || 'line';
+  </script>
+</body>

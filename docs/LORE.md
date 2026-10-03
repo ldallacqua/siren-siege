@@ -1,6 +1,6 @@
 # Siren Siege — Lore bible
 
-The canon for every chat, bio, map and enemy. Keep new writing consistent with this file; add to it when you invent something. Tone: warm, flirty, a little melancholy under the teasing. Suggestive, never explicit (see AGENTS.md content policy). All heroines are adults.
+The canon for every chat, bio, map and enemy. Keep new writing consistent with this file; add to it when you invent something. How the story is told and shown (the standard for a heroine, a scene and the story screen) is in `docs/VN_DIRECTION.md`: read both before writing. Tone: warm, flirty, a little melancholy under the teasing. Suggestive, never explicit (see AGENTS.md content policy). All heroines are adults.
 
 ## The world
 
@@ -95,4 +95,5 @@ The Commander's past is deliberately left blank so the player can fill it in. Ne
 2. The best choice fits _her_: Scarlet wants boldness, Yuki gentleness, Kaede nerve, Selene romance and sincerity.
 3. Every chat from Bond 5 up should reveal one piece of her lore above. Bond 9 is the confession.
 4. Use `speaker: 'you'` sparingly for the Commander's spoken lines when the choice text alone isn't enough.
-5. Moods must be one of: smile, tease, smirk, wink, laugh, blush, shy, pout, grin.
+5. Moods must be one of `MOODS` in `src/data/progression.ts`: smile, laugh, tease, wink, blush, shy, pout, angry, sad. Each is a whole pose, and every line of hers gets one.
+6. These rules describe the episodes as they are today (short sketches). The standard they are being raised to, with the scene rules and the checklist, is `docs/VN_DIRECTION.md` sections 4–6 and 10.

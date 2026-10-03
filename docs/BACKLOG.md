@@ -21,6 +21,54 @@ Portraits are 1536 px tall (the generator's maximum). On a 4K screen at 200 % th
 
 - Accept: owner chooses; if done, `MAX_UPSCALE` framing on 4K matches 1080p and the gate passes.
 
+## Visual novel direction (`docs/VN_DIRECTION.md`)
+
+The owner's reference for the story side is Yuzusoft. Order of work is section 9 of that document; decisions waiting for him are its section 11. Each item is checked on phone, tablet and big desktop.
+
+### B-22 · P1 · Story screen look
+
+The chat player takes the target look (VN_DIRECTION 7.1–7.3, mock in `docs/vn/mock.html`): frameless window in the speaker's colour, name without a plate, text sized from the screen, big sprite cut at the thigh, backdrop at full brightness, chapter ribbon, choice bars, quick menu in small caps. No data change.
+
+- Accept: desktop, tablet and phone screenshots match the mock's layout; text is at least 3 % of the screen height on landscape; her face is never covered; Reduced motion works; smoke passes on all five screens.
+- Needs the owner's answer to decision 1 (bright story scenes).
+
+### B-23 · P1 · Pictures inside scenes
+
+A node can show an event illustration full screen (sprites hidden); every Bond 7 and Bond 9 episode shows its gallery picture at the peak. **Hide** removes the window and menus until the next tap.
+
+- Accept: data type + test (an episode may only show a picture the heroine has); ten episodes updated; Hide works by tap and key.
+
+### B-24 · P1 · A cast on stage
+
+A speaker id per line (any heroine, later side characters), positions (left, centre, right), shots (far, mid, near), the listener dimmed, the speaker's face icon on landscape; one sprite and small faces on an upright phone. One existing episode rewritten with a second voice as the sample (VN_DIRECTION 6).
+
+- Accept: types and data tests (every speaker exists and has the pose used); works with one, two and three characters at all five screens.
+
+### B-25 · P2 · Reader's tools
+
+Back one line; Skip stops at unread lines by default; leaving mid-episode keeps the place and the Diary offers Continue; Config (text speed, auto speed, window strength, blips); tap a log line to return to it.
+
+- Accept: read lines and the resume point are in the save, backward compatible; keyboard and touch.
+
+### B-26 · P1 · Routes written to the standard
+
+One heroine first (owner picks, decision 9): her five episodes at 25–40 lines with a second voice where it fits, her sheet completed (VN_DIRECTION 4.1), and her Bond 10 After episode. The owner reads it; then the other four.
+
+- Accept: the episode checklist (VN_DIRECTION 10) for each; LORE updated with anything new; data tests pass.
+- Needs decisions 2–5 and 8.
+
+### B-27 · P2 · Chibi cut-ins
+
+A chibi illustration style test with the generator (two candidates, the owner picks), then one cut-in per route at its gag, shown as a framed panel (VN_DIRECTION 7.4).
+
+- Accept: owner-approved style in ART_GUIDE; art gate rules for the new kind of picture; a node can show a cut-in.
+
+### B-28 · P2 · Day and dusk backdrops
+
+Day and dusk versions of the places the scenes use most, generated with the backdrop prompt frame and a different light; a scene names its time of day.
+
+- Accept: the set is all there or not at all per place; owner approved.
+
 ### B-21 · P1 · Menus scale up on big desktop monitors
 
 At 2560×1440 (`desktop-large` in the smoke test) only the Bond screen scales (D-031). The lobby tiles and name, Messages, arena select, roster, profile, gallery, codex, settings, the upgrade tree, the chat box and the battle HUD keep their phone pixel sizes and look small, with wide empty margins.
@@ -111,7 +159,7 @@ The MVP pass is complete: 19 assets (all four portraits/chibis/First Impression 
 
 ### B-16 · P2 · Main story chapters
 
-The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price, the Hollow King). Add story chapters unlocked by map progress (e.g. after wave 10, after winning), using `playChat` with `noReward` and multi-heroine scenes (needs a `speaker` per node for other heroines).
+The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price, the Hollow King). Add story chapters unlocked by map progress (e.g. after wave 10, after winning), using `playChat` with `noReward` and multi-heroine scenes (needs a `speaker` per node for other heroines). This is the "common route" of `docs/VN_DIRECTION.md` 5.1: ensemble chapters numbered "Chapter 1-1", densest in comedy, never assuming a romance. It comes after B-22 to B-24 and after the side cast is designed with the owner (decision 6).
 
 - Accept: at least 3 chapters; multi-speaker chat support with tests; stays consistent with docs/LORE.md.
 

@@ -32,6 +32,8 @@ No screen is a flat dark fill: each sits on a painted backdrop (`public/art/scen
 - A screen with a backdrop uses `backdrop(name)` (`src/ui/common.ts`) for fixed layouts or the `--scene` variable for scrolling ones. Art stays optional: without the file the old CSS-painted scene shows.
 - Don't raise the brightness to show a painting off. If text loses contrast on a phone, raise `--dim`/`--veil`.
 
+The story screen (chats and story chapters) is the exception to the dark look: bright picture, no dark panels, colour from the speaker. Its target is `docs/VN_DIRECTION.md` section 7, with mock-ups in `docs/vn/`. It shares the fonts, gold hairlines, diamonds and chamfers with the rest.
+
 ## Typography
 
 - **Cinzel 600/700:** logo, screen titles, heroine names, chat speaker plates, results headline. Title case, letter-spacing 0.02–0.04em.

@@ -8,7 +8,7 @@ This file is the single source of truth for any AI coding agent (Claude Code, Co
 
 - Live: https://ldallacqua.github.io/siren-siege/ (served from the `gh-pages` branch, deployed by CI on every push to `main`)
 - Owner: Lucas (ldallacqua). Talks to agents in English or Portuguese.
-- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · **UI look: `docs/UI_STYLE.md` (read before any UI/CSS/battlefield change)** · **Story canon: `docs/LORE.md` (read before writing chats, bios or enemies)** · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names) + **`docs/ART_QA.md` (the gate every heroine's art must pass)**
+- Design: `docs/GDD.md` · Architecture: `docs/ARCHITECTURE.md` · **UI look: `docs/UI_STYLE.md` (read before any UI/CSS/battlefield change)** · **Story canon: `docs/LORE.md` and story craft: `docs/VN_DIRECTION.md` (read both before writing chats, bios or enemies, or changing the chat player; the reference is Yuzusoft's visual novels)** · Art: `docs/ART_DIRECTION.md` (style) + `docs/ART_GUIDE.md` (owner's ChatGPT workflow, file names) + **`docs/ART_QA.md` (the gate every heroine's art must pass)**
 
 ## 2. Resume protocol (do this first, every session)
 
@@ -93,7 +93,7 @@ public/sw.js       Service worker (installable PWA, offline); public/manifest.we
 tests/             data, sim, chibi, camera and audio tests
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
 public/art/scenes/ Painted backdrops: one per chat scene + menu (SCENE_FILES in progression.ts)
-docs/              GDD, ARCHITECTURE, UI_STYLE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
+docs/              GDD, ARCHITECTURE, UI_STYLE, VN_DIRECTION (+ vn/ mock of the story screen), LORE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
 public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 ```
 
@@ -107,7 +107,7 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 
 **Tune difficulty:** edit `WAVES` in `maps.ts`, enemy `speed`/`hp`, or economy constants in `BattleSim.endWave()`/`pop()`. Target: `npm run sim` (a naive bot buying cheapest upgrades) should reach wave ~18–20 and lose narrowly; a thinking player wins.
 
-**Write a chat:** read `docs/LORE.md` first. Add a `ChatEpisode` (with a `scene`) to `EPISODES` using the `her()/nar()/pick()/you()/end()` helpers. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of `MOODS` in `src/data/progression.ts`: smile, laugh, tease, wink, blush, shy, pout, angry, sad. Each is a whole pose of hers, so pick the one whose body language fits the line, give every line of hers a mood (a line without one falls back to `smile` and she snaps back to that pose), and only use a mood she has art for (`public/art/<id>/portrait-<mood>.webp`; a test fails otherwise). Tests verify links, reachability and endings.
+**Write a chat:** read `docs/LORE.md` (canon) and `docs/VN_DIRECTION.md` (the standard for a heroine and a scene, sections 4–6, and the checklist in section 10) first. Add a `ChatEpisode` (with a `scene`) to `EPISODES` using the `her()/nar()/pick()/you()/end()` helpers. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of `MOODS` in `src/data/progression.ts`: smile, laugh, tease, wink, blush, shy, pout, angry, sad. Each is a whole pose of hers, so pick the one whose body language fits the line, give every line of hers a mood (a line without one falls back to `smile` and she snaps back to that pose), and only use a mood she has art for (`public/art/<id>/portrait-<mood>.webp`; a test fails otherwise). Tests verify links, reachability and endings.
 
 **Write a lobby line** (what she says when tapped on the home screen): add it to `IDLE_LINES` in `src/data/lore.ts` with the Bond `level` that unlocks it and a `mood`. She takes that pose while the line shows. Only the everyday moods are allowed there (`LOBBY_MOODS`: smile, tease, wink, pout); the other five stay a surprise for her chats (a test enforces it).
 

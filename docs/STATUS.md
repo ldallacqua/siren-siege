@@ -58,7 +58,7 @@
 - Audio is synthesized placeholder quality (no recorded samples). 60 fps with 200 enemies on a mid phone is **not yet measured** (sounds are rate-limited to 24 voices, particles capped at 400).
 - Balance only validated by the naive bot (`npm run sim`: loses around wave 19–20). No human playtest data yet.
 - Upgrade tiers stop at 3 (BTD6 has 5). No camo/regrow enemies, no hero abilities.
-- Only 2 of the planned 5 chats per heroine are written; `speaker: 'you'` lines are supported but unused.
+- **Story against the owner's reference (Yuzusoft, `docs/VN_DIRECTION.md`):** the 25 episodes are one-minute sketches with one heroine on screen, a small sprite and a framed dark text box; no second voices, no pictures inside scenes, no After stories, no main story. Voice acting and recorded music are out of reach.
 - Battlefield texture is 80 px/tile: slightly soft at 3× zoom on high-DPI phones. Scenery props are decorative only (you can place a heroine on a tree or pond).
 - No 18+ age gate yet (required before any public promotion — see BACKLOG B-12).
 - Saves are per-browser only; clearing site data wipes progress.
@@ -67,7 +67,15 @@
 
 ## Last session
 
-**2026-10-03 — Bond screen for wide screens, lobby poses, dev gallery, five-screen review (Claude, local Windows session). On `main` and live**
+**2026-10-03 — Visual novel direction: research, document, mock (Claude, local Windows session). On `main`**
+
+- The owner said his style of game is Yuzusoft's and asked for research (characters, UI, interactions), a comprehensive document of what we expect, and a check that we can build it. `docs/VN_DIRECTION.md` is the result (D-032): what those games do, what we take and what changes for a tower defense game, the sheet every heroine needs and where our five are thin, route structure, scene rules with a before/after sample, the story screen target, a feasibility table, the order of work (B-22 to B-28, B-16), a checklist, and nine decisions for him.
+- Research: reviews and trope pages of four Yuzusoft games and the Steam screenshots of Senren＊Banka and Sabbat of the Witch. I have not played them, and the document says so. The reference screenshots are not in the repo.
+- Mock of the target story screen from our own art: `docs/vn/mock.html` and four renders in `docs/vn/`. It shows the layout is reachable: frameless window, face icon, two big sprites, bright backdrop, ribbon, choice bars, a chibi panel (placeholder art).
+- **Nothing in the game changed for this.** Next is B-22 once he answers decision 1.
+- Also this session: the diary timeline's diamonds were off the line (1 px at normal size, more on scaled screens); they are now placed from the same variables as the list and the smoke test checks it. LORE's mood list was out of date (smirk, grin) and is fixed.
+
+**Previously, 2026-10-03 — Bond screen for wide screens, lobby poses, dev gallery, five-screen review (Claude, local Windows session). On `main` and live**
 
 - The owner sent a screenshot of the Bond screen at 2000×1040 (a small card in a corner) and asked for four things.
 - **Bond screen (D-031):** landscape is now a full-height column beside a larger heroine (picker, name, rank, what Bond gives, favourite gifts, episodes in place when there is room), sized in `--u` so it scales with the screen height. Portrait is unchanged apart from the panel being centred with margins instead of a transform (it used to slide in diagonally). `style.css` has the whole screen in one block now; the three older patch blocks are gone. Checked at 16 window sizes from 844×390 to 3440×1440 with every heroine's longest name: nothing scrolls or clips.
@@ -161,7 +169,8 @@
 1. **Art gate sign-off (B-18):** the owner looks at `artifacts/art-check/` (or the game) and signs off each heroine in `docs/ART_QA.md`; redraw what he rejects. Ask him about B-19 (upscaled portraits for 4K framing).
 2. **Nemu follow-ups (owner):** confirm her chibi (B, two pins forward, is shipped; A, mid-throw, is the alternative), play her chats, and decide what to do with the two portrait poses he also liked (my suggestion: use them as gallery pictures). Her five gallery pictures are still placeholders (B-01).
 3. **Owner check of Kaede's and Selene's moods** (open a chat with each; any face he dislikes is one Codex image to redo with her `portrait.webp` as the reference, Kaede on blue, Selene on green). Then **T-08** (drop the `FULL_BODY` set, full body becomes the default framing). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
-4. **B-21: menus on big monitors.** Ask the owner whether he wants one global UI scale or wide layouts screen by screen (the Bond screen is the sample).
-5. **Bond screen, owner playtest** on his monitor, tablet and phone: is head-to-shin the right framing for her on wide screens, and are the four lobby moods the right ones to give away?
-6. **Backdrops, owner playtest:** are the dim levels right on his phone (`--dim` on `.scene-art` / `.home-art`, `--veil` on `.screen` in `style.css`)? The battle results screen and arena cards could get their own paintings later.
-7. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.
+4. **Visual novel direction:** the owner reads `docs/VN_DIRECTION.md` and answers its section 11 (nine decisions; the first, bright story scenes, unblocks B-22). Then B-22 (story screen look), B-23, B-24 in that order.
+5. **B-21: menus on big monitors.** Ask the owner whether he wants one global UI scale or wide layouts screen by screen (the Bond screen is the sample).
+6. **Bond screen, owner playtest** on his monitor, tablet and phone: is head-to-shin the right framing for her on wide screens, and are the four lobby moods the right ones to give away?
+7. **Backdrops, owner playtest:** are the dim levels right on his phone (`--dim` on `.scene-art` / `.home-art`, `--veil` on `.screen` in `style.css`)? The battle results screen and arena cards could get their own paintings later.
+8. **B-03b perf check** (Vfx adds particles; cap is 700), then **B-04 barks**, **B-12 age gate**, **B-05 tiers 4–5**.
