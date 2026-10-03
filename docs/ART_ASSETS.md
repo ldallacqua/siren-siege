@@ -25,9 +25,9 @@ Kaede's approved design, for future art of her: left hand on her hip with the el
 
 Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below; her chibi was redone to match on 2026-10-03). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
-## Pose moods (2026-10-03: Scarlet and Yuki approved)
+## Pose moods (2026-10-03: Scarlet, Yuki and Kaede approved)
 
-The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach, then Yuki's; Kaede, Selene and Nemu follow one at a time (B-20) and until then keep face-only moods and no `angry` or `sad`.
+The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach, then Yuki's and Kaede's; Selene and Nemu follow one at a time (B-20) and until then keep face-only moods and no `angry` or `sad`.
 
 | Mood  | Scarlet's pose                                                                                      |
 | ----- | --------------------------------------------------------------------------------------------------- |
@@ -58,6 +58,22 @@ Yuki keeps her staff in every pose (a closed grip around the shaft is a hand the
 | sad   | head bowed, both hands holding the staff close, her temple resting against it                        |
 
 Lessons from Yuki: the first `smile` (a hand tucking her hair) came back with dark grey nails that two nail-only edits did not change, so the pose was replaced; no line of hers uses `angry` yet. Regenerating her base portrait with real transparency was tried and dropped: a "recreate exactly" take redraws small parts (the raised hand lost its detail, the feet changed shape; a second round with enlarged close-ups of those parts as extra `-i` images came close but shifted her skin tone). The owner's decision: approved originals stay as they are, and only new images use real transparency. Kaede's two takes were not used either.
+
+Kaede's poses have no flame (a flame over an open palm is the hand the generator gets wrong; only her base portrait has it) and were made from her original keyed base:
+
+| Mood  | Kaede's pose                                                                                   |
+| ----- | ---------------------------------------------------------------------------------------------- |
+| smile | weight on one leg, both arms folded behind her head (hands hidden), a broad closed-mouth smile |
+| laugh | head back, eyes closed, fangs showing, a hand on her hip, the gourd held up by its neck        |
+| tease | leaning in, chin on a loose fist, the other hand on her hip, a fanged smirk                    |
+| wink  | one eye closed, a wide grin, a fist pump beside her head, the other hand on her hip            |
+| blush | red cheeks, eyes away, one hand rubbing the back of her neck (hidden), the other a loose fist  |
+| shy   | both arms behind her back, shoulders up, toes turned in, looking down and away                 |
+| pout  | arms crossed with the hands tucked in, turned away, cheeks puffed                              |
+| angry | brawler stance, feet apart, both fists up, teeth bared, hair and jacket whipped by hot wind    |
+| sad   | head bowed, tears welling, one hand holding her other arm, the other a loose fist at her side  |
+
+All nine passed first time: closed fists, a hand on the hip and hidden hands are the reliable hand poses.
 
 ## Gallery 2, "Off Duty" (2026-10-02)
 
