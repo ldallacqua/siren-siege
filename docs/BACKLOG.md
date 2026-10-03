@@ -83,8 +83,7 @@ Alternate outfits unlocked at Bond 7; outfit picker in profile; art file naming 
 
 The MVP pass is complete: 19 assets (all four portraits/chibis/First Impression scenes plus seven expressions). See `docs/ART_ASSETS.md`. The owner explicitly requested the most important images only; completing all 64 is not a release gate.
 
-- When requested: add `gallery-4` and `gallery-5` (2 and 3 are done; recipe and lessons in `docs/ART_ASSETS.md`), reusing each committed main portrait as the character reference.
-- Follow the approved full-body portraits (designs in `docs/ART_ASSETS.md`). Selene's chibi and `gallery-1` still show her old closed-neck gown and small bow, and Kaede's show her old pose: redo them from the new portraits when this item is picked up.
+- Follow the approved full-body portraits (designs in `docs/ART_ASSETS.md`). All 20 gallery pictures are done (Selene's `gallery-1` was redone in her new gown). Selene's chibi still shows her old closed-neck gown and small bow, Kaede's chibi and `gallery-1` show her old pose, and Scarlet's and Yuki's `gallery-1` predate their full-body portraits: redo them from the new portraits when this item is picked up.
 - Accept: no body/framing jump between expressions, proper alpha, no face cropping in cards, gallery lightboxes and all three smoke viewports verified.
 
 ### B-16 · P2 · Main story chapters

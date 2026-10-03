@@ -2,13 +2,13 @@
 
 > Living handoff document. **Every session updates this before finishing** (see AGENTS.md §3).
 
-**Version:** 0.4.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-10-02
+**Version:** 0.4.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-10-03
 
 ## What works
 
 - Full match loop on _Moonlit Shrine_: 20 waves, win/lose, results screen with Bond XP and unlock notices.
 - 4 heroines (Scarlet, Yuki, Kaede, Selene), 3 upgrade paths × 3 tiers, BTD6 crosspath rule, targeting modes, sell 70%.
-- All four heroines have full-body art (portrait + all 9 moods) and three gallery pictures (`gallery-1` First Impression, `gallery-2` Off Duty, `gallery-3` Poolside); `npm run art` removes a green-screen background (or a blue one, used for Kaede's fire); agents can generate art via Codex CLI (ART_GUIDE §9).
+- All four heroines have full-body art (portrait + all 9 moods) and all five gallery pictures (First Impression, Off Duty, Poolside, After Hours, Heart Unveiled); `npm run art` removes a green-screen background (or a blue one, used for Kaede's fire); agents can generate art via Codex CLI (ART_GUIDE §9).
 - Enemies: 5 layered types, armored Iron Husk (immune to physical), Blight Colossus boss with HP bar.
 - Controls: speed 1×/2×/3×, auto-start, pause (auto-pauses when the tab is hidden), keyboard shortcuts.
 - Bond 1–10 (+2% attack rate/level), 8 chat episodes (2 per heroine, Bond 1 and 3), 20 gallery slots (Bond 2/4/6/8/10).
@@ -48,7 +48,7 @@
 
 ## Known issues / limitations
 
-- **Art scope:** every mood portrait exists now; gallery slots 4–5 still show placeholders, and the chibis and `gallery-1` pictures predate the full-body portraits (Selene's still show her old closed-neck gown). The owner explicitly deferred the full 64-image set. Optional follow-up: B-01.
+- **Art scope:** every mood portrait exists now; all 20 gallery slots have art. The chibis, and `gallery-1` for Scarlet, Yuki and Kaede, predate the full-body portraits (Selene's chibi still shows her old closed-neck gown; her `gallery-1` was redone). The owner explicitly deferred the full 64-image set. Optional follow-up: B-01.
 - Audio is synthesized placeholder quality (no recorded samples). 60 fps with 200 enemies on a mid phone is **not yet measured** (sounds are rate-limited to 24 voices, particles capped at 400).
 - Balance only validated by the naive bot (`npm run sim`: loses around wave 19–20). No human playtest data yet.
 - Upgrade tiers stop at 3 (BTD6 has 5). No camo/regrow enemies, no hero abilities.
@@ -61,7 +61,13 @@
 
 ## Last session
 
-**2026-10-02 — README banner framing; Off Duty and Poolside gallery pictures (Claude, local Windows session)**
+**2026-10-03 — Gallery 4 and 5 for all four heroines; Selene's gallery 1 redone (Claude, local Windows session)**
+
+- The owner asked for `gallery-4` (After Hours, Bond 8) and `gallery-5` (Heart Unveiled, Bond 10) for every heroine, plus Selene's `gallery-1` redone with her cleavage (the old one had her closed-neck gown). All ten are in and approved by him. Scenes follow each heroine's Bond 7 and Bond 9 arcs in `docs/LORE.md`; the table is in `docs/ART_ASSETS.md`.
+- It took three rounds: he rejected five of my first nine for hands I had passed (a nail on the palm side of a finger, a finger lost behind a wine glass, a bad nail and a sticking-out little finger, and cupped hands in front of Selene's chest that read as a third breast). Edits that redraw one hand fixed two; fresh takes with simpler hand poses fixed the rest. Kaede's needed a new setup with no palm-up hand. Lessons in `docs/ART_ASSETS.md`.
+- Selene's `gallery-1` was made with the old picture as a second reference for the composition, so the scene is the same and only her gown and bow changed.
+
+**Previously, 2026-10-02 — README banner framing; Off Duty and Poolside gallery pictures (Claude, local Windows session)**
 
 - README banner: the owner wanted the upper bodies in focus now that the portraits are full body. The banner in `scripts/readme-shots.ts` frames each heroine head to mid-thigh (image 900 px tall in the 520 px banner, anchored at the top). `npm run shots -- --banner` regenerates only the banner and heroine cards.
 - Gallery: the owner wants two new gallery pictures per heroine, matching the lore, each approved by him. `gallery-2` (Off Duty, Bond 4) is in for all four, approved on the first take; scenes and the prompt recipe are in `docs/ART_ASSETS.md`. `gallery-3` (Poolside, Bond 6) is in for all four too: Yuki and Kaede approved on the first take; Selene after one take I rejected (impossible twist) and one fix for a finger through her hat; Scarlet after the owner rejected her tangled legs and the image filter refused three fixes, so she got a new standing scene, which he approved. Details and lessons in `docs/ART_ASSETS.md`. This completes the owner's request (two new gallery pictures per heroine).

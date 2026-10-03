@@ -19,11 +19,11 @@ The owner explicitly reduced the full 64-image brief to an MVP pass. Other expre
 
 ## Full-body sets (2026-10-02)
 
-All four heroines now have a full-body `portrait.webp` and all nine `portrait-<mood>.webp` (1024×1536 with alpha), replacing the thighs-up files above. They were generated through the Codex CLI (ART_GUIDE §9) and keyed by `npm run art`: Scarlet, Yuki and Selene on green, Kaede on blue because of her flame. Each mood was generated from the approved portrait with only the face changing. Chibis and `gallery-1` are still the MVP files.
+All four heroines now have a full-body `portrait.webp` and all nine `portrait-<mood>.webp` (1024×1536 with alpha), replacing the thighs-up files above. They were generated through the Codex CLI (ART_GUIDE §9) and keyed by `npm run art`: Scarlet, Yuki and Selene on green, Kaede on blue because of her flame. Each mood was generated from the approved portrait with only the face changing. Chibis are still the MVP files, and so is `gallery-1` except Selene's (redone 2026-10-03).
 
 Kaede's approved design, for future art of her: left hand on her hip with the elbow out, the happi jacket off both shoulders, a flame floating above her open right palm, a layered black-and-red skirt with a braided rope belt, a red marking on her left thigh, the sake gourd hanging at her left hip.
 
-Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below, which her chibi and `gallery-1` still show). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
+Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below, which her chibi still shows). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
 ## Gallery 2, "Off Duty" (2026-10-02)
 
@@ -54,6 +54,26 @@ What went wrong on the way, for next time:
 - Reclining or lying poses in swimwear go wrong: Scarlet's first take (reclining at the pool's edge) had legs the owner called intertwined, and the image tool's filter then refused all three attempts to fix that pose (two edits, one fresh take). A standing pose in a one-piece passed at once. Prefer standing or sitting-upright poses for swimwear.
 - Selene's first take looked back over her shoulder: her torso twisted impossibly and the high-cut swimsuit read as bare. Ask for a front or three-quarter view with the whole body turned the same way, and a normal swimsuit leg line.
 - Small fixes (Selene's finger through the hat brim) work as an edit: attach the picture as image 1 and the portrait as image 2, and ask to redraw image 1 with exactly one thing changed.
+
+## Gallery 4 "After Hours" and Gallery 5 "Heart Unveiled" (2026-10-03)
+
+`gallery-4.webp` and `gallery-5.webp` for all four (1536×1024, opaque), each approved by the owner. Same recipe as gallery 2. After Hours follows each heroine's Bond 7 chat and Heart Unveiled her Bond 9 confession (`docs/LORE.md`).
+
+| Heroine | 4 After Hours                                                                                                                                     | 5 Heart Unveiled                                                                                                                |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Scarlet | A blood-moon night, when she is weakest: crimson satin gown, long lace gloves, the Commander's coat over her shoulders, wine on a balcony bench   | Candlelit hall, the night her heart beats again: one glove off, her bare hand offered back up; the gloved hand over her heart   |
+| Yuki    | Kneeling on a futon in a pale-blue yukata, reaching out to test her touch on the Commander; frost flowers stop short of her hand                  | First snow on the shrine bridge that doesn't melt on her: the Commander's red scarf pressed to her cheek, happy tears           |
+| Kaede   | A late teahouse drink: red maple kimono off one shoulder, raising her sake cup to the Commander; a candle she lit burns too bright                | The Ember Dance, which an oni dances only for the one who carries her flame: ceremonial costume, ribbons of flame, reaching out |
+| Selene  | Her balcony at night after admitting the price in the old texts: lilac silk nightgown and chiffon robe, playing with her braid, the scroll by her | Before the Moongate under a moon halo, choosing to live: holding up her crescent hair ornament for the Commander, happy tears   |
+
+Selene's `gallery-1` was redone the same day because the old one showed her closed-neck gown: image 1 her portrait (outfit and bow win), image 2 the old picture (composition, pose and scene kept).
+
+What went wrong on the way, for next time:
+
+- The owner rejected five of the first nine for hands that a quick look had passed. He checks every finger: a nail on the palm side of a finger (Yuki), a finger lost behind a wine glass (Scarlet), a badly shaped nail and a little finger sticking out (Kaede), rubbery fingers on a palm-up hand (Scarlet, two takes). He also caught cupped hands held in front of Selene's chest that read as a third breast. Check every hand at 2–4× zoom and count the fingers before showing a picture.
+- The HANDS paragraph of the prompt now says: five fingers on each hand, three segments each, no fused, missing, rubbery or sticking-out fingers, and nails only on the backs of the fingers (finger pads on the palm side).
+- An edit that redraws one hand (image 1 the picture, image 2 the portrait, "redraw image 1 with exactly one thing changed") fixed Scarlet's and Yuki's After Hours. Fresh takes that describe simple hand poses fixed the rest: the back of the hand toward the viewer, hands closed around a cup, a hand flat on a table. Palm-up open hands and a flame floating above a palm failed repeatedly, so Kaede's After Hours moved the flame to a candle.
+- Keep props away from the chest; hold them at the waist or beside the face.
 
 ## Visual reference and prompt set
 
