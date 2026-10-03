@@ -6263,8 +6263,9 @@ html.fullh .screen {
     display: flex;
   }
   .bs-memories .diary {
+    --pad: calc(18 * var(--u));
+    --dot: calc(12 * var(--u));
     gap: calc(6 * var(--u));
-    padding-left: calc(18 * var(--u));
   }
   .bs-memories .diary-row {
     min-height: calc(46 * var(--u));
@@ -6336,9 +6337,13 @@ html.fullh .screen {
   font-size: 20px;
 }
 .diary {
+  /* --pad: from the timeline to the rows; --dot: the diamond's side. The diamonds are
+     placed from these, so they stay centred on the line when the list is scaled. */
+  --pad: 18px;
+  --dot: 12px;
   list-style: none;
   margin: 0;
-  padding: 0 0 0 18px;
+  padding: 0 0 0 var(--pad);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -6350,11 +6355,12 @@ html.fullh .screen {
 }
 .diary-dot {
   position: absolute;
-  left: -26px;
+  /* centred on the 2px line: back over the padding, half the line, half the diamond */
+  left: calc(-1 * var(--pad) - 1px - var(--dot) / 2);
   top: 50%;
-  width: 12px;
-  height: 12px;
-  margin-top: -6px;
+  width: var(--dot);
+  height: var(--dot);
+  margin-top: calc(var(--dot) / -2);
   transform: rotate(45deg);
   background: var(--ink-3, #2a1f34);
   border: 2px solid var(--hair-2);

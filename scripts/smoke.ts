@@ -175,16 +175,29 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   );
   await page.waitForTimeout(600);
   await shot('1f-gifted');
+  // The timeline's diamonds sit on its line (they drifted off it when the list was scaled)
+  const drift = (root: string) =>
+    page.evaluate((root) => {
+      const ol = document.querySelector<HTMLElement>(`${root} .diary`)!;
+      const line = ol.getBoundingClientRect().left + 1;
+      return Math.max(
+        ...Array.from(ol.querySelectorAll('.diary-dot')).map((d) =>
+          Math.abs(d.getBoundingClientRect().left + d.getBoundingClientRect().width / 2 - line),
+        ),
+      );
+    }, root);
   // Her episodes: in the diary sheet, or listed in the column where the screen has room for it
   const diary = page.getByRole('button', { name: 'Diary' });
   if (await diary.isVisible()) {
     await diary.click();
     await page.locator('.bs-sheet .diary li').first().waitFor();
     assert((await page.locator('.bs-sheet .diary li').count()) === 5, 'diary should list her 5 episodes in order');
+    assert((await drift('.bs-sheet')) < 0.6, 'diary diamonds are off the timeline');
     await shot('1g-diary');
     await page.locator('.bs-sheet').getByRole('button', { name: 'Close' }).click();
   } else {
     assert((await page.locator('.bs-memories .diary li:visible').count()) === 5, 'her 5 episodes should be listed in the column');
+    assert((await drift('.bs-memories')) < 0.6, 'episode diamonds are off the timeline');
   }
   // Nothing on her Bond screen may be cut off or need scrolling
   const fit = await page.evaluate(() => {
