@@ -7,7 +7,7 @@ import { paintMap } from '../game/mapArt.ts';
 import { BESTIARY, BESTIARY_NOTE, CODEX, IDLE_LINES, STORIES } from '../data/lore.ts';
 import { GALLERY, HOME_SCENE, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode, GalleryItem } from '../data/types.ts';
-import { dev, heroineLevel, isMapUnlocked, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
+import { dev, galleryOpen, heroineLevel, isMapUnlocked, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
 import { openLightbox } from './art.ts';
 import { playChat, startAmbient, type Ambient } from './chat.ts';
 import { artChain, backdrop, bondBar, capUpscale, closeScreens, sceneUrl, show, topbar } from './common.ts';
@@ -20,6 +20,7 @@ import { giftIcon } from './giftArt.ts';
 
 export { closeScreens };
 import { icon, type IconName } from './icons.ts';
+import { preload } from './preload.ts';
 
 // ------------------------------------------------------------------ home
 
@@ -30,6 +31,9 @@ export interface HomeActions {
 
 /** Which heroine the lobby features; the player can switch with the avatars. */
 let featured = '';
+
+/** How long her old pose stays while it fades under the new one (`.pose-out` in style.css). */
+const POSE_SWAP_MS = 420;
 
 /** Lobby particles behind each heroine. */
 const LOBBY_FX: Record<string, Ambient> = { scarlet: 'petals', yuki: 'snow', kaede: 'embers', selene: 'sparkle', nemu: 'motes' };
@@ -52,7 +56,7 @@ export function showHome(a: HomeActions): void {
     featured = [...unlocked].sort((x, y) => (save.heroines[y.id]?.xp ?? 0) - (save.heroines[x.id]?.xp ?? 0))[0]?.id ?? HEROINES[0].id;
   }
   const d = HEROINE_BY_ID[featured];
-  const got = GALLERY.filter((g) => heroineLevel(g.heroine) >= g.level).length;
+  const got = GALLERY.filter(galleryOpen).length;
   const fresh = newChats().length;
   const best = Math.max(0, ...Object.values(save.bestWave));
   const mapsOpen = MAPS.filter((m) => isMapUnlocked(m)).length;
@@ -66,8 +70,9 @@ export function showHome(a: HomeActions): void {
       h('span', { class: 'lobby-lbl' }, label),
     );
 
-  const heroFor = (id: string) => {
-    const img = capUpscale(artChain([portraitFile(id)], id, HEROINE_BY_ID[id].name, true, 'home-hero'));
+  const heroFor = (id: string, mood?: string) => {
+    const files = mood ? [portraitFile(id, mood), portraitFile(id)] : [portraitFile(id)];
+    const img = capUpscale(artChain(files, id, HEROINE_BY_ID[id].name, true, 'home-hero'));
     img.draggable = false;
     return img;
   };
@@ -85,6 +90,30 @@ export function showHome(a: HomeActions): void {
   const nameBox = h('div', { class: 'home-name' }, nameB, nameS, bondSlot);
   let lastLine = -1;
   let bubbleTimer = 0;
+  let pose: string | undefined;
+
+  /**
+   * She takes the pose that goes with her line, then returns to her usual one. Moods
+   * are whole poses, so the old picture is pinned where it stands and fades out under
+   * the new one (as in chats); the swap waits until the new picture is decoded.
+   */
+  const setPose = (mood?: string) => {
+    if (mood === pose) return false;
+    pose = mood;
+    const id = featured;
+    void preload(portraitFile(id, mood)).then((ok) => {
+      if (!ok || featured !== id || pose !== mood || !screen.isConnected) return;
+      const old = hero;
+      const next = heroFor(id, mood);
+      next.classList.add('pose-in');
+      old.style.cssText += `position:absolute;left:${old.offsetLeft}px;top:${old.offsetTop}px;width:${old.offsetWidth}px;height:${old.offsetHeight}px`;
+      old.classList.add('pose-out');
+      old.after(next);
+      hero = next;
+      window.setTimeout(() => old.remove(), POSE_SWAP_MS);
+    });
+    return true;
+  };
 
   const talk = () => {
     const id = featured;
@@ -98,12 +127,18 @@ export function showHome(a: HomeActions): void {
     void bubble.offsetWidth;
     bubble.classList.add('on');
     heroWrap.classList.remove('poke');
-    void heroWrap.offsetWidth;
-    heroWrap.classList.add('poke');
+    // A new pose is its own reaction; the same pose gets a little hop.
+    if (!setPose(lines[i].mood)) {
+      void heroWrap.offsetWidth;
+      heroWrap.classList.add('poke');
+    }
     const voice = VOICE[id] ?? 1.5;
     for (let k = 0; k < 6; k++) window.setTimeout(() => sound.play('blip', voice), k * 70);
     clearTimeout(bubbleTimer);
-    bubbleTimer = window.setTimeout(() => bubble.classList.remove('on'), 4200);
+    bubbleTimer = window.setTimeout(() => {
+      bubble.classList.remove('on');
+      setPose();
+    }, 4200);
   };
 
   // Switching the featured heroine updates only what changes (no full re-render).
@@ -111,6 +146,9 @@ export function showHome(a: HomeActions): void {
     if (id === featured) return;
     featured = id;
     lastLine = -1;
+    pose = undefined;
+    clearTimeout(bubbleTimer);
+    for (const o of heroWrap.querySelectorAll('.pose-out')) o.remove();
     const u = HEROINE_BY_ID[id];
     screen.style.setProperty('--c', hex(u.color));
     screen.style.setProperty('--a', hex(u.accent));
@@ -475,7 +513,7 @@ export function showProfile(id: string, a: HomeActions): void {
       h('span', null, ...(open ? (seen ? ['Replay'] : [icon('sparkle'), 'New']) : [recruited ? `Bond ${ep.level}` : 'Locked'])),
     );
   });
-  const gallery = GALLERY.filter((g) => g.heroine === id).map((g) => galleryThumb(g, lvl));
+  const gallery = GALLERY.filter((g) => g.heroine === id).map(galleryThumb);
   const art = fullPortrait(artChain([portraitFile(id)], id, d.name, true, 'profile-art'), id);
   show(
     h(
@@ -532,9 +570,8 @@ export function showProfile(id: string, a: HomeActions): void {
 
 // ------------------------------------------------------------------ gallery
 
-function galleryThumb(g: GalleryItem, lvl: number): HTMLElement {
-  const open = lvl >= g.level;
-  if (!open) return h('div', { class: 'thumb locked' }, h('span', null, icon('lock'), `Bond ${g.level}`));
+function galleryThumb(g: GalleryItem): HTMLElement {
+  if (!galleryOpen(g)) return h('div', { class: 'thumb locked' }, h('span', null, icon('lock'), `Bond ${g.level}`));
   return h(
     'button',
     { class: 'thumb', onclick: (e: Event) => lightbox(g, e.currentTarget as HTMLElement) },
@@ -594,19 +631,15 @@ export function showCodex(a: HomeActions): void {
 
 export function showGallery(a: HomeActions): void {
   const sections = HEROINES.map((d, si) => {
-    const lvl = heroineLevel(d.id);
     return h(
       'div',
       { class: 'gallery-section', style: `--c:${hex(d.color)}` },
       h('div', { class: 'label' }, d.name),
-      stagger(
-        h('div', { class: 'gallery-grid pop' }, ...GALLERY.filter((g) => g.heroine === d.id).map((g) => galleryThumb(g, lvl))),
-        si * 2,
-      ),
+      stagger(h('div', { class: 'gallery-grid pop' }, ...GALLERY.filter((g) => g.heroine === d.id).map(galleryThumb)), si * 2),
     );
   });
   const total = GALLERY.length;
-  const got = GALLERY.filter((g) => heroineLevel(g.heroine) >= g.level).length;
+  const got = GALLERY.filter(galleryOpen).length;
   show(
     h(
       'section',

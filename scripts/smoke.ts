@@ -1,6 +1,11 @@
 // End-to-end smoke test: builds nothing itself — run `npm run build` first (npm run smoke does).
-// Serves dist/, drives the game in a real Chromium at desktop / phone-portrait / phone-landscape,
-// asserts core flows work, fails on page errors, and saves screenshots to artifacts/smoke/.
+// Serves dist/, drives the game in a real Chromium on a phone (upright and on its side), a
+// tablet, a laptop and a big desktop monitor, asserts core flows work, fails on page errors,
+// and saves screenshots to artifacts/smoke/. Every UI change is reviewed at three of them at
+// least: phone-portrait, tablet and desktop-large (AGENTS.md §8).
+//
+//   npm run smoke                      all five screens
+//   npm run smoke -- tablet desktop    only the screens whose name contains one of these words
 //
 // Browser resolution order: $CHROME_PATH, then @sparticuz/chromium (Linux x64: works in
 // sandboxes/cloud sessions where browser downloads are blocked), then Playwright's own Chromium
@@ -13,11 +18,16 @@ import { preview } from 'vite';
 const OUT = 'artifacts/smoke';
 mkdirSync(OUT, { recursive: true });
 
-const VIEWS = [
-  { name: 'desktop', width: 1280, height: 720, touch: false },
-  { name: 'phone-portrait', width: 390, height: 844, touch: true },
-  { name: 'phone-landscape', width: 844, height: 390, touch: true },
+const ALL_VIEWS = [
+  { name: 'desktop', width: 1280, height: 720, touch: false, dpr: 2 },
+  { name: 'phone-portrait', width: 390, height: 844, touch: true, dpr: 2 },
+  { name: 'phone-landscape', width: 844, height: 390, touch: true, dpr: 2 },
+  { name: 'tablet', width: 820, height: 1180, touch: true, dpr: 2 },
+  { name: 'desktop-large', width: 2560, height: 1440, touch: false, dpr: 1 },
 ];
+const only = process.argv.slice(2);
+const VIEWS = only.length ? ALL_VIEWS.filter((v) => only.some((o) => v.name.includes(o))) : ALL_VIEWS;
+if (!VIEWS.length) throw new Error(`no screen matches ${only.join(', ')} (have: ${ALL_VIEWS.map((v) => v.name).join(', ')})`);
 
 async function launch() {
   if (process.env.CHROME_PATH) return chromium.launch({ executablePath: process.env.CHROME_PATH });
@@ -64,7 +74,7 @@ const sim = (page: Page) =>
 async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string, v: (typeof VIEWS)[number]) {
   const ctx = await browser.newContext({
     viewport: { width: v.width, height: v.height },
-    deviceScaleFactor: 2,
+    deviceScaleFactor: v.dpr,
     hasTouch: v.touch,
     isMobile: v.touch,
   });
@@ -125,6 +135,20 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   // Tapping her makes her talk; Messages lists the chats
   await page.getByRole('button', { name: 'Talk to her' }).click();
   await page.locator('.lobby-bubble.on').waitFor({ timeout: 2000 });
+  // …and take the pose that goes with her line: one of the everyday ones, never a chat-only mood
+  if (existsSync('public/art/scarlet/portrait-smile.webp')) {
+    await page.waitForFunction(
+      () =>
+        /portrait-(smile|tease|wink|pout)\.webp$/.test(
+          document.querySelector<HTMLImageElement>('.lobby-hero img:last-child')?.currentSrc ?? '',
+        ),
+      null,
+      {
+        timeout: 4000,
+      },
+    );
+    await page.waitForFunction(() => document.querySelectorAll('.lobby-hero img').length === 1); // the old pose has faded out
+  }
   await shot('1b-lobby-talk');
   await page.getByRole('button', { name: 'Messages' }).click();
   await page.locator('.bond-card').first().waitFor();
@@ -151,11 +175,27 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   );
   await page.waitForTimeout(600);
   await shot('1f-gifted');
-  await page.getByRole('button', { name: 'Diary' }).click();
-  await page.locator('.diary li').first().waitFor();
-  assert((await page.locator('.diary li').count()) === 5, 'diary should list her 5 episodes in order');
-  await shot('1g-diary');
-  await page.locator('.bs-sheet').getByRole('button', { name: 'Close' }).click();
+  // Her episodes: in the diary sheet, or listed in the column where the screen has room for it
+  const diary = page.getByRole('button', { name: 'Diary' });
+  if (await diary.isVisible()) {
+    await diary.click();
+    await page.locator('.bs-sheet .diary li').first().waitFor();
+    assert((await page.locator('.bs-sheet .diary li').count()) === 5, 'diary should list her 5 episodes in order');
+    await shot('1g-diary');
+    await page.locator('.bs-sheet').getByRole('button', { name: 'Close' }).click();
+  } else {
+    assert((await page.locator('.bs-memories .diary li:visible').count()) === 5, 'her 5 episodes should be listed in the column');
+  }
+  // Nothing on her Bond screen may be cut off or need scrolling
+  const fit = await page.evaluate(() => {
+    const p = document.querySelector('.bs-panel')!;
+    const r = p.getBoundingClientRect();
+    return {
+      scrolls: p.scrollHeight > p.clientHeight + 1,
+      inside: r.left >= 0 && r.top >= 0 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1,
+    };
+  });
+  assert(!fit.scrolls && fit.inside, `the Bond panel does not fit the screen: ${JSON.stringify(fit)}`);
   await page.getByTitle('Back', { exact: true }).click();
   await page.locator('.bond-card').first().waitFor();
   await page.getByTitle('Back', { exact: true }).click();
@@ -351,6 +391,7 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     for (const heroine of Object.values(progress) as { xp: number }[]) heroine.xp = 100; // Bond 2
   });
   await page.getByRole('button', { name: 'Gallery', exact: true }).click();
+  assert((await page.locator('.thumb.locked').count()) === 0, 'dev mode should open every gallery picture');
   const heroineIds = ['scarlet', 'yuki', 'kaede', 'selene', 'nemu'];
   for (const [index, id] of heroineIds.entries()) {
     await page

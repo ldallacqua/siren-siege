@@ -102,6 +102,11 @@ export function heroineLevel(id: string): number {
   return bondLevel(save.heroines[id]?.xp ?? 0);
 }
 
+/** A gallery picture opens at its Bond level (dev mode: every picture is open). */
+export function galleryOpen(g: { heroine: string; level: number }): boolean {
+  return dev || heroineLevel(g.heroine) >= g.level;
+}
+
 export function addXp(id: string, amount: number): { before: number; after: number } {
   const p = (save.heroines[id] ??= { xp: 0, chatsDone: [] });
   const before = bondLevel(p.xp);

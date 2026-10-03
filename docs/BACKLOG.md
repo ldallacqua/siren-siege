@@ -21,6 +21,14 @@ Portraits are 1536 px tall (the generator's maximum). On a 4K screen at 200 % th
 
 - Accept: owner chooses; if done, `MAX_UPSCALE` framing on 4K matches 1080p and the gate passes.
 
+### B-21 · P1 · Menus scale up on big desktop monitors
+
+At 2560×1440 (`desktop-large` in the smoke test) only the Bond screen scales (D-031). The lobby tiles and name, Messages, arena select, roster, profile, gallery, codex, settings, the upgrade tree, the chat box and the battle HUD keep their phone pixel sizes and look small, with wide empty margins.
+
+- One scale for the whole UI from the screen height (the Bond screen's `--u` steps are the reference: 1 / 1.15 / 1.3 / 1.5), or per-screen wide layouts where a list should become columns.
+- If it is a global `zoom`, check every `vh`/`vw`/`dvh` size, the lightbox, and the battlefield's pointer maths (`BattleScene`, `tileToPage` in the smoke test); then remove the Bond screen's own `--u` steps.
+- Done when the `desktop-large` smoke screenshots read comfortably from a normal distance and the other four screens are unchanged.
+
 ### B-03b · P1 · Juice follow-ups
 
 B-03 shipped (synth SFX + music, particles, floating gold, shake, settings). Remaining:

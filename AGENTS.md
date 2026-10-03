@@ -34,11 +34,11 @@ The next agent has **no memory of your session** — if it isn't in the repo, it
 
 | Command             | What it does                                                                                                              |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`       | Dev server on :5173. Open `/?dev` for dev mode (all unlocked, 20k gold, `window.siren` debug hook)                        |
+| `npm run dev`       | Dev server on :5173. Open `/?dev` for dev mode (all unlocked incl. the gallery, 20k gold, `window.siren` debug hook)      |
 | `npm run check`     | **The gate.** Prettier check + typecheck (app and node) + unit tests + balance sim + production build                     |
 | `npm test`          | Vitest unit tests (`tests/`): data integrity + simulation behavior                                                        |
 | `npm run sim`       | Headless balance bot plays all 20 waves and prints per-wave lives/cash (`npm run sim -- scarlet yuki`)                    |
-| `npm run smoke`     | Build + real-browser test at 1280×720, 390×844 touch, 844×390 touch; screenshots → `artifacts/smoke/`                     |
+| `npm run smoke`     | Build + real-browser test on five screens (below); screenshots → `artifacts/smoke/`. `-- tablet large` runs only those    |
 | `npm run fx`        | Build + fires each heroine's effects for 5 upgrade builds side by side; screenshots → `artifacts/fx/`                     |
 | `npm run format`    | Prettier write                                                                                                            |
 | `npm run shots`     | Build + regenerate the README images in `docs/readme/` (`-- --banner`: banner and heroine cards only)                     |
@@ -46,7 +46,7 @@ The next agent has **no memory of your session** — if it isn't in the repo, it
 | `npm run art:check` | **The art gate** (`docs/ART_QA.md`): measured checks per heroine + review sheets → `artifacts/art-check/`                 |
 | `npm run build`     | Typecheck + Vite build to `dist/`                                                                                         |
 
-**Look at the smoke screenshots** (`artifacts/smoke/*.png`) after UI changes — that's how you "see" the game. The smoke test finds Chromium via `$CHROME_PATH`, then `@sparticuz/chromium` (bundled via npm, works in sandboxed/cloud Linux where browser downloads are blocked), then Playwright's own (`npx playwright-core install chromium` on macOS/Windows).
+**Look at the smoke screenshots** (`artifacts/smoke/*.png`) after UI changes — that's how you "see" the game. The five screens: `phone-portrait` 390×844, `phone-landscape` 844×390, `tablet` 820×1180, `desktop` 1280×720 (a laptop) and `desktop-large` 2560×1440. **Every UI change is looked at on a phone, a tablet and a big desktop** (`phone-portrait`, `tablet`, `desktop-large`) before it is called done: the owner plays on all three, and a screen that is fine on a laptop can be tiny or empty on a 1440p monitor. The smoke test finds Chromium via `$CHROME_PATH`, then `@sparticuz/chromium` (bundled via npm, works in sandboxed/cloud Linux where browser downloads are blocked), then Playwright's own (`npx playwright-core install chromium` on macOS/Windows).
 
 ## 5. Code map
 
@@ -109,6 +109,8 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 
 **Write a chat:** read `docs/LORE.md` first. Add a `ChatEpisode` (with a `scene`) to `EPISODES` using the `her()/nar()/pick()/you()/end()` helpers. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of `MOODS` in `src/data/progression.ts`: smile, laugh, tease, wink, blush, shy, pout, angry, sad. Each is a whole pose of hers, so pick the one whose body language fits the line, give every line of hers a mood (a line without one falls back to `smile` and she snaps back to that pose), and only use a mood she has art for (`public/art/<id>/portrait-<mood>.webp`; a test fails otherwise). Tests verify links, reachability and endings.
 
+**Write a lobby line** (what she says when tapped on the home screen): add it to `IDLE_LINES` in `src/data/lore.ts` with the Bond `level` that unlocks it and a `mood`. She takes that pose while the line shows. Only the everyday moods are allowed there (`LOBBY_MOODS`: smile, tease, wink, pout); the other five stay a surprise for her chats (a test enforces it).
+
 **Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots. Art is not done until it passes the art gate (`docs/ART_QA.md`): `npm run art:check` green, the review sheets looked at (count fingers on every hand), and the owner's sign-off recorded in the ART_QA status table.
 
 **Add a new screen:** add a `showX()` in `ui/screens.ts` that builds DOM with `h()` and calls `show()`. Style in `style.css` with a portrait and a short-landscape variant.
@@ -119,7 +121,7 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 - Imports use explicit `.ts` extensions (Node strip-types needs them).
 - Sim units: tiles and seconds. Colors: `0xRRGGBB` numbers. The sim must stay deterministic (no `Math.random()` in `sim/`; if you need randomness, add a seeded RNG).
 - Only `src/state/save.ts` touches `localStorage`. If you change the save shape, keep `load()` backward compatible or bump `version` with a migration.
-- UI must work in portrait and landscape, touch and mouse. Tap targets ≥ 40px. Test with `npm run smoke`.
+- UI must work in portrait and landscape, touch and mouse, from a phone to a 2560×1440 monitor. Tap targets ≥ 40px. Test with `npm run smoke` and look at the phone, tablet and big-desktop screenshots.
 - Never hard-require an art file to exist; always go through `artImg()` / `artChain()`.
 - **Any generated image that needs a transparent background (portraits, moods, chibis, cut-out props) is requested transparent from the image generator**: tell it to use its image tool with `transparent_background` set to true (`docs/ART_GUIDE.md` §9). Don't generate on a green screen and key it out: keyed edges keep a coloured outline in the hair. The green screen is only the fallback for a tool without that switch. This is for new images: pictures the owner already approved (the base portraits) are not regenerated to get transparency, because a regenerated copy redraws hands, feet and skin tone (D-029).
 - Phaser 4 (not 3). Its API docs for agents ship inside the package: `node_modules/phaser/skills/<topic>/SKILL.md` (see `v3-to-v4-migration` before using v3 examples from the web).
@@ -130,7 +132,7 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 
 - `npm run check` green; `npm run smoke` green for UI work, and you looked at the screenshots.
 - New logic has a unit test; new content passes the data tests.
-- Works at 1280×720, 390×844 and 844×390.
+- Works on a phone (390×844 and 844×390), a tablet (820×1180), a laptop (1280×720) and a big desktop (2560×1440): the smoke test passes on all five and you looked at the phone, tablet and big-desktop screenshots of what you changed.
 - STATUS/BACKLOG updated, committed, pushed to `main` (CI deploys it).
 
 ## 9. Environment notes
@@ -138,5 +140,5 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 - Node ≥ 22.6 (`.nvmrc`). No backend; static hosting only.
 - Cloud agent sandboxes often block arbitrary outbound HTTP (Google Fonts, github.io, browser downloads). That's expected — fonts fall back, and the smoke test uses the npm-bundled Chromium.
 - GitHub Pages serves the `gh-pages` branch; don't commit to it by hand — `.github/workflows/deploy.yml` owns it.
-- `git push` runs `.githooks/pre-push` (installed by `npm install`): `npm run check` + `npm run smoke` on the pushed commit (~2 min; skipped for trees that already passed, Prettier only for docs-only pushes; `SKIP_SMOKE=1` skips the browser test). In cloud sandboxes give the push a long timeout.
+- `git push` runs `.githooks/pre-push` (installed by `npm install`): `npm run check` + `npm run smoke` on the pushed commit (~3 min; skipped for trees that already passed, Prettier only for docs-only pushes; `SKIP_SMOKE=1` skips the browser test). In cloud sandboxes give the push a long timeout.
 - CI (`.github/workflows/ci.yml`) runs `npm run check` on branch pushes and adds `npm run smoke` on pull requests; the deploy runs `npm run check` only.

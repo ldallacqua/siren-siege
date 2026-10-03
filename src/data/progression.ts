@@ -58,6 +58,13 @@ export const MOODS = ['smile', 'laugh', 'tease', 'wink', 'blush', 'shy', 'pout',
 export type Mood = (typeof MOODS)[number];
 
 /**
+ * The poses she takes when tapped in the lobby: only the everyday ones. The other
+ * five (laugh, blush, shy, angry, sad) are first seen in her chats.
+ */
+export const LOBBY_MOODS = ['smile', 'tease', 'wink', 'pout'] as const satisfies readonly Mood[];
+export type LobbyMood = (typeof LOBBY_MOODS)[number];
+
+/**
  * Painted backdrops, `public/art/scenes/<name>.webp`: one per chat scene, plus `menu`
  * (the shrine courtyard) for the title and menu screens. Like all art they are
  * optional: without the file the CSS-painted scene shows.

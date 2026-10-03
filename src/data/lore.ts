@@ -1,6 +1,8 @@
 // In-game lore: the Codex (world entries) and each heroine's story entries,
 // unlocked by Bond. Canon lives in docs/LORE.md; keep the two in sync.
 
+import type { LobbyMood } from './progression.ts';
+
 export interface LoreEntry {
   title: string;
   text: string;
@@ -135,51 +137,54 @@ export const STORIES: Record<string, StoryEntry[]> = {
   ],
 };
 
-/** Lines she says when you tap her in the lobby (a few unlock with Bond). */
-export const IDLE_LINES: Record<string, { level: number; text: string }[]> = {
+/**
+ * What she says when tapped in the lobby, by Bond level. Each line comes with a pose,
+ * and only the everyday ones (`LOBBY_MOODS`): the rest stay a surprise for the chats.
+ */
+export const IDLE_LINES: Record<string, { level: number; mood: LobbyMood; text: string }[]> = {
   scarlet: [
-    { level: 1, text: 'Staring, Commander? Go on. I charge by the minute, but for you I run a tab.' },
-    { level: 1, text: 'Silver polished, coat pressed, hunger politely asleep. I am ready when you are.' },
-    { level: 1, text: 'Careful where you poke, darling. Some of us bite back.' },
-    { level: 3, text: 'The rain here smells like the Keep. I hate that I like it.' },
-    { level: 5, text: 'Your heartbeat is very loud today. Nervous, or pleased to see me?' },
-    { level: 7, text: 'Stand a little closer. The shadows are colder when you are not in them.' },
-    { level: 9, text: "Four hundred years and I've finally found something worth being late for." },
+    { level: 1, mood: 'tease', text: 'Staring, Commander? Go on. I charge by the minute, but for you I run a tab.' },
+    { level: 1, mood: 'smile', text: 'Silver polished, coat pressed, hunger politely asleep. I am ready when you are.' },
+    { level: 1, mood: 'wink', text: 'Careful where you poke, darling. Some of us bite back.' },
+    { level: 3, mood: 'pout', text: 'The rain here smells like the Keep. I hate that I like it.' },
+    { level: 5, mood: 'tease', text: 'Your heartbeat is very loud today. Nervous, or pleased to see me?' },
+    { level: 7, mood: 'smile', text: 'Stand a little closer. The shadows are colder when you are not in them.' },
+    { level: 9, mood: 'wink', text: "Four hundred years and I've finally found something worth being late for." },
   ],
   yuki: [
-    { level: 1, text: '...Hello. Your hand is warm. Please do not do that without warning.' },
-    { level: 1, text: 'Kaede says I should "say more words". This is me saying more words.' },
-    { level: 1, text: "I'm not sulking. It's just my face. It freezes like that." },
-    { level: 3, text: 'The hot spring was... acceptable. I might go again. With you.' },
-    { level: 5, text: 'I finished the snow figure of you. It looks surprised. So do you, right now.' },
-    { level: 7, text: 'You did not freeze. I keep checking. You are still warm.' },
-    { level: 9, text: "It's snowing just over you. Yes, that's me. Stop smiling." },
+    { level: 1, mood: 'pout', text: '...Hello. Your hand is warm. Please do not do that without warning.' },
+    { level: 1, mood: 'smile', text: 'Kaede says I should "say more words". This is me saying more words.' },
+    { level: 1, mood: 'pout', text: "I'm not sulking. It's just my face. It freezes like that." },
+    { level: 3, mood: 'smile', text: 'The hot spring was... acceptable. I might go again. With you.' },
+    { level: 5, mood: 'tease', text: 'I finished the snow figure of you. It looks surprised. So do you, right now.' },
+    { level: 7, mood: 'smile', text: 'You did not freeze. I keep checking. You are still warm.' },
+    { level: 9, mood: 'wink', text: "It's snowing just over you. Yes, that's me. Stop smiling." },
   ],
   kaede: [
-    { level: 1, text: "COMMANDER! Let's go blow something up. Or drink. Both. Both is good." },
-    { level: 1, text: 'Poke my horns again and I poke you back. With fire.' },
-    { level: 1, text: "You look tired. Here, have some sake. It's medicinal. Oni law." },
-    { level: 3, text: "Kid at the village said my horns were cool today. Not that I care. I'm thrilled." },
-    { level: 5, text: 'Sunrise on the watchtower tomorrow? You bring breakfast, I bring bad jokes.' },
-    { level: 7, text: 'If I ever get too hot to handle... you know what to do. Grab my hand.' },
-    { level: 9, text: "I'm teaching you the second half of the dance tonight. No excuses." },
+    { level: 1, mood: 'smile', text: "COMMANDER! Let's go blow something up. Or drink. Both. Both is good." },
+    { level: 1, mood: 'pout', text: 'Poke my horns again and I poke you back. With fire.' },
+    { level: 1, mood: 'wink', text: "You look tired. Here, have some sake. It's medicinal. Oni law." },
+    { level: 3, mood: 'smile', text: "Kid at the village said my horns were cool today. Not that I care. I'm thrilled." },
+    { level: 5, mood: 'wink', text: 'Sunrise on the watchtower tomorrow? You bring breakfast, I bring bad jokes.' },
+    { level: 7, mood: 'smile', text: 'If I ever get too hot to handle... you know what to do. Grab my hand.' },
+    { level: 9, mood: 'tease', text: "I'm teaching you the second half of the dance tonight. No excuses." },
   ],
   selene: [
-    { level: 1, text: 'Ara~ Tapping a priestess? The Lady saw that, Commander.' },
-    { level: 1, text: 'The seal is quiet today. So I get to be a little lazy with you.' },
-    { level: 1, text: 'Would you like your fortune? It says: "more tea, less war".' },
-    { level: 3, text: 'I drew the Lovers card again. The deck has a sense of humor.' },
-    { level: 5, text: 'The cracks close faster when you visit. I shall start charging admission.' },
-    { level: 7, text: "Don't look at the scroll. Look at me. Much nicer to read." },
-    { level: 9, text: 'I have decided to grow old here and be terribly bossy. You are included.' },
+    { level: 1, mood: 'tease', text: 'Ara~ Tapping a priestess? The Lady saw that, Commander.' },
+    { level: 1, mood: 'smile', text: 'The seal is quiet today. So I get to be a little lazy with you.' },
+    { level: 1, mood: 'wink', text: 'Would you like your fortune? It says: "more tea, less war".' },
+    { level: 3, mood: 'tease', text: 'I drew the Lovers card again. The deck has a sense of humor.' },
+    { level: 5, mood: 'wink', text: 'The cracks close faster when you visit. I shall start charging admission.' },
+    { level: 7, mood: 'pout', text: "Don't look at the scroll. Look at me. Much nicer to read." },
+    { level: 9, mood: 'smile', text: 'I have decided to grow old here and be terribly bossy. You are included.' },
   ],
   nemu: [
-    { level: 1, text: '...Mm? Oh. It’s you. Wake me when something explodes.' },
-    { level: 1, text: 'Don’t poke. I bite. Not hard. Still.' },
-    { level: 1, text: 'This is my working face. Yes, the eyes are always like this.' },
-    { level: 3, text: 'Three lollipops per wave. I checked the contract. You owe me two.' },
-    { level: 5, text: 'Warm tea tonight? I’ll tell you a bitter story and you can make a face.' },
-    { level: 7, text: 'You slept fine last night. I made sure. Don’t ask how.' },
-    { level: 9, text: 'I dreamed about you again. Don’t make that face. ...Okay, make it a little.' },
+    { level: 1, mood: 'smile', text: '...Mm? Oh. It’s you. Wake me when something explodes.' },
+    { level: 1, mood: 'pout', text: 'Don’t poke. I bite. Not hard. Still.' },
+    { level: 1, mood: 'tease', text: 'This is my working face. Yes, the eyes are always like this.' },
+    { level: 3, mood: 'tease', text: 'Three lollipops per wave. I checked the contract. You owe me two.' },
+    { level: 5, mood: 'smile', text: 'Warm tea tonight? I’ll tell you a bitter story and you can make a face.' },
+    { level: 7, mood: 'wink', text: 'You slept fine last night. I made sure. Don’t ask how.' },
+    { level: 9, mood: 'tease', text: 'I dreamed about you again. Don’t make that face. ...Okay, make it a little.' },
   ],
 };

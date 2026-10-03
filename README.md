@@ -190,7 +190,7 @@ flowchart LR
 - **Every sound is synthesized.** SFX, voice blips and the lofi and battle music (full song forms with sections, not loops) are generated with the Web Audio API. The repo contains no audio files.
 - **Effects are data.** A pure function turns a heroine's upgrade path into her effect palette, scale and tier-3 signature, so visuals always match the build.
 - **Installable and offline.** A hand-written service worker and web manifest; the page checks for a newer build on boot so players are never stuck on an old deploy.
-- **Tested in a real browser.** A Playwright smoke test drives desktop, phone-portrait and phone-landscape through the whole game and saves screenshots of every screen.
+- **Tested in a real browser.** A Playwright smoke test drives a phone (upright and on its side), a tablet, a laptop and a 1440p desktop through the whole game and saves screenshots of every screen.
 
 ## 🛠 Develop
 
@@ -207,13 +207,13 @@ npm run dev        # http://localhost:5173/?dev  (dev mode: everything unlocked,
 | --------------- | --------------------------------------------------------------------------------- |
 | `npm run dev`   | Dev server; add `?dev` for all unlocks and the `window.siren` debug hook          |
 | `npm run check` | **The gate**: Prettier, typecheck, unit tests, balance bot and a production build |
-| `npm run smoke` | Real-browser test on three viewports; screenshots in `artifacts/smoke/`           |
+| `npm run smoke` | Real-browser test on five screen sizes; screenshots in `artifacts/smoke/`         |
 | `npm run sim`   | Balance bot plays all 20 waves and prints lives and cash per wave                 |
 | `npm run fx`    | Renders each heroine's effects across five upgrade builds, side by side           |
 | `npm run shots` | Regenerates the images in this README (`docs/readme/`)                            |
 | `npm run art`   | Converts dropped-in PNG/JPG art to correctly sized WebP                           |
 
-**Shipping.** Pushing to `main` deploys to GitHub Pages. `npm install` wires up a **pre-push hook** (`.githooks/pre-push`) that runs `npm run check` and the smoke test on the exact commit you're pushing (about 2 minutes on a laptop), so CI only re-runs the fast gate before deploying. The hook skips commits that already passed and docs-only pushes; `SKIP_SMOKE=1 git push` skips the browser test in a pinch.
+**Shipping.** Pushing to `main` deploys to GitHub Pages. `npm install` wires up a **pre-push hook** (`.githooks/pre-push`) that runs `npm run check` and the smoke test on the exact commit you're pushing (about 3 minutes on a laptop), so CI only re-runs the fast gate before deploying. The hook skips commits that already passed and docs-only pushes; `SKIP_SMOKE=1 git push` skips the browser test in a pinch.
 
 <details>
 <summary><b>Project layout</b></summary>

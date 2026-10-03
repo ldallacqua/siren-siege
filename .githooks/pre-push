@@ -78,7 +78,7 @@ for sha in $(printf '%s\n' "${shas[@]}" | sort -u); do
     if [ "${SKIP_SMOKE:-}" = 1 ]; then
       echo "pre-push: SKIP_SMOKE=1, smoke test skipped"
     else
-      echo "pre-push: npm run smoke (~2 min; screenshots in artifacts/smoke/)"
+      echo "pre-push: npm run smoke (~3 min; screenshots in artifacts/smoke/)"
       npm run --silent smoke
       echo "$tree" >>"$stamp"
     fi

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { EPISODES, PROLOGUE } from '../src/data/dialogues.ts';
 import { ENEMIES, ENEMY_BY_ID, rbe } from '../src/data/enemies.ts';
 import { HEROINES } from '../src/data/heroines.ts';
+import { IDLE_LINES } from '../src/data/lore.ts';
 import { MAPS, WAVES } from '../src/data/maps.ts';
 import { existsSync } from 'node:fs';
 import {
@@ -11,6 +12,7 @@ import {
   FULL_BODY,
   GALLERY,
   HOME_SCENE,
+  LOBBY_MOODS,
   MAX_BOND,
   MOODS,
   SCENE_FILES,
@@ -188,6 +190,25 @@ describe('progression', () => {
     for (const g of GALLERY) {
       expect(g.level).toBeLessThanOrEqual(MAX_BOND);
       expect(g.file).toMatch(new RegExp(`^art/${g.heroine}/gallery-\\d+\\.webp$`));
+    }
+  });
+});
+
+describe('lobby lines', () => {
+  it('every heroine has a line from Bond 1, each with an everyday pose she has art for', () => {
+    const everyday: readonly string[] = LOBBY_MOODS;
+    for (const d of HEROINES) {
+      const lines = IDLE_LINES[d.id] ?? [];
+      expect(
+        lines.some((l) => l.level === 1),
+        d.id,
+      ).toBe(true);
+      const hasArt = existsSync(`public/${portraitFile(d.id)}`);
+      for (const l of lines) {
+        // The other moods are kept for the chats, so the lobby doesn't give them away.
+        expect(everyday, `${d.id}: "${l.text}"`).toContain(l.mood);
+        if (hasArt) expect(existsSync(`public/${portraitFile(d.id, l.mood)}`), `${d.id} ${l.mood}`).toBe(true);
+      }
     }
   });
 });

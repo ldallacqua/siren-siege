@@ -55,6 +55,15 @@ No screen is a flat dark fill: each sits on a painted backdrop (`public/art/scen
 - Ambient motion is slow (≥ 3 s loops): moon glow, bond-bar shine, Battle-button glow, lobby particles per heroine, pointer/tilt parallax via `data-depth`.
 - Reduced motion (Settings toggle or OS) sets `body.calm`: all CSS animation/transition collapses, `calm()` short-circuits every helper. Always check it before adding a JS-driven animation.
 
+## Screen sizes
+
+The game is played on a phone, a tablet and a desktop monitor, so every screen is designed for three shapes and checked on five sizes (`npm run smoke`): phone 390×844 and 844×390, tablet 820×1180, laptop 1280×720, big desktop 2560×1440.
+
+- Portrait and landscape are split with `aspect-ratio` media queries; `max-height: 520px` in landscape means a phone on its side.
+- A wide screen is not a stretched phone: don't leave a small card floating in a corner of a 1440p monitor. Use the height (a full-height column, a list that was a sheet on the phone) and scale type and spacing with the screen.
+- The Bond screen is the model (`style.css`, "her bond screen", D-031): portrait keeps a card at the bottom; landscape gets a full-height column on the right with a heroine picker, what Bond gives, her favourite gifts and, from 1000×780, her episodes listed in place. Everything in that column is sized in `--u` (1px, then 1.15 / 1.3 / 1.5 px from 1000 / 1200 / 1400 px of height).
+- Known gap: the other menu screens still use fixed pixel sizes and look small at 2560×1440 (BACKLOG B-21).
+
 ## Battlefield
 
 - Everything is drawn by `BattleScene` (canvas). The static scene (ground, path, props, vignette) is painted once per map/orientation into a texture (`src/game/mapArt.ts`); per-frame drawing is only for live things (enemies, projectiles, fx, fireflies, lantern flicker).
@@ -63,7 +72,7 @@ No screen is a flat dark fill: each sits on a painted backdrop (`public/art/scen
 
 ## Checklist before shipping UI
 
-1. Smoke screenshots at all three viewports; nothing clipped, no overlap, tap targets ≥ 40 px.
+1. Smoke screenshots on a phone, a tablet and a big desktop (`phone-portrait`, `tablet`, `desktop-large`), plus the other two when the layout changed; nothing clipped, no overlap, nothing tiny on the monitor, tap targets ≥ 40 px.
 2. No emoji or Unicode symbols used as icons in UI chrome.
 3. Only the two fonts; numbers are tabular.
 4. At most one rose "primary" per view.

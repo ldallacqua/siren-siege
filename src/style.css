@@ -1002,6 +1002,25 @@ body.in-battle .zoom-ctl {
     poke 0.4s var(--ease),
     breathe 5.5s ease-in-out 0.4s infinite;
 }
+/* Tapped: she changes pose. The new picture fades in over the old one, which then fades out. */
+.home-hero.pose-in {
+  animation:
+    pose-in 0.26s ease-out,
+    breathe 5.5s ease-in-out 0.3s infinite;
+}
+.home-hero.pose-out {
+  animation: pose-out 0.26s ease-in 0.14s forwards;
+}
+@keyframes pose-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pose-out {
+  to {
+    opacity: 0;
+  }
+}
 @keyframes hero-in {
   from {
     opacity: 0;
@@ -5481,12 +5500,24 @@ html.fullh .screen {
   color: var(--text-2);
 }
 
-/* ------------------------------------------------------------------ her bond screen */
+/* ------------------------------------------------------------------ her bond screen
+   One DOM (ui/bond.ts), three layouts (D-031):
+   - portrait (phones, tablets held upright): her art fills the screen and a card
+     sits at the bottom; the diary opens in a sheet;
+   - landscape: her art on the left and a full-height column on the right (.bs-panel),
+     with every recruited heroine one tap away at its top;
+   - roomy landscape (at least 1000 x 780): the column also lists her episodes, so
+     the diary book is hidden.
+   The column is sized in --u (1px, more on tall screens; --k is the same as a plain
+   number), so a 1440p monitor gets the same composition as a laptop instead of a
+   small card in a corner. */
 
 .screen.bond {
   padding: 0;
   overflow: hidden;
   background: #0a0610;
+  --u: 1px;
+  --k: 1;
 }
 .bond .screen-top {
   position: absolute;
@@ -5534,10 +5565,11 @@ html.fullh .screen {
 .bs-panel {
   position: absolute;
   z-index: 3;
-  left: 50%;
+  left: 12px;
+  right: 12px;
   bottom: calc(14px + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
   width: min(560px, calc(100% - 24px));
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -5549,6 +5581,20 @@ html.fullh .screen {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   animation: item-in 0.4s var(--ease) 0.1s backwards;
+}
+/* Switching heroine swaps the screen: the panel stays put, only its contents change. */
+.screen.bond.no-anim .bs-panel {
+  animation: none;
+}
+.bs-body {
+  display: contents;
+}
+/* Only the landscape column shows these. */
+.bs-picks,
+.bs-perks,
+.bs-memories,
+.bs-tastes {
+  display: none;
 }
 .bs-head {
   display: flex;
@@ -5591,59 +5637,80 @@ html.fullh .screen {
   text-transform: uppercase;
   color: var(--text-2);
 }
+/* the diary: a journal with a dark cover, a gold edge and a moon clasp */
 .bs-diary {
   flex: none;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  width: 92px;
-  padding: 0 0 6px;
-  border: 1px solid var(--hair-2);
-  border-bottom: 3px solid var(--c);
-  border-radius: 4px;
-  background: #f4edf5;
-  color: #1a0f22;
+  gap: 4px;
+  width: 104px;
+  padding: 10px 8px 8px;
+  border: 1px solid rgba(232, 193, 112, 0.55);
+  border-left: 6px solid color-mix(in srgb, var(--c) 70%, #1a0f22);
+  border-radius: 3px 8px 8px 3px;
+  background:
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%),
+    linear-gradient(160deg, #2a1a34, #140b1c);
+  color: var(--text);
   cursor: pointer;
-  transform: rotate(2deg);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 3px rgba(232, 193, 112, 0.12);
   transition: transform 0.15s var(--ease);
 }
 .bs-diary:hover {
-  transform: rotate(0deg) translateY(-2px);
+  transform: translateY(-2px);
 }
-.bs-diary-art {
-  width: 100%;
-  height: 64px;
-  object-fit: cover;
-  object-position: 50% 6%;
-  border-radius: 3px 3px 0 0;
+.bs-diary-moon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 40%, transparent 52%, var(--gold-hi) 54%);
+  filter: drop-shadow(0 0 6px rgba(232, 193, 112, 0.6));
 }
-.bs-diary span {
+.bs-diary-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.bs-diary-text small {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.bs-diary-text > span {
   display: flex;
   align-items: center;
   gap: 4px;
   font-size: 12px;
   font-weight: 700;
+  color: var(--gold-hi);
 }
-.bs-diary span .ic {
+.bs-diary-text .ic {
   width: 13px;
   height: 13px;
-  color: var(--rose-2);
+  color: var(--gold);
 }
 .bs-diary b {
   font-size: 12px;
-  color: #6a4a70;
+  color: var(--text-2);
 }
 .bs-bar {
-  position: relative;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  overflow: visible;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.bs-bar > i {
+.bs-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.bs-track > i {
   display: block;
   height: 100%;
   border-radius: 4px;
@@ -5652,9 +5719,6 @@ html.fullh .screen {
   transition: width 0.7s var(--ease);
 }
 .bs-nums {
-  position: absolute;
-  right: 0;
-  bottom: 12px;
   font-size: 12px;
   font-weight: 700;
   color: var(--rose-hi);
@@ -5798,6 +5862,448 @@ html.fullh .screen {
     translate: 0 -220px;
   }
 }
+
+/* portrait: her art starts under the top bar and is cropped to the screen width */
+@media (max-aspect-ratio: 1/1) {
+  .bs-art {
+    inset: calc(56px + env(safe-area-inset-top)) 0 auto;
+    height: calc(100% - 56px - env(safe-area-inset-top));
+    align-items: flex-start;
+  }
+  .bs-hero {
+    object-fit: cover;
+    object-position: 50% 0%;
+  }
+}
+
+/* landscape: her art on the left, a full-height column on the right */
+@media (min-aspect-ratio: 1/1) {
+  .screen.bond {
+    --band: clamp(calc(360 * var(--u)), 36vw, calc(500 * var(--u)));
+    /* her stage: next to the column, and no wider than it needs on an ultrawide monitor */
+    --stage: min(calc(100% - var(--band)), calc(1500 * var(--u)));
+  }
+  .bs-art {
+    left: auto;
+    right: calc(var(--band) + env(safe-area-inset-right));
+    width: var(--stage);
+  }
+  .bs-hearts {
+    right: var(--band);
+  }
+  .bs-nav.next {
+    right: calc(var(--band) + env(safe-area-inset-right) + 10px);
+  }
+  /* her reply sits under her like a line of dialogue, where it can't cover her face */
+  .bs-bubble {
+    left: auto;
+    right: calc(var(--band) + env(safe-area-inset-right) + var(--stage) * 0.5);
+    /* centred on that line: the animation's transform already shifts it back by half */
+    translate: 100% 0;
+    top: auto;
+    bottom: 9%;
+    width: min(calc(380 * var(--u)), var(--stage) - 32px);
+    padding: calc(10 * var(--u)) calc(16 * var(--u));
+    border-radius: calc(14 * var(--u));
+    font-size: calc(15 * var(--u));
+  }
+  .bs-bubble b {
+    font-size: calc(13 * var(--u));
+  }
+  .bs-hearts .ic {
+    width: calc(26 * var(--u));
+    height: calc(26 * var(--u));
+  }
+  .bond .screen-top {
+    right: var(--band);
+    gap: calc(12 * var(--u));
+  }
+  .bond .screen-top h2 {
+    font-size: calc(22 * var(--u));
+  }
+  .bond .screen-top .btn {
+    zoom: var(--k);
+  }
+  .bs-panel {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: calc(var(--band) + env(safe-area-inset-right));
+    margin: 0;
+    gap: calc(16 * var(--u));
+    padding: calc(20 * var(--u)) calc(28 * var(--u) + env(safe-area-inset-right)) calc(24 * var(--u) + env(safe-area-inset-bottom))
+      calc(28 * var(--u));
+    overflow-y: auto;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c) 16%, rgba(14, 9, 21, 0.9)), rgba(14, 9, 21, 0.9) 42%);
+    border: 0;
+    border-left: 1px solid var(--hair-2);
+    border-radius: 0;
+    box-shadow: -30px 0 70px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(14px);
+    animation-name: band-in;
+  }
+  /* a thin line of her colour down the column's edge */
+  .bs-panel::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 2px;
+    height: 40%;
+    background: linear-gradient(180deg, var(--c), transparent);
+  }
+  .bs-body {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: calc(14 * var(--u));
+  }
+  /* her name leads; the rank sits on its own row, with the diary beside it */
+  .bs-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0 calc(12 * var(--u));
+  }
+  .bs-id {
+    display: contents;
+  }
+  .bs-kicker,
+  .bs-panel h1,
+  .bs-title {
+    grid-column: 1 / -1;
+  }
+  .bs-kicker {
+    font-size: calc(12 * var(--u));
+  }
+  .bs-kicker .ic {
+    width: calc(12 * var(--u));
+    height: calc(12 * var(--u));
+  }
+  .bs-panel h1 {
+    order: 1;
+    margin: calc(4 * var(--u)) 0 calc(2 * var(--u));
+    /* the longest name (Selene Moonwhisper) stays on one line in the narrowest column */
+    font-size: min(calc(34 * var(--u)), var(--band) * 0.07);
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 14px #000;
+  }
+  .bs-title {
+    order: 2;
+    font-size: calc(13 * var(--u));
+  }
+  .bs-rank {
+    order: 3;
+    margin-top: calc(16 * var(--u));
+    font-size: calc(26 * var(--u));
+  }
+  .bs-diary {
+    order: 4;
+    flex-direction: row;
+    gap: calc(8 * var(--u));
+    width: auto;
+    padding: calc(5 * var(--u)) calc(12 * var(--u)) calc(5 * var(--u)) calc(8 * var(--u));
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  }
+  .bs-diary-moon {
+    width: calc(22 * var(--u));
+    height: calc(22 * var(--u));
+  }
+  .bs-diary-text small {
+    display: none;
+  }
+  .bs-diary-text > span,
+  .bs-diary b {
+    font-size: calc(13 * var(--u));
+  }
+  .bs-diary-text .ic {
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+  }
+  .bs-bar {
+    gap: calc(10 * var(--u));
+  }
+  .bs-track {
+    height: calc(8 * var(--u));
+  }
+  .bs-nums {
+    font-size: calc(13 * var(--u));
+  }
+  .bs-lock {
+    font-size: calc(13 * var(--u));
+  }
+  .bs-lock .ic {
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+  }
+  .bs-actions {
+    gap: calc(10 * var(--u));
+  }
+  .bs-actions .btn.big {
+    min-height: calc(56 * var(--u));
+    font-size: calc(16 * var(--u));
+  }
+  .bs-actions .btn .ic {
+    width: calc(20 * var(--u));
+    height: calc(20 * var(--u));
+  }
+  .bs-talk small {
+    font-size: calc(11 * var(--u));
+  }
+  .bs-count {
+    min-width: calc(22 * var(--u));
+    font-size: calc(12 * var(--u));
+    line-height: calc(20 * var(--u));
+  }
+  .bs-perks {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: calc(8 * var(--u));
+  }
+  .bs-perk {
+    display: flex;
+    flex-direction: column;
+    gap: calc(2 * var(--u));
+    padding: calc(8 * var(--u)) calc(10 * var(--u));
+    border: 1px solid var(--hair);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .bs-perk small {
+    font-size: calc(11 * var(--u));
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .bs-perk b {
+    font-size: calc(17 * var(--u));
+    font-variant-numeric: tabular-nums;
+  }
+  .bs-perk:first-child b {
+    color: var(--gold-hi);
+  }
+  /* the gift and diary sheets grow with the column */
+  .bs-card {
+    zoom: var(--k);
+  }
+}
+@keyframes band-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+/* landscape, short (a phone on its side): the column is compact; arrows switch heroine */
+@media (min-aspect-ratio: 1/1) and (max-height: 520px) {
+  .bs-panel {
+    gap: 8px;
+    padding: calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) 14px;
+  }
+  .bs-body {
+    gap: 8px;
+  }
+  .bs-panel h1 {
+    font-size: 22px;
+    margin: 2px 0 0;
+  }
+  .bs-title {
+    display: none;
+  }
+  .bs-rank {
+    margin-top: 8px;
+    font-size: 20px;
+  }
+  .bs-perk {
+    padding: 5px 10px;
+  }
+  .bs-perk b {
+    font-size: 15px;
+  }
+  .bs-actions .btn.big {
+    min-height: 46px;
+  }
+}
+
+/* landscape with room (tablets, laptops, monitors): heroine picker, what Bond gives, her favourite gifts */
+@media (min-aspect-ratio: 1/1) and (min-height: 521px) {
+  .bs-nav {
+    display: none;
+  }
+  /* She is drawn larger than the screen, head to shin, and fades out at the bottom
+     (her full figure is on her profile). Never past --art-max (capUpscale), so she stays sharp. */
+  .bs-art {
+    container-type: size;
+    align-items: flex-start;
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 80%, transparent 98%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 80%, transparent 98%);
+  }
+  .bs-hero.full {
+    flex: none;
+    width: auto;
+    /* 150cqw: a 2:3 picture as wide as her stage, so a narrow window never crops her sides */
+    height: min(122cqh, 150cqw, var(--art-max, 9999px));
+    margin-top: 2vh;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .bs-picks {
+    display: flex;
+    align-items: center;
+    gap: calc(12 * var(--u));
+    padding: calc(4 * var(--u)) calc(4 * var(--u)) calc(16 * var(--u));
+    border-bottom: 1px solid var(--hair);
+  }
+  .bs-picks .pick {
+    flex: none;
+    width: calc(46 * var(--u));
+    height: calc(46 * var(--u));
+  }
+  .bs-panel .label {
+    gap: calc(10 * var(--u));
+    font-size: calc(12 * var(--u));
+  }
+  .bs-panel .label b {
+    order: 1;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .bs-tastes,
+  .bs-memories {
+    flex-direction: column;
+    gap: calc(8 * var(--u));
+  }
+  .bs-tastes {
+    display: flex;
+  }
+  .bs-taste-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: calc(8 * var(--u));
+  }
+  .bs-taste {
+    display: flex;
+    align-items: center;
+    gap: calc(6 * var(--u));
+    min-width: 0;
+    min-height: calc(48 * var(--u));
+    padding: calc(6 * var(--u));
+    border: 1px solid var(--hair);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.28);
+    color: var(--text-3);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .bs-taste:hover {
+    border-color: var(--c);
+  }
+  .bs-taste .gift-ic,
+  .bs-taste-q {
+    flex: none;
+    width: calc(32 * var(--u));
+    height: calc(32 * var(--u));
+    max-width: none;
+  }
+  .bs-taste-q {
+    display: grid;
+    place-items: center;
+    border: 1px dashed var(--hair-2);
+    border-radius: 6px;
+    font-family: var(--display);
+    font-size: calc(17 * var(--u));
+  }
+  .bs-taste-tag {
+    display: flex;
+    align-items: center;
+    gap: calc(4 * var(--u));
+    font-size: calc(11 * var(--u));
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .bs-taste-tag .ic {
+    flex: none;
+    width: calc(11 * var(--u));
+    height: calc(11 * var(--u));
+    fill: currentColor;
+  }
+  .bs-taste.known.love .bs-taste-tag {
+    color: var(--rose-hi);
+  }
+  .bs-taste.known.like .bs-taste-tag {
+    color: var(--gold-hi);
+  }
+}
+/* too short for her favourite gifts */
+@media (min-aspect-ratio: 1/1) and (min-height: 521px) and (max-height: 639px) {
+  .bs-tastes {
+    display: none;
+  }
+}
+
+/* roomy landscape: her episodes are listed in the column, so the diary book goes
+   (below 860px tall the list takes the place of her favourite gifts) */
+@media (min-aspect-ratio: 1/1) and (min-width: 1000px) and (min-height: 780px) and (max-height: 859px) {
+  .bs-tastes {
+    display: none;
+  }
+}
+@media (min-aspect-ratio: 1/1) and (min-width: 1000px) and (min-height: 780px) {
+  .bs-diary {
+    display: none;
+  }
+  .bs-memories {
+    display: flex;
+  }
+  .bs-memories .diary {
+    gap: calc(6 * var(--u));
+    padding-left: calc(18 * var(--u));
+  }
+  .bs-memories .diary-row {
+    min-height: calc(46 * var(--u));
+    padding: calc(5 * var(--u)) calc(12 * var(--u));
+  }
+  .bs-memories .diary-row small {
+    font-size: calc(11 * var(--u));
+  }
+  .bs-memories .diary-row b {
+    font-size: calc(15 * var(--u));
+  }
+  .bs-memories .diary-tag {
+    font-size: calc(12 * var(--u));
+  }
+  .bs-memories .diary-row .ic {
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+  }
+}
+/* tall screens: the whole column scales up */
+@media (min-aspect-ratio: 1/1) and (min-height: 1000px) {
+  .screen.bond {
+    --u: 1.15px;
+    --k: 1.15;
+  }
+}
+@media (min-aspect-ratio: 1/1) and (min-height: 1200px) {
+  .screen.bond {
+    --u: 1.3px;
+    --k: 1.3;
+  }
+}
+@media (min-aspect-ratio: 1/1) and (min-height: 1400px) {
+  .screen.bond {
+    --u: 1.5px;
+    --k: 1.5;
+  }
+}
+
 /* sheets (gift, diary) */
 .bs-sheet {
   position: absolute;
@@ -6053,116 +6559,13 @@ button.diary-row:hover {
   color: var(--gold-hi);
 }
 
-/* landscape: art on the left, panel on the right */
-@media (min-aspect-ratio: 1/1) {
-  .bs-art {
-    right: 40%;
-  }
-  .bs-panel {
-    left: auto;
-    right: calc(24px + env(safe-area-inset-right));
-    transform: none;
-    bottom: auto;
-    top: 50%;
-    translate: 0 -50%;
-    width: min(440px, 44%);
-  }
-  .bs-bubble {
-    left: 30%;
-  }
-  .bs-nav.next {
-    right: auto;
-    left: calc(60% - 60px);
-  }
-}
+/* Messages list, short landscape */
 @media (min-aspect-ratio: 1/1) and (max-height: 520px) {
-  .bs-panel {
-    top: calc(56px + env(safe-area-inset-top));
-    translate: none;
-    padding: 10px 12px;
-    gap: 6px;
-  }
-  .bs-rank {
-    font-size: 22px;
-  }
-  .bs-panel h1 {
-    font-size: 18px;
-  }
-  .bs-diary {
-    width: 74px;
-  }
-  .bs-diary-art {
-    height: 46px;
-  }
-  .bs-actions .btn.big {
-    min-height: 46px;
-  }
   .bond-card {
     min-height: 96px;
   }
   .bc-rank {
     font-size: 21px;
-  }
-}
-/* bond screen fixes: progress numbers beside the bar; panels anchored to the bottom; bigger art in portrait */
-.bs-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: auto;
-  background: none;
-}
-.bs-track {
-  flex: 1;
-  height: 8px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-}
-.bs-track > i {
-  display: block;
-  height: 100%;
-  border-radius: 4px;
-  background: linear-gradient(90deg, var(--rose), var(--gold));
-  box-shadow: 0 0 10px rgba(255, 79, 139, 0.5);
-  transition: width 0.7s var(--ease);
-}
-.bs-nums {
-  position: static;
-}
-@media (max-aspect-ratio: 1/1) {
-  .bs-art {
-    inset: calc(56px + env(safe-area-inset-top)) 0 auto;
-    height: calc(100% - 56px - env(safe-area-inset-top));
-    align-items: flex-start;
-  }
-  .bs-hero {
-    object-fit: cover;
-    object-position: 50% 0%;
-  }
-}
-@media (min-aspect-ratio: 1/1) {
-  .bs-panel {
-    top: auto;
-    translate: none;
-    bottom: calc(16px + env(safe-area-inset-bottom));
-    max-height: calc(100% - 80px - env(safe-area-inset-top));
-    overflow-y: auto;
-  }
-}
-@media (min-aspect-ratio: 1/1) and (max-height: 520px) {
-  .bs-panel {
-    top: auto;
-    bottom: calc(10px + env(safe-area-inset-bottom));
-    max-height: calc(100% - 64px);
-  }
-  .bs-title {
-    display: none;
-  }
-}
-@media (min-aspect-ratio: 1/1) {
-  /* "next heroine" sits just left of the panel, not under it */
-  .bs-nav.next {
-    left: calc(100% - min(440px, 44%) - 24px - 64px);
   }
 }
 
@@ -6211,55 +6614,6 @@ button.diary-row:hover {
   z-index: 2;
   background: linear-gradient(90deg, color-mix(in srgb, var(--c) 85%, #000), color-mix(in srgb, var(--c) 45%, #0c0712)), #0c0712;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
-}
-
-/* diary: our own journal look (dark cover, gold edge, moon clasp) */
-.bs-diary {
-  width: 104px;
-  padding: 10px 8px 8px;
-  gap: 4px;
-  transform: none;
-  border: 1px solid rgba(232, 193, 112, 0.55);
-  border-left: 6px solid color-mix(in srgb, var(--c) 70%, #1a0f22);
-  border-radius: 3px 8px 8px 3px;
-  background:
-    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%),
-    linear-gradient(160deg, #2a1a34, #140b1c);
-  color: var(--text);
-  box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.45),
-    inset 0 0 0 3px rgba(232, 193, 112, 0.12);
-}
-.bs-diary:hover {
-  transform: translateY(-2px);
-}
-.bs-diary-moon {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 36% 40%, transparent 52%, var(--gold-hi) 54%);
-  filter: drop-shadow(0 0 6px rgba(232, 193, 112, 0.6));
-}
-.bs-diary-text {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-}
-.bs-diary-text small {
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-.bs-diary .bs-diary-text > span {
-  color: var(--gold-hi);
-}
-.bs-diary .bs-diary-text .ic {
-  color: var(--gold);
-}
-.bs-diary b {
-  color: var(--text-2);
 }
 
 /* ── Portrait framing ──────────────────────────────────────────────────────
