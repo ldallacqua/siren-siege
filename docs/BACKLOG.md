@@ -100,7 +100,7 @@ The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price,
 - T-01 · Split `ui/screens.ts` into one file per screen when it passes ~600 lines.
 - T-02 · Lazy-load Phaser after the home screen renders to speed up first paint.
 - T-03 · Replace per-frame `Graphics.clear()` redraw with pooled sprites once real sprites exist (only if profiling shows a need).
-- T-08 · Drop the `FULL_BODY` set now that all four heroines are full body: make the `.full` framing in `style.css` the default for portraits and remove the class from `art.ts` / `common.ts`. Check the generated SVG placeholders (a new heroine without art) still frame sensibly in cards, avatars, home and profile.
+- T-08 · Drop the `FULL_BODY` set now that all five heroines are full body: make the `.full` framing in `style.css` the default for portraits and remove the class from `art.ts` / `common.ts`. Check the generated SVG placeholders (a new heroine without art) still frame sensibly in cards, avatars, home and profile.
 - T-09 · `.screen.home` is `overflow: hidden` but wider than the viewport inside (scaled picker avatars, the hero image), so a programmatic scroll-into-view can shift the whole lobby sideways (seen with Playwright's `click()` at 390×844; a real tap does not). `overflow: clip` on the screen would rule it out; check Safari support and the smoke screenshots.
 - T-04 · Smarter balance bot (buys tier 3s, positions by role) so balance targets are closer to real players.
 

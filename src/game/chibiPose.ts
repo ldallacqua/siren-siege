@@ -27,12 +27,84 @@ export const FLIP_DEADZONE = 0.25;
  * @param flash   seconds of "just attacked" left (Tower.flash, starts at ~0.12–0.15)
  * @param prev    facing from the previous frame
  */
-export function chibiPose(time: number, phase: number, aimX: number, aimY: number, flash: number, prev: Facing): ChibiPose {
+export function chibiPose(
+  time: number,
+  phase: number,
+  aimX: number,
+  aimY: number,
+  flash: number,
+  prev: Facing,
+  /** She has a drawn attack frame for this direction: then the art shows the attack and the sprite is not squashed. */
+  attackFrame = false,
+): ChibiPose {
   const facing: Facing = aimX > FLIP_DEADZONE ? 1 : aimX < -FLIP_DEADZONE ? -1 : prev;
   const bob = Math.sin(time * 3 + phase) * 0.03;
   const k = Math.min(1, Math.max(0, flash / 0.15));
-  const kick = k * 0.08;
-  return { dx: -aimX * kick, dy: bob - aimY * kick, squash: 1 - k * 0.06, facing };
+  const kick = k * (attackFrame ? 0.04 : 0.08);
+  return { dx: -aimX * kick, dy: bob - aimY * kick, squash: attackFrame ? 1 : 1 - k * 0.06, facing };
+}
+
+/**
+ * Which drawn frame a chibi shows. Each heroine can have up to four files:
+ * chibi (front, idle), chibi-attack, chibi-back (seen from behind, for targets
+ * above her) and chibi-back-attack; all face screen-right and are mirrored for
+ * the left. Missing frames fall back to the closest one that exists.
+ */
+export type ChibiFrame = 'front' | 'attack' | 'back' | 'back-attack';
+export const CHIBI_FRAMES: readonly ChibiFrame[] = ['front', 'attack', 'back', 'back-attack'];
+/** File suffix per frame: chibi.webp, chibi-attack.webp, … */
+export const frameSuffix = (f: ChibiFrame): string => (f === 'front' ? '' : `-${f}`);
+
+/**
+ * Where a frame's figure sits in its texture, as fractions of the texture size:
+ * the feet line, the top of her head (measured in the middle columns, so a
+ * raised weapon or a fireball off to the side doesn't count) and the middle of
+ * her legs.
+ */
+export interface FrameMetrics {
+  feet: number;
+  top: number;
+  legsX: number;
+}
+
+/** Front-frame origin (fraction of the texture) that the battlefield anchors at her ground spot. */
+export const BASE_ORIGIN = { x: 0.5, y: 0.82 };
+
+/**
+ * Fit a frame to the front frame: scale it so her body (head to feet) is the
+ * same height, and pick an origin that puts her feet and legs exactly where the
+ * front frame's are. Generated frames don't always draw her at the same size.
+ */
+export function frameFit(base: FrameMetrics, own: FrameMetrics): { k: number; ox: number; oy: number } {
+  const bh = base.feet - base.top;
+  const oh = own.feet - own.top;
+  const k = bh > 0 && oh > 0 ? Math.min(1.4, Math.max(0.7, bh / oh)) : 1;
+  return {
+    k,
+    ox: own.legsX - (base.legsX - BASE_ORIGIN.x) / k,
+    oy: own.feet - (base.feet - BASE_ORIGIN.y) / k,
+  };
+}
+
+/** Aim must point this far up (screen -y) to turn her around, and come back past BACK_OFF to turn her to the front again. */
+export const BACK_ON = -0.45;
+export const BACK_OFF = -0.15;
+
+export function chibiFrame(
+  aimY: number,
+  attacking: boolean,
+  wasBack: boolean,
+  has: (f: ChibiFrame) => boolean,
+): { frame: ChibiFrame; back: boolean } {
+  const back = aimY < BACK_ON ? true : aimY > BACK_OFF ? false : wasBack;
+  const order: ChibiFrame[] = back
+    ? attacking
+      ? ['back-attack', 'back', 'attack', 'front']
+      : ['back', 'front']
+    : attacking
+      ? ['attack', 'front']
+      : ['front'];
+  return { frame: order.find(has) ?? 'front', back };
 }
 
 /**

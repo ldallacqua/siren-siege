@@ -1,4 +1,4 @@
-<a href="https://ldallacqua.github.io/siren-siege/"><img src="docs/readme/banner.webp" alt="Siren Siege: four heroines (Scarlet, Yuki, Kaede and Selene) above the title" width="100%"></a>
+<a href="https://ldallacqua.github.io/siren-siege/"><img src="docs/readme/banner.webp" alt="Siren Siege: five heroines (Scarlet, Yuki, Kaede, Selene and Nemu) above the title" width="100%"></a>
 
 <p align="center"><em>Beauty is the last line of defense.</em></p>
 
@@ -34,7 +34,7 @@
 
 ## 🌙 The game
 
-Every hundred years, on the night of the **Crimson Eclipse**, the moon's light fails and **the Blight** climbs the shrine road in waves. Four sirens stand between it and the last Moongate, and you are their Commander.
+Every hundred years, on the night of the **Crimson Eclipse**, the moon's light fails and **the Blight** climbs the shrine road in waves. Five sirens stand between it and the last Moongate, and you are their Commander.
 
 **Siren Siege** is a browser tower defense in the mold of _Bloons TD 6_: layered enemies that peel apart as you hit them, three upgrade paths per tower with crosspathing, targeting priorities, and bosses. The difference is who your towers are. Each is a heroine with her own personality, story and upgrade tree, and fighting beside her raises her **Bond**, which unlocks branching chats, gallery art and a little extra power.
 
@@ -43,21 +43,21 @@ It runs on desktop and phone, portrait and landscape, and installs to your home 
 <table>
   <tr>
     <td width="50%" valign="top">
-      <img src="docs/readme/battle.webp" alt="Four upgraded heroines defending the winding shrine path on wave 12">
+      <img src="docs/readme/battle.webp" alt="Five upgraded heroines defending the winding shrine path on wave 12">
       <h3>A tower defense that stands on its own</h3>
       20 hand-tuned waves of layered Blight, armored husks that shrug off bullets, and a Colossus boss. Place heroines, pick targeting (first, last, strong, close), and read a battlefield painted with lanterns, sakura, fireflies and a torii gate. Pinch or scroll to zoom, run it at 1×, 2× or 3×.
     </td>
     <td width="50%" valign="top">
       <img src="docs/readme/upgrades.webp" alt="Yuki's upgrade tree: three paths of three tiers, with a stat preview for Glacial Embrace">
       <h3>BTD-style upgrade trees</h3>
-      Three paths × three tiers per heroine with the crosspath rule (one path to tier 3, one to tier 2). Every tier-3 unlocks a <b>signature effect</b>: Scarlet's blood-moon sniper beam, Yuki's ice vortex, Kaede's oni meteor, Selene's falling stars. Effects grow with each tier you buy.
+      Three paths × three tiers per heroine with the crosspath rule (one path to tier 3, one to tier 2). Every tier-3 unlocks a <b>signature effect</b>: Scarlet's blood-moon sniper beam, Yuki's ice vortex, Kaede's oni meteor, Selene's falling stars, Nemu's dream-devouring bite. Effects grow with each tier you buy.
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
       <img src="docs/readme/chat.webp" alt="A visual-novel chat with Scarlet Vane offering two replies">
       <h3>Bond, chats and a story worth unlocking</h3>
-      20 branching visual-novel chats (Bond 1, 3, 5, 7 and 9 for each heroine, ending in a confession), painted scenes with ambient snow, embers and lanterns, voice blips, auto and skip. Answer well and she remembers it.
+      25 branching visual-novel chats (Bond 1, 3, 5, 7 and 9 for each heroine, ending in a confession), painted scenes with ambient snow, embers and lanterns, voice blips, auto and skip. Answer well and she remembers it.
     </td>
     <td width="50%" valign="top">
       <img src="docs/readme/bond.webp" alt="Scarlet's Bond screen with her diary, Talk and Gift buttons">
@@ -83,34 +83,39 @@ It runs on desktop and phone, portrait and landscape, and installs to your home 
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="docs/readme/hero-scarlet.webp" alt="Scarlet Vane" width="100%"></td>
-    <td align="center" width="25%"><img src="docs/readme/hero-yuki.webp" alt="Yuki Frostveil" width="100%"></td>
-    <td align="center" width="25%"><img src="docs/readme/hero-kaede.webp" alt="Kaede Emberhorn" width="100%"></td>
-    <td align="center" width="25%"><img src="docs/readme/hero-selene.webp" alt="Selene Moonwhisper" width="100%"></td>
+    <td align="center" width="20%"><img src="docs/readme/hero-scarlet.webp" alt="Scarlet Vane" width="100%"></td>
+    <td align="center" width="20%"><img src="docs/readme/hero-yuki.webp" alt="Yuki Frostveil" width="100%"></td>
+    <td align="center" width="20%"><img src="docs/readme/hero-kaede.webp" alt="Kaede Emberhorn" width="100%"></td>
+    <td align="center" width="20%"><img src="docs/readme/hero-selene.webp" alt="Selene Moonwhisper" width="100%"></td>
+    <td align="center" width="20%"><img src="docs/readme/hero-nemu.webp" alt="Nemu Sugardream" width="100%"></td>
   </tr>
   <tr>
     <td align="center"><b>Scarlet Vane</b><br><sub>Crimson Gunslinger · 27</sub></td>
     <td align="center"><b>Yuki Frostveil</b><br><sub>Snow Witch · 24</sub></td>
     <td align="center"><b>Kaede Emberhorn</b><br><sub>Oni Flame Dancer · 29</sub></td>
     <td align="center"><b>Selene Moonwhisper</b><br><sub>Moon Priestess · 26</sub></td>
+    <td align="center"><b>Nemu Sugardream</b><br><sub>Dream Eater · 21</sub></td>
   </tr>
   <tr>
     <td valign="top"><sub>Vampire with a pair of silver revolvers: confident, teasing, dangerous. Fast single-target damage that learns to pierce armor.</sub></td>
     <td valign="top"><sub>Ice witch of the mountain pass: cool, aloof, secretly shy. Frost pulses that slow, freeze and shatter crowds.</sub></td>
     <td valign="top"><sub>Festival fire dancer with horns and big-sister energy. Arcing fireballs that splash whole clusters.</sub></td>
     <td valign="top"><sub>Idol priestess of the moon: gentle, elegant, a little mischievous. Buffs allies, earns gold, calls down starfall.</sub></td>
+    <td valign="top"><sub>Sleepy baku who eats nightmares: deadpan, lazy, secretly sweet. Silver hairpins that put the Blight to sleep.</sub></td>
   </tr>
   <tr>
     <td valign="top"><sub>🔫 Crimson Rounds<br>⚡ Quickdraw<br>🌑 Night Sight → <i>Blood Moon Sniper</i></sub></td>
     <td valign="top"><sub>❄️ Blizzard → <i>Absolute Zero</i><br>🧊 Deep Chill → <i>Shatter</i><br>🌀 Winter Pulse</sub></td>
     <td valign="top"><sub>🔥 Inferno → <i>Crimson Lotus</i><br>🎆 Wildfire → <i>Fireworks Finale</i><br>👹 Demon Heart → <i>Oni Awakening</i></sub></td>
     <td valign="top"><sub>🌙 Moonlit Blessing → <i>Goddess Descent</i><br>🪙 Tribute → <i>Lunar Treasury</i><br>🏹 Lunar Arrows → <i>Starfall</i></sub></td>
+    <td valign="top"><sub>💤 Lullaby → <i>Sweet Dreams</i><br>🍬 Bitter Feast → <i>Devour</i><br>📍 Sleepwalker → <i>Night Parade</i></sub></td>
   </tr>
   <tr>
     <td align="center"><sub>Starts unlocked</sub></td>
     <td align="center"><sub>Starts unlocked</sub></td>
     <td align="center"><sub>🔒 Reach wave 10</sub></td>
     <td align="center"><sub>🔒 Clear Moonlit Shrine</sub></td>
+    <td align="center"><sub>🔒 Reach wave 15</sub></td>
   </tr>
 </table>
 
@@ -156,7 +161,7 @@ The Blight is what's left when a memory is eaten. Each layer is a stolen memory;
 
 | Key                                    | Action                              | Key                                    | Action                  |
 | -------------------------------------- | ----------------------------------- | -------------------------------------- | ----------------------- |
-| <kbd>1</kbd>–<kbd>4</kbd>              | Pick a heroine to place             | <kbd>Space</kbd>                       | Start the next wave     |
+| <kbd>1</kbd>–<kbd>5</kbd>              | Pick a heroine to place             | <kbd>Space</kbd>                       | Start the next wave     |
 | <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> | Buy the next tier of path 1 / 2 / 3 | <kbd>F</kbd>                           | Game speed 1× → 2× → 3× |
 | <kbd>U</kbd>                           | Open the upgrade tree               | <kbd>P</kbd>                           | Pause                   |
 | <kbd>Tab</kbd>                         | Cycle targeting                     | <kbd>M</kbd>                           | Mute                    |

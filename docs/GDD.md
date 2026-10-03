@@ -36,22 +36,22 @@ Battle (place heroines, upgrade, survive waves)
 
 ### MVP (v0.1 — this repository, playable now)
 
-| System    | In MVP                                                                                           |
-| --------- | ------------------------------------------------------------------------------------------------ |
-| Maps      | 1 — _Moonlit Shrine_, 20 waves                                                                   |
-| Heroines  | 4 — Scarlet (single-target DPS), Yuki (slow/AoE pulse), Kaede (splash), Selene (support/economy) |
-| Upgrades  | 3 paths × 3 tiers each, BTD6 crosspath rule (one path to 3, another to 2)                        |
-| Enemies   | 5 layered types + armored Iron Husk + Blight Colossus boss                                       |
-| Targeting | First / Last / Strong / Close                                                                    |
-| Controls  | 1×/2×/3× speed, auto-start, pause, sell (70%)                                                    |
-| Bond      | 10 levels, XP from pops + wave reached + win bonus; +2% attack rate per level                    |
-| Chats     | 2 branching episodes per heroine (Bond 1 and 3), 2-choice dialogue, affection XP                 |
-| Gallery   | 5 slots per heroine (Bond 2/4/6/8/10), lightbox viewer                                           |
-| Unlocks   | Kaede at wave 10, Selene on first clear                                                          |
-| Save      | localStorage                                                                                     |
-| Layout    | Landscape sidebar / portrait bottom dock, map auto-rotates                                       |
-| Deploy    | GitHub Pages via Actions                                                                         |
-| Art       | Generated placeholders; drop-in real art by filename                                             |
+| System    | In MVP                                                                                                                                  |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Maps      | 1 — _Moonlit Shrine_, 20 waves                                                                                                          |
+| Heroines  | 5 — Scarlet (single-target DPS), Yuki (slow/AoE pulse), Kaede (splash), Selene (support/economy), Nemu (stun/control, added 2026-10-03) |
+| Upgrades  | 3 paths × 3 tiers each, BTD6 crosspath rule (one path to 3, another to 2)                                                               |
+| Enemies   | 5 layered types + armored Iron Husk + Blight Colossus boss                                                                              |
+| Targeting | First / Last / Strong / Close                                                                                                           |
+| Controls  | 1×/2×/3× speed, auto-start, pause, sell (70%)                                                                                           |
+| Bond      | 10 levels, XP from pops + wave reached + win bonus; +2% attack rate per level                                                           |
+| Chats     | 2 branching episodes per heroine (Bond 1 and 3), 2-choice dialogue, affection XP                                                        |
+| Gallery   | 5 slots per heroine (Bond 2/4/6/8/10), lightbox viewer                                                                                  |
+| Unlocks   | Kaede at wave 10, Nemu at wave 15, Selene on first clear                                                                                |
+| Save      | localStorage                                                                                                                            |
+| Layout    | Landscape sidebar / portrait bottom dock, map auto-rotates                                                                              |
+| Deploy    | GitHub Pages via Actions                                                                                                                |
+| Art       | Generated placeholders; drop-in real art by filename                                                                                    |
 
 ### v1.0 — "Full release" target
 
@@ -94,12 +94,13 @@ Battle (place heroines, upgrade, survive waves)
 
 Each heroine has: cost, base stats, attack kind (`bolt`, `bomb`, `pulse`, `none`), damage type (`physical` / `magic`), and three upgrade paths.
 
-| Heroine                                     | Role                | Attack                           | Signature                                                                                   |
-| ------------------------------------------- | ------------------- | -------------------------------- | ------------------------------------------------------------------------------------------- |
-| **Scarlet Vane**, 27 — vampire gunslinger   | Single-target DPS   | Fast piercing bullets (physical) | _Silver Bullets_ unlock armor damage; _Heartseeker_ triples boss damage                     |
-| **Yuki Frostveil**, 24 — snow witch         | Crowd control       | Radial frost pulse (magic)       | Slows 40→70%; _Absolute Zero_ freezes; _Shatter_ makes slowed enemies take +2 from everyone |
-| **Kaede Emberhorn**, 29 — oni flame dancer  | Splash / anti-armor | Lobbed fire bombs (magic)        | _Crimson Lotus_ burn; _Fireworks Finale_ 3 bombs; _Oni Awakening_ boss killer               |
-| **Selene Moonwhisper**, 26 — moon priestess | Support / economy   | None by default                  | Aura +rate/+range/armor-pierce; _Tribute_ cash per wave; can buy an arrow attack            |
+| Heroine                                     | Role                  | Attack                                      | Signature                                                                                                                |
+| ------------------------------------------- | --------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Scarlet Vane**, 27 — vampire gunslinger   | Single-target DPS     | Fast piercing bullets (physical)            | _Silver Bullets_ unlock armor damage; _Heartseeker_ triples boss damage                                                  |
+| **Yuki Frostveil**, 24 — snow witch         | Crowd control         | Radial frost pulse (magic)                  | Slows 40→70%; _Absolute Zero_ freezes; _Shatter_ makes slowed enemies take +2 from everyone                              |
+| **Kaede Emberhorn**, 29 — oni flame dancer  | Splash / anti-armor   | Lobbed fire bombs (magic)                   | _Crimson Lotus_ burn; _Fireworks Finale_ 3 bombs; _Oni Awakening_ boss killer                                            |
+| **Selene Moonwhisper**, 26 — moon priestess | Support / economy     | None by default                             | Aura +rate/+range/armor-pierce; _Tribute_ cash per wave; can buy an arrow attack                                         |
+| **Nemu Sugardream**, 21 — baku dream eater  | Single-target control | Thrown hairpins that stun 0.25 s (physical) | _Sweet Dreams_ drowsy +2 vulnerability; _Nightmare Venom_ magic pins; _Devour_ triple boss damage; _Night Parade_ 3 pins |
 
 **Crosspathing (BTD6 rule):** at most two paths may have upgrades, and only one of them may exceed tier 2. (MVP caps at tier 3, so legal builds are like 3-2-0, 2-2-0, 0-3-1.) Implemented in `canBuyUpgrade()`.
 
@@ -158,7 +159,7 @@ Visual-novel presentation: large mood portrait, text box with type-on effect, ta
 ]}
 ```
 
-Writing rules: she's an adult with a distinct voice; flirting is teasing and playful; the "good" option is the one that fits _her_ personality (Scarlet likes boldness, Yuki likes gentleness, Kaede likes nerve, Selene likes romance). Keep it suggestive, never explicit.
+Writing rules: she's an adult with a distinct voice; flirting is teasing and playful; the "good" option is the one that fits _her_ personality (Scarlet likes boldness, Yuki likes gentleness, Kaede likes nerve, Selene likes romance, Nemu likes being looked after). Keep it suggestive, never explicit.
 
 ### 3.7 Gallery
 

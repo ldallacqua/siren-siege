@@ -16,16 +16,17 @@ This is the hands-on companion to [`ART_DIRECTION.md`](ART_DIRECTION.md) (the st
 
 ## 1. What the game needs
 
-There are 4 heroines. Each uses the same set of files. **Everything is optional**: any missing file shows a generated placeholder, so you can add art a little at a time.
+There are 5 heroines. Each uses the same set of files. **Everything is optional**: any missing file shows a generated placeholder, so you can add art a little at a time.
 
-| File                                | Ideal size      | Pick in ChatGPT        | Background                  | Where it appears                                                 |
-| ----------------------------------- | --------------- | ---------------------- | --------------------------- | ---------------------------------------------------------------- |
-| `portrait.webp`                     | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Shop cards, home screen, roster, profile, results, battle panel  |
-| `portrait-<mood>.webp` (×9 moods)   | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Chat scenes: her expression changes line by line                 |
-| `chibi.webp`                        | 256×256 (1:1)   | Square                 | **Transparent**             | Her little figure standing on the battlefield (the actual tower) |
-| `gallery-1.webp` … `gallery-5.webp` | 1600×1200 (4:3) | Landscape / wide (3:2) | Full scene (no transparent) | Unlockable gallery pictures (Bond levels 2, 4, 6, 8, 10)         |
+| File                                                             | Ideal size      | Pick in ChatGPT        | Background                  | Where it appears                                                                               |
+| ---------------------------------------------------------------- | --------------- | ---------------------- | --------------------------- | ---------------------------------------------------------------------------------------------- |
+| `portrait.webp`                                                  | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Shop cards, home screen, roster, profile, results, battle panel                                |
+| `portrait-<mood>.webp` (×9 moods)                                | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Chat scenes: her expression changes line by line                                               |
+| `chibi.webp`                                                     | 256×256 (1:1)   | Square                 | **Transparent**             | Her little figure standing on the battlefield (the actual tower)                               |
+| `chibi-attack.webp`, `chibi-back.webp`, `chibi-back-attack.webp` | 256×256 (1:1)   | Square                 | **Transparent** or green    | Extra battlefield poses: attacking, seen from behind (target above her), attacking from behind |
+| `gallery-1.webp` … `gallery-5.webp`                              | 1600×1200 (4:3) | Landscape / wide (3:2) | Full scene (no transparent) | Unlockable gallery pictures (Bond levels 2, 4, 6, 8, 10)                                       |
 
-That's 16 files per heroine and 64 in total. You don't need them all at once. **Suggested order:**
+That's 19 files per heroine and 95 in total. You don't need them all at once. **Suggested order:**
 
 1. `portrait.webp` for all 4. This has the biggest visual impact because it appears on almost every screen.
 2. `chibi.webp` for all 4. This replaces the colored circles on the map.
@@ -37,6 +38,7 @@ That's 16 files per heroine and 64 in total. You don't need them all at once. **
    | Yuki    | shy, blush, smile, pout, tease, wink       |
    | Kaede   | grin, laugh, blush, pout, shy, smile, wink |
    | Selene  | smile, tease, blush, wink                  |
+   | Nemu    | blush, smile, pout, shy, smirk, grin       |
 
 4. `gallery-1` … `gallery-5`. Players unlock these slowly, so they can come last.
 
@@ -46,12 +48,12 @@ That's 16 files per heroine and 64 in total. You don't need them all at once. **
 
 ```
 public/art/
-  scarlet/   yuki/   kaede/   selene/        ← folder = heroine id, lowercase
+  scarlet/   yuki/   kaede/   selene/   nemu/  ← folder = heroine id, lowercase
     portrait.webp
     portrait-smile.webp   portrait-tease.webp  portrait-smirk.webp
     portrait-wink.webp    portrait-laugh.webp  portrait-blush.webp
     portrait-shy.webp     portrait-pout.webp   portrait-grin.webp
-    chibi.webp
+    chibi.webp            chibi-attack.webp    chibi-back.webp    chibi-back-attack.webp
     gallery-1.webp  gallery-2.webp  gallery-3.webp  gallery-4.webp  gallery-5.webp
 ```
 
@@ -190,6 +192,24 @@ Character: Selene Moonwhisper, "the Moon Priestess". A 26-year-old adult woman.
 - Personality/default expression: gentle, serene, with a quietly mischievous smile.
 ```
 
+**Nemu** (folder `nemu`)
+
+```
+Character: Nemu Sugardream, "the Dream Eater", a baku. A 21-year-old adult woman.
+- Petite (about 150 cm), slender with soft curves, a clearly adult face.
+- Short black bob with blunt bangs and vivid hot-pink tips, a striped hair clip and
+  a white X-shaped clip; pink-red half-lidded eyes, a beauty mark under her left eye,
+  one slightly pointed canine; black choker with a silver ring, ear cuffs.
+- Outfit: oversized white haori with black trim and hot-pink lining slipping off her
+  shoulders, black belt with a long loose end, short black dress with a low neckline
+  that shows her cleavage, black thigh-high socks, black platform geta with pink
+  straps. Long glossy hot-pink nails.
+- Props: a pink-and-white swirl lollipop (show the pink candy, not just the stick);
+  two long silver kanzashi hairpins with black tops, pink beads and tassels.
+- Signature color: hot pink (#ff4f9a), with black and white.
+- Personality/default expression: bored, deadpan, half-lidded, a faint smirk.
+```
+
 ### 5.3 Main portrait → `portrait.webp`
 
 ```
@@ -239,6 +259,14 @@ effects that extend past the edges.
 ```
 
 To check it, zoom your phone out until the image is about the size of a fingernail. You should still recognize her by her silhouette and color. If she's facing left, say _"mirror it so she faces right"_.
+
+### 5.5b Extra battlefield poses → `chibi-attack`, `chibi-back`, `chibi-back-attack`
+
+The game picks the pose by itself: from behind when her target is above her, the attack pose for a moment each time she attacks, and it mirrors every pose for targets on the left. Each pose is optional (a missing one falls back to the closest one that exists), and the game lines up her feet and body height across poses, so small size differences between generations are fine. Attach her `chibi.webp` (and her portrait for costume details) and ask for the SAME chibi in a new pose, facing screen-right, same size, feet near the bottom, on flat green (blue for Kaede):
+
+- attack: front three-quarter view, mid-attack toward the right (firing, casting, throwing).
+- back: three-quarter BACK view, turned away from the viewer and facing up-right, the back of her head visible, weapon ready.
+- back-attack: the back view, attacking toward the upper right.
 
 ### 5.6 Gallery → `gallery-1.webp` … `gallery-5.webp`
 
@@ -302,7 +330,7 @@ Then it runs the smoke test, looks at the screenshots, and commits.
 
 ### 6.3 Uploading on GitHub (works from the phone browser)
 
-1. Go to `github.com/ldallacqua/siren-siege` → `public` → `art` → the heroine's folder (`scarlet`, `yuki`, `kaede` or `selene`). The folders already exist.
+1. Go to `github.com/ldallacqua/siren-siege` → `public` → `art` → the heroine's folder (`scarlet`, `yuki`, `kaede`, `selene` or `nemu`). The folders already exist.
 2. Tap **Add file → Upload files** and pick the files. On a phone, unzip the zip in the Files app first.
 3. Leave **"Commit directly to the main branch"** selected → **Commit changes**.
 4. The site redeploys automatically. After about 3 minutes, open the live game and hard-refresh (or close and reopen the tab).

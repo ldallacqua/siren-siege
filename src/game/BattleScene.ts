@@ -7,7 +7,17 @@ import { reducedMotion } from '../state/save.ts';
 import type { Battle } from './Battle.ts';
 import type { Enemy, Fx, Tower } from './sim/BattleSim.ts';
 import { clampCam, homeCam, viewOf, zoomAt, panBy, MAX_ZOOM, MIN_ZOOM, type Cam, type Frame } from './camera.ts';
-import { chibiPose, towerPresence, type Facing } from './chibiPose.ts';
+import {
+  CHIBI_FRAMES,
+  chibiFrame,
+  chibiPose,
+  frameFit,
+  frameSuffix,
+  towerPresence,
+  type ChibiFrame,
+  type Facing,
+  type FrameMetrics,
+} from './chibiPose.ts';
 import { PX, paintMap, type MapArt } from './mapArt.ts';
 import { Vfx, type VfxView } from './Vfx.ts';
 
@@ -19,7 +29,7 @@ interface View {
 }
 
 /** Texture key for a heroine's optional map sprite (public/art/<id>/chibi.webp). */
-const chibiKey = (id: string) => `chibi-${id}`;
+const chibiKey = (id: string, frame: ChibiFrame = 'front') => `chibi-${id}${frameSuffix(frame)}`;
 
 interface FloatText {
   obj: Phaser.GameObjects.Text;
@@ -76,6 +86,44 @@ function outlined(img: HTMLImageElement, color: number): HTMLCanvasElement {
   return out;
 }
 
+/** Measure where the figure sits in a chibi image (see FrameMetrics), in pixels of the image. */
+function measure(img: HTMLImageElement): { feet: number; top: number; legsX: number } {
+  const w = img.naturalWidth;
+  const hgt = img.naturalHeight;
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = hgt;
+  const x = c.getContext('2d', { willReadFrequently: true })!;
+  x.drawImage(img, 0, 0);
+  const d = x.getImageData(0, 0, w, hgt).data;
+  const solid = (i: number, y: number) => d[(y * w + i) * 4 + 3] > 128;
+  let feet = hgt;
+  find: for (let y = hgt - 1; y >= 0; y--)
+    for (let i = 0; i < w; i++)
+      if (solid(i, y)) {
+        feet = y + 1;
+        break find;
+      }
+  // Top of her head: the middle columns only, so weapons and effects off to the side don't count.
+  let top = 0;
+  find2: for (let y = 0; y < hgt; y++)
+    for (let i = Math.round(w * 0.3); i < w * 0.65; i++)
+      if (solid(i, y)) {
+        top = y;
+        break find2;
+      }
+  // Middle of her legs: mean opaque column over the bottom 15 % of the figure.
+  let sum = 0;
+  let n = 0;
+  for (let y = Math.max(0, Math.round(feet - (feet - top) * 0.15)); y < feet; y++)
+    for (let i = 0; i < w; i++)
+      if (solid(i, y)) {
+        sum += i;
+        n++;
+      }
+  return { feet, top, legsX: n ? sum / n : w / 2 };
+}
+
 /**
  * Renders a Battle and forwards pointer input to it. The map is laid out in
  * tile units; in portrait stages the whole map is transposed (x<->y) so the
@@ -93,7 +141,9 @@ export class BattleScene extends Phaser.Scene {
   private top!: Phaser.GameObjects.Graphics;
   private view: View = { portrait: false, tile: 32, ox: 0, oy: 0 };
   private labels = new Map<number, Phaser.GameObjects.Text>();
-  private sprites = new Map<number, { img: Phaser.GameObjects.Image; facing: Facing }>();
+  private sprites = new Map<number, { img: Phaser.GameObjects.Image; facing: Facing; back: boolean; frame: ChibiFrame }>();
+  /** Where the figure sits in each chibi texture, so every frame stands on the same spot at the same size. */
+  private metrics = new Map<string, FrameMetrics>();
   /** Per-tower motion: when she landed and when she last upgraded. */
   private towerAnim = new Map<number, { born: number; tiers: number; bump: number }>();
   /** Current tower's presence (scale, vertical offset in px) while drawing it. */
@@ -183,14 +233,25 @@ export class BattleScene extends Phaser.Scene {
    */
   private loadChibis(): void {
     // A plain <img> probe instead of this.load: Phaser's loader console.errors on a 404.
-    for (const h of HEROINES) {
-      const img = new Image();
-      img.onload = () => {
-        const key = chibiKey(h.id);
-        if (!this.textures.exists(key)) this.textures.addCanvas(key, outlined(img, h.color));
-      };
-      img.src = `art/${h.id}/chibi.webp`;
-    }
+    // Extra frames (attack, seen from behind) are optional too; see chibiFrame().
+    for (const h of HEROINES)
+      for (const frame of CHIBI_FRAMES) {
+        const img = new Image();
+        img.onload = () => {
+          const key = chibiKey(h.id, frame);
+          if (this.textures.exists(key)) return;
+          const canvas = outlined(img, h.color);
+          const pad = (canvas.height - img.naturalHeight) / 2;
+          const m = measure(img);
+          this.metrics.set(key, {
+            feet: (m.feet + pad) / canvas.height,
+            top: (m.top + pad) / canvas.height,
+            legsX: (m.legsX + pad) / canvas.width,
+          });
+          this.textures.addCanvas(key, canvas);
+        };
+        img.src = `art/${h.id}/chibi${frameSuffix(frame)}.webp`;
+      }
   }
 
   private clearTowerObjects(): void {
@@ -766,12 +827,26 @@ export class BattleScene extends Phaser.Scene {
     }
     let s = this.sprites.get(t.uid);
     if (!s) {
-      s = { img: this.add.image(x, y, key).setOrigin(0.5, 0.82).setDepth(4), facing: 1 };
+      s = { img: this.add.image(x, y, key).setOrigin(0.5, 0.82).setDepth(4), facing: 1, back: false, frame: 'front' };
       this.sprites.set(t.uid, s);
     }
-    const pose = chibiPose(reducedMotion() ? 0 : this.time.now / 1000, t.uid * 1.7, dx, dy, t.flash, s.facing);
+    const id = t.def.id;
+    const has = (f: ChibiFrame) => this.textures.exists(chibiKey(id, f));
+    const pick = chibiFrame(dy, t.flash > 0, s.back, has);
+    s.back = pick.back;
+    if (pick.frame !== s.frame) {
+      s.frame = pick.frame;
+      s.img.setTexture(chibiKey(id, pick.frame));
+    }
+    // Every frame stands where the front frame stands, at the same body height.
+    const base = this.metrics.get(key);
+    const own = this.metrics.get(chibiKey(id, s.frame));
+    const fit = base && own && s.frame !== 'front' ? frameFit(base, own) : { k: 1, ox: 0.5, oy: 0.82 };
+    s.img.setOrigin(fit.ox, fit.oy);
+    const attackFrame = s.frame === 'attack' || s.frame === 'back-attack';
+    const pose = chibiPose(reducedMotion() ? 0 : this.time.now / 1000, t.uid * 1.7, dx, dy, t.flash, s.facing, attackFrame);
     s.facing = pose.facing;
-    const scale = ((T * CHIBI_H) / s.img.height) * this.pres.s;
+    const scale = ((T * CHIBI_H) / s.img.height) * this.pres.s * fit.k;
     // Feet sit on the shadow ellipse; squash keeps the feet planted.
     s.img
       .setPosition(x + pose.dx * T, y + T * 0.32 + pose.dy * T + this.pres.dy)

@@ -99,6 +99,7 @@ async function banner() {
     ['yuki', '#7cc8ff'],
     ['kaede', '#ff8a3d'],
     ['selene', '#c9a7ff'],
+    ['nemu', '#ff4f9a'],
   ];
   // Served from the game's origin, so art/ and fonts/ resolve like they do in the game.
   const html = `<!doctype html><html><head><style>
@@ -111,7 +112,7 @@ async function banner() {
     /* The portraits are full body; the banner frames head to mid-thigh (the owner wants
        the upper-body focus), so each image is ~1.7x the banner height, anchored at the top. */
     .row { position: absolute; left: 0; right: 0; top: 14px; height: 900px; display: flex; justify-content: center; }
-    .h { position: relative; width: 330px; margin: 0 -14px; }
+    .h { position: relative; width: 290px; margin: 0 -22px; }
     .h img { position: absolute; top: 0; left: 50%; height: 100%; transform: translateX(-50%);
       -webkit-mask-image: linear-gradient(90deg, transparent 10%, #000 30%, #000 70%, transparent 89%);
       filter: saturate(1.05); }
@@ -193,6 +194,7 @@ async function stageBattle(page: Page) {
     put('yuki', 9.5, 4.5, [3, 1, 0]);
     put('kaede', 14.5, 8.5, [0, 2, 3]);
     put('selene', 5.5, 3.5, [2, 0, 1]);
+    put('nemu', 9.5, 8.5, [2, 0, 2]);
     b.sim.wave = 11;
     b.sim.startWave();
     b.sim.lives = 87;

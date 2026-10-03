@@ -5,7 +5,7 @@
 //   npm run art -- --keep  convert but keep the sources
 //
 // Sizing: images are scaled down (never up, never cropped) to fit the box for their
-// kind — portraits 1200×1600, gallery 1600×1200, chibi 256×256. Transparency is kept.
+// kind — portraits 1200×1600, gallery 1600×1200, chibi frames 256×256. Transparency is kept.
 // Green/blue screen: a portrait or chibi whose four corners are flat pure green (or pure
 // blue, for heroines with fire or yellow, where a green fringe would show) gets the
 // screen keyed out to transparent, with the screen colour unmixed from her edges. That is
@@ -26,7 +26,7 @@ const SOURCE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 function boxFor(base: string): { w: number; h: number } | null {
   if (base === 'portrait' || MOODS.some((m) => base === `portrait-${m}`)) return { w: 1200, h: 1600 };
   if (/^gallery-[1-5]$/.test(base)) return { w: 1600, h: 1200 };
-  if (base === 'chibi') return { w: 256, h: 256 };
+  if (/^chibi(-back)?(-attack)?$/.test(base)) return { w: 256, h: 256 };
   return null;
 }
 

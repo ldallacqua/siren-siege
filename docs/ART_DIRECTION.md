@@ -5,7 +5,7 @@
 - **Style:** high-quality anime / gacha key-art (think _Azur Lane_, _NIKKE_, _Blue Archive_ splash art). Clean lineart, cel shading with soft gradients, rim light, glossy highlights.
 - **Mood:** night, moonlight, neon-pink and violet accents, shrine lanterns. UI palette: deep purple `#140a1f`, pink `#ff5fa2`, violet `#7b3fe4`, gold `#ffd23f`.
 - **Heroines:** clearly adult women (mid-20s and up), mature proportions and faces, confident and alluring. Fan service through outfit design, pose, framing and expression — cleavage, thighs, bare shoulders, tight fits, swimsuits, teasing looks, blushing. **Ceiling: suggestive, never nude or explicit.**
-- Each heroine owns a color: Scarlet crimson, Yuki ice-blue, Kaede ember-orange, Selene lilac. Keep it dominant in her outfit, effects and UI frame.
+- Each heroine owns a color: Scarlet crimson, Yuki ice-blue, Kaede ember-orange, Selene lilac, Nemu hot pink (with black and white). Keep it dominant in her outfit, effects and UI frame.
 
 > **Making the images?** Step-by-step ChatGPT workflow, copy-paste prompts, naming and upload: [ART_GUIDE.md](ART_GUIDE.md).
 
@@ -34,6 +34,9 @@ Very long straight white-silver hair with ice-blue tips, pale blue eyes, porcela
 
 **Kaede Emberhorn — Oni Flame Dancer (oni, 29)**
 Short-to-mid messy orange-red hair, two red horns, amber eyes, athletic curvy build, sun-kissed skin with red tribal markings. Cropped festival happi jacket worn open over a sarashi chest wrap, short hakama, tabi and geta, sake gourd on hip, fire in hand. Expression: big grin, wink.
+
+**Nemu Sugardream — Dream Eater (baku, 21)**
+Petite (about 150 cm), clearly adult face. Short black bob with blunt bangs and hot-pink tips, striped and X hair clips, pink-red half-lidded eyes, beauty mark under the left eye, one pointed canine. Black choker, oversized white haori with hot-pink lining off the shoulders, black belt, short black dress with a low neckline, black thigh-highs, platform geta. Two long silver kanzashi hairpins, a pink swirl lollipop. Expression: bored, deadpan, half-lidded. (Her look follows Ellen Joe from Zenless Zone Zero at the owner's request; looks only, she is not a shark.)
 
 **Selene Moonwhisper — Moon Priestess (26)**
 Long lavender hair in a loose braid, violet eyes, crescent-moon hair ornament, elegant curvy figure. Backless white-and-lilac priestess gown with gold trim, sheer layered skirt with thigh slit, detached sleeves, moon-phase jewelry, bow of moonlight. Expression: gentle, mischievous smile.

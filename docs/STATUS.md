@@ -8,7 +8,7 @@
 
 - Full match loop on _Moonlit Shrine_: 20 waves, win/lose, results screen with Bond XP and unlock notices.
 - 5 heroines (Scarlet, Yuki, Kaede, Selene, Nemu), 3 upgrade paths × 3 tiers, BTD6 crosspath rule, targeting modes, sell 70%.
-- All five heroines have full-body art (portrait + all 9 moods) and a chibi; the first four also have all five gallery pictures (First Impression, Off Duty, Poolside, After Hours, Heart Unveiled); `npm run art` removes a green-screen background (or a blue one, used for Kaede's fire); agents can generate art via Codex CLI (ART_GUIDE §9).
+- All five heroines have full-body art (portrait + all 9 moods) and four battlefield poses (front, attack, back, back-attack); the first four also have all five gallery pictures (First Impression, Off Duty, Poolside, After Hours, Heart Unveiled); `npm run art` removes a green-screen background (or a blue one, used for Kaede's fire); agents can generate art via Codex CLI (ART_GUIDE §9).
 - Enemies: 5 layered types, armored Iron Husk (immune to physical), Blight Colossus boss with HP bar.
 - Controls: speed 1×/2×/3×, auto-start, pause (auto-pauses when the tab is hidden), keyboard shortcuts.
 - Bond 1–10 (+2% attack rate/level), 8 chat episodes (2 per heroine, Bond 1 and 3), 20 gallery slots (Bond 2/4/6/8/10).
@@ -61,7 +61,13 @@
 
 ## Last session
 
-**2026-10-03 — New heroine: Nemu Sugardream, the Dream Eater (Claude, local Windows session)**
+**2026-10-03 — Battlefield poses for every heroine; Nemu in the docs (Claude, local Windows session)**
+
+- The owner noticed the docs and README didn't mention Nemu: README (banner and heroine cards regenerated with `npm run shots -- --banner`, heroine table, shortcuts 1–5, 25 chats), GDD, ART_GUIDE (character block, file list), ART_DIRECTION, BACKLOG are updated.
+- He found Nemu's sprite "a little stretched": that was the recoil squash on every attack. And he asked for more sprites per heroine so the movement varies. Now every heroine has four poses (front, attack, back, back-attack; D-027), picked from her aim and attacks and mirrored left/right; frames are measured and fitted at load. Selene got a new front chibi in her current gown. 16 new images, all approved by the owner. README images regenerated with Nemu in the battle.
+- `npm run art` accepts the new file names.
+
+**Previously, 2026-10-03 — New heroine: Nemu Sugardream, the Dream Eater (Claude, local Windows session)**
 
 - The owner asked for a fifth heroine who looks like Ellen Joe from Zenless Zone Zero (looks only: he explicitly did not want a shark girl), a petite 21-year-old, with lore and weapon of my choosing; he approved the concept. Nemu is a **baku** (eats nightmares) from Yumeji, the tea-house town of the eastern isles; weapon: two silver kanzashi hairpins that put what they hit to sleep. Canon, arc and relationships are in `docs/LORE.md`.
 - Art: full-body `portrait.webp` (owner picked candidate A of three; he loved the other two poses too but they had hand problems) and all nine moods (silhouettes within 0.6 % of the base, hands checked in every mood), chibi (candidate B of two, not yet confirmed by the owner). No gallery pictures yet: her five slots show placeholders.

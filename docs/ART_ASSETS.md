@@ -19,11 +19,11 @@ The owner explicitly reduced the full 64-image brief to an MVP pass. Other expre
 
 ## Full-body sets (2026-10-02)
 
-All four heroines now have a full-body `portrait.webp` and all nine `portrait-<mood>.webp` (1024×1536 with alpha), replacing the thighs-up files above. They were generated through the Codex CLI (ART_GUIDE §9) and keyed by `npm run art`: Scarlet, Yuki and Selene on green, Kaede on blue because of her flame. Each mood was generated from the approved portrait with only the face changing. Chibis are still the MVP files, and so is `gallery-1` except Selene's (redone 2026-10-03).
+All four heroines now have a full-body `portrait.webp` and all nine `portrait-<mood>.webp` (1024×1536 with alpha), replacing the thighs-up files above. They were generated through the Codex CLI (ART_GUIDE §9) and keyed by `npm run art`: Scarlet, Yuki and Selene on green, Kaede on blue because of her flame. Each mood was generated from the approved portrait with only the face changing. `gallery-1` is still the MVP file except Selene's (redone 2026-10-03). Chibis: see Battlefield poses below.
 
 Kaede's approved design, for future art of her: left hand on her hip with the elbow out, the happi jacket off both shoulders, a flame floating above her open right palm, a layered black-and-red skirt with a braided rope belt, a red marking on her left thigh, the sake gourd hanging at her left hip.
 
-Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below, which her chibi still shows). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
+Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below; her chibi was redone to match on 2026-10-03). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
 ## Gallery 2, "Off Duty" (2026-10-02)
 
@@ -54,6 +54,10 @@ What went wrong on the way, for next time:
 - Reclining or lying poses in swimwear go wrong: Scarlet's first take (reclining at the pool's edge) had legs the owner called intertwined, and the image tool's filter then refused all three attempts to fix that pose (two edits, one fresh take). A standing pose in a one-piece passed at once. Prefer standing or sitting-upright poses for swimwear.
 - Selene's first take looked back over her shoulder: her torso twisted impossibly and the high-cut swimsuit read as bare. Ask for a front or three-quarter view with the whole body turned the same way, and a normal swimsuit leg line.
 - Small fixes (Selene's finger through the hat brim) work as an edit: attach the picture as image 1 and the portrait as image 2, and ask to redraw image 1 with exactly one thing changed.
+
+## Battlefield poses (2026-10-03)
+
+Every heroine has `chibi-attack`, `chibi-back` and `chibi-back-attack` (256×256, keyed; Kaede on blue), generated through Codex with her `chibi.webp` as image 1 and her portrait as image 2 ("the same chibi sprite, another frame for animation"); prompt in ART_GUIDE §5.5b. Selene also got a new `chibi.webp` first, from her portrait, because the old one still showed the closed-neck gown; her three poses were made from the new one. The generator draws the figure smaller in the square than the MVP chibis did; the game measures each frame (top of the head in the middle columns, feet line, middle of the legs) and fits it to the front frame, so no regeneration is needed for size.
 
 ## Nemu, the fifth heroine (2026-10-03)
 
