@@ -9,13 +9,13 @@
 // Green/blue screen: a portrait or chibi whose four corners are flat green (or blue, for
 // heroines with fire or yellow, where a green fringe would show) gets the screen keyed
 // out to transparent, with the screen colour unmixed from her edges (scripts/chroma.ts).
-// That is how we ask image generators for a cut-out, since they rarely return real
-// transparency. Decoding and encoding use the same browser as the smoke test (no image
+// A PNG that is already transparent (Codex's image tool with transparent_background,
+// the preferred way now) only has its near-invisible matte fringe removed. Decoding and encoding use the same browser as the smoke test (no image
 // library dependency).
 import { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { HEROINES } from '../src/data/heroines.ts';
-import { keyScreen } from './chroma.ts';
+import { cleanAlpha, keyScreen } from './chroma.ts';
 import { BOX, QUALITY, isCutout, kindOf, type ArtKind } from './artSpec.ts';
 import { dataUrlOf, decode, encode, launch } from './browser.ts';
 
@@ -59,9 +59,12 @@ if (jobs.length) {
     const dataUrl = dataUrlOf(j.src, readFileSync(j.src));
     const box = BOX[j.kind];
     const { w: W, h: H, px } = await decode(page, dataUrl);
+    const fresh = !j.src.endsWith('.webp');
     const key = isCutout(j.kind) ? keyScreen(px, W, H) : null;
+    // already transparent from the generator: drop its near-invisible fringe
+    const cleaned = isCutout(j.kind) && !key && fresh && cleanAlpha(px, W, H);
     const k = Math.min(1, box.w / W, box.h / H);
-    if (j.src.endsWith('.webp') && k === 1 && !key) continue;
+    if (!fresh && k === 1 && !key) continue;
     const res = await encode(page, px, W, H, k, QUALITY[j.kind]);
     const ratio = res.w / res.h;
     const want = box.w / box.h;
@@ -70,7 +73,7 @@ if (jobs.length) {
     writeFileSync(j.out, Buffer.from(res.url.split(',')[1], 'base64'));
     if (!KEEP && j.src !== j.out) unlinkSync(j.src);
     converted++;
-    const screen = key ? `  (${key.screen} screen ${key.color.join(',')} removed)` : '';
+    const screen = key ? `  (${key.screen} screen ${key.color.join(',')} removed)` : cleaned ? '  (transparent; faint fringe removed)' : '';
     console.log(`✓ ${j.src} → ${j.out} ${res.w}×${res.h}${screen}${note}`);
   }
   await browser.close();

@@ -21,7 +21,7 @@ There are 5 heroines. Each uses the same set of files. **Everything is optional*
 | File                                                             | Ideal size      | Pick in ChatGPT        | Background                  | Where it appears                                                                               |
 | ---------------------------------------------------------------- | --------------- | ---------------------- | --------------------------- | ---------------------------------------------------------------------------------------------- |
 | `portrait.webp`                                                  | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Shop cards, home screen, roster, profile, results, battle panel                                |
-| `portrait-<mood>.webp` (×9 moods)                                | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Chat scenes: her expression changes line by line                                               |
+| `portrait-<mood>.webp` (×9 moods)                                | 1024×1536 (2:3) | Portrait / tall (2:3)  | **Transparent** or green    | Chat scenes: her pose and expression change line by line                                       |
 | `chibi.webp`                                                     | 256×256 (1:1)   | Square                 | **Transparent**             | Her little figure standing on the battlefield (the actual tower)                               |
 | `chibi-attack.webp`, `chibi-back.webp`, `chibi-back-attack.webp` | 256×256 (1:1)   | Square                 | **Transparent** or green    | Extra battlefield poses: attacking, seen from behind (target above her), attacking from behind |
 | `gallery-1.webp` … `gallery-5.webp`                              | 1600×1200 (4:3) | Landscape / wide (3:2) | Full scene (no transparent) | Unlockable gallery pictures (Bond levels 2, 4, 6, 8, 10)                                       |
@@ -69,8 +69,10 @@ Follow these rules or faces get cut off:
   - Framing: **full body**, head to feet, centered, standing, facing the viewer, with a small margin above her head and below her shoes. Nothing cropped (not her hair ornaments, not her heels).
   - Full body is the source so no screen ever cuts her off at a hard edge; the game still frames her **head to mid-thigh** on the home screen and profile (fading out below), zooms further in on cards, avatars and the chat, and shows her whole in "View full art".
   - After adding a heroine's first full-body portrait, add her id to `FULL_BODY` in `src/data/progression.ts` (that switches her small views to the zoomed framing). Older thighs-up art still works without it.
-  - The background must be **transparent** (a box behind her looks bad on the home screen). Image generators rarely give real transparency, so ask for a **flat solid pure green (#00FF00)** background instead: `npm run art` detects green corners and removes the green automatically, edges included.
-  - **All moods must match `portrait.webp` exactly** (same pose, crop, outfit, size and position). Only the face and maybe the arms change. In chats, the game swaps one mood image for another, so if the body moves she will visibly "jump".
+  - The background must be **transparent** (a box behind her looks bad on the home screen). Two ways to get it:
+    - **Best: real transparency from the generator.** Codex's image tool has a `transparent_background` switch (§9). `npm run art` only strips the near-invisible fringe its cut-out leaves. No screen colour ever touches her, so there are no coloured hair edges to repair (measured halo ≤ 0.003; keyed art is 0.008–0.028).
+    - **Fallback: a green screen.** The ChatGPT app usually can't output transparency, so ask for a **flat solid pure green (#00FF00)** background: `npm run art` detects green corners and removes the green, edges included.
+  - **Moods are different poses, the same size.** Each `portrait-<mood>.webp` is a new pose and expression (§5.4), but her outfit, her size (head-to-feet height) and the line her feet stand on must match `portrait.webp`: in chats one picture fades into the next, so a change of size or footing shows as her growing or hopping. The art gate measures it. (Yuki, Kaede, Selene and Nemu still have the older kind, the base pose with only the face changed, until theirs are redrawn.)
 - **Chibi (`chibi.webp`)**
   - It is drawn about **one map tile tall**, which is tiny (roughly 40–80 px on screen). It needs a bold silhouette, big head, simple shapes, her signature color and weapon, and no fine details.
   - **She must face screen-RIGHT** (her body angled right, weapon pointing right). The game mirrors her when enemies are on the left.
@@ -223,28 +225,33 @@ Iterate until it's perfect, then save it as `portrait.png` (or `.webp`).
 
 ### 5.4 Mood variants → `portrait-<mood>.webp`
 
-Send one message per mood:
+A mood is a **whole pose and expression**: her body shows the emotion, not just her face (owner decision 2026-10-03, D-029; Scarlet is the first, see "Pose moods" in [ART_ASSETS.md](ART_ASSETS.md)). The nine moods are in `MOODS` (`src/data/progression.ts`). Send one message per mood, with the approved portrait attached:
 
 ```
-Using the exact same character, pose, outfit, framing, size and position as the
-approved main portrait, change ONLY her facial expression (and her hands/arms if
-needed) to: [EXPRESSION]. Keep the PORTRAIT RULES and the green background. Her
-body must stay in exactly the same place so the images can be swapped seamlessly.
+Image 1 is the approved design. Create ONE new image of the SAME character: keep her
+face, hair, eyes, the whole outfit, her weapon and the art style exactly. Change her
+POSE and FACIAL EXPRESSION together, so her whole body shows this emotion: [EMOTION]
+[POSE]
+Keep the PORTRAIT RULES: full body, head to feet, nothing cropped, a clear margin on
+every side, the same size and camera distance as image 1 (the pictures swap in a
+chat, she must not grow, shrink or hop). Natural unpainted nails as in image 1.
 ```
 
-Replace `[EXPRESSION]` with:
+Write `[POSE]` for her character (what her hands, weapon, shoulders and legs do). Starting points:
 
-| File                  | [EXPRESSION]                                                                   |
-| --------------------- | ------------------------------------------------------------------------------ |
-| `portrait-smile.webp` | a warm, genuine smile with soft eyes                                           |
-| `portrait-tease.webp` | a teasing smile, one eyebrow raised, leaning slightly toward the viewer        |
-| `portrait-smirk.webp` | a smug, confident half-smirk, eyes narrowed                                    |
-| `portrait-wink.webp`  | a playful wink with a small smile, maybe a finger near her lips                |
-| `portrait-laugh.webp` | laughing openly, eyes closed with joy                                          |
-| `portrait-blush.webp` | cheeks visibly blushing, surprised and flattered, a small embarrassed smile    |
-| `portrait-shy.webp`   | shy and bashful, looking away, strong blush, a hand touching her hair or cheek |
-| `portrait-pout.webp`  | pouting, puffed cheeks, arms crossed, mock-annoyed                             |
-| `portrait-grin.webp`  | a huge toothy grin, full of energy and mischief                                |
+| File                  | [EMOTION]                             | [POSE] ideas                                                                  |
+| --------------------- | ------------------------------------- | ----------------------------------------------------------------------------- |
+| `portrait-smile.webp` | warm, content, at ease                | weapon put away, a hand on her hip, the other in her hair                     |
+| `portrait-laugh.webp` | delighted laughter                    | head back, eyes closed, a hand near her mouth, weapon lowered                 |
+| `portrait-tease.webp` | amused, flirty                        | leaning toward the viewer, one eyebrow raised, weapon held up beside her      |
+| `portrait-wink.webp`  | playful, cheerful                     | one eye closed, head tilted, a hand on her hip                                |
+| `portrait-blush.webp` | flustered, caught off guard           | a hand on her cheek, eyes to the side, shoulders up                           |
+| `portrait-shy.webp`   | shy, vulnerable                       | hands clasped in front of her, knees together, looking down and away          |
+| `portrait-pout.webp`  | sulking, mildly annoyed               | both hands on her hips, cheeks puffed, a sideways look                        |
+| `portrait-angry.webp` | cold fury, ready to fight             | fighting stance, weapon aimed to the side (never at the viewer), brows down   |
+| `portrait-sad.webp`   | sad, remembering what she lost (LORE) | shoulders dropped, head bowed, one hand holding the other arm, weapon hanging |
+
+What went wrong on Scarlet's set, so you can ask for it up front: a wide stance or an outstretched arm gets cut off by the image edge (say "everything stays inside the image with a margin"); nail polish changes colour between pictures (say "natural unpainted nails"); the filter refused "blowing the smoke from the barrel near her lips" (plainer wording passed).
 
 ### 5.5 Chibi → `chibi.webp`
 
@@ -379,7 +386,11 @@ OpenAI's Codex CLI signs in with the owner's ChatGPT plan (no API key) and has a
    ```
    codex exec --skip-git-repo-check -s workspace-write -C <dir> -i ref.png -- "Use your image generation tool to create ONE image, then save it in this directory as smile.png. …" < /dev/null
    ```
-   Each image takes about 5–7 minutes (about 2 on the owner's PC); three in parallel works. Ask for the green background (§5.1 PORTRAIT RULES) and say the body must stay exactly in place for moods. For a heroine with fire or yellow (Kaede), ask for pure blue (#0000FF) instead, and for a solid, opaque flame that floats clear of her hand: a see-through flame lets the screen colour into the fire. If the image tool refuses a mood, retry once with plainer wording for the expression (Selene's `tease` passed as "a playful, amused smile with one eyebrow slightly raised"); don't push past a second refusal.
+   In PowerShell `--` is dropped when calling `codex`, so pipe the prompt instead: `$prompt | codex exec --skip-git-repo-check -s workspace-write -C <dir> -i ref.webp`.
+   Each image takes about 5–7 minutes (about 2 on the owner's PC); three in parallel works.
+   **Cut-outs (portraits, moods, chibis): ask for real transparency.** The image tool takes `transparent_background: true`; say so in the prompt ("use your image generation tool with transparent_background set to true … save the tool's output unchanged, no post-processing"). The PNG comes back 1024×1536 with a real alpha channel, and `npm run art` strips its faint fringe. Don't judge these PNGs in an image viewer that ignores alpha: the hidden pixels hold a glow the tool painted behind her. The green screen (§5.1 PORTRAIT RULES; pure blue #0000FF for fire or yellow, as Kaede) is the fallback for tools without the switch.
+   For moods, describe the pose (§5.4) and say she keeps the size of image 1. If the image tool refuses a mood, retry once with plainer wording (Selene's `tease` passed as "a playful, amused smile with one eyebrow slightly raised"; Scarlet's `wink` passed once the gun-smoke near her lips was dropped); don't push past a second refusal.
+   A small fix to a finished picture works as an edit: attach it as image 1 and the portrait as image 2, and ask to recreate image 1 exactly with one thing changed.
 3. Show the owner the main portrait before making moods from it. Check moods line up (Scarlet's differed from the base by < 0.5 % of the silhouette).
 4. Copy the PNGs into `public/art/<id>/` with their final names and run `npm run art` (green is removed there), then `npm run smoke` and look at home, profile, chat and Bond screenshots.
 5. Keep the source PNGs until the owner signs off (`npm run art -- --keep`, or generate in a scratch folder and copy): the keyer improves over time and re-keying from the source is the only clean way to fix an edge problem later (Scarlet's and Yuki's sources were lost). Run the art gate ([ART_QA.md](ART_QA.md)) and fix every ✗ before showing the owner.

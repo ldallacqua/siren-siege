@@ -10,7 +10,7 @@ import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import type { Page } from 'playwright-core';
 import { HEROINES } from '../src/data/heroines.ts';
 import { measureFigure, type FrameMetrics } from '../src/game/chibiPose.ts';
-import { BOX, CHIBI_FILES, GALLERY_FILES, HAND_BOXES, MOODS } from './artSpec.ts';
+import { BOX, CHIBI_FILES, GALLERY_FILES, MOODS, POSE_MOODS, handBoxes } from './artSpec.ts';
 import { dataUrlOf, decode, launch } from './browser.ts';
 import { edgeReport, edgeTint } from './chroma.ts';
 
@@ -26,6 +26,13 @@ export const GATE = {
   portraitMinHeight: 1500,
   /** Mood portraits crossfade over the base: her silhouette must stay put (IoU of the masks). */
   moodIoU: 0.9,
+  /**
+   * Pose moods (POSE_MOODS) change her silhouette, so instead she must keep her size
+   * (head-to-feet height within ±6 % of the base) and stand on the same line (feet
+   * within 2 % of the image height), or she visibly grows, shrinks or hops on a swap.
+   */
+  poseHeight: 0.06,
+  poseFeet: 0.02,
   /**
    * The battlefield rescales each chibi frame to the front frame's body height
    * (frameFit). Up to ±30 % is invisible at sprite size; past that, redraw the frame
@@ -61,6 +68,19 @@ function mask(px: Uint8ClampedArray, W: number, H: number, mw = 64, mh = 96): Ui
     }
   return m;
 }
+/** Her vertical extent (rows with any pixel at alpha ≥ 128). */
+function span(px: Uint8ClampedArray, W: number, H: number): { height: number; bottom: number } {
+  let top = H;
+  let bottom = 0;
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++)
+      if (px[(y * W + x) * 4 + 3] >= 128) {
+        top = Math.min(top, y);
+        bottom = y;
+        break;
+      }
+  return { height: bottom - top, bottom };
+}
 function iou(a: Uint8Array, b: Uint8Array): number {
   let i = 0;
   let u = 0;
@@ -88,7 +108,7 @@ async function sheet(page: Page, file: string, html: string, w: number, h: numbe
   await page.setViewportSize({ width: w, height: h });
   await page.setContent(`<body style="margin:0;background:#0d0912;font:600 14px system-ui;color:#eee">${html}</body>`);
   await page.waitForFunction(() => Array.from(document.images).every((i) => i.complete));
-  await page.screenshot({ path: file });
+  await page.screenshot({ path: file, fullPage: true });
 }
 
 for (const hero of heroes) {
@@ -112,6 +132,9 @@ for (const hero of heroes) {
   let worstHalo = 0;
   let worstTint = 0;
   let worstIoU = 1;
+  const poses = POSE_MOODS.has(id);
+  let baseSpan: { height: number; bottom: number } | null = null;
+  let worstSize = 0;
   for (const f of portraits) {
     const d = await decode(page, url(`${dir}/${f}.webp`));
     if (d.h < GATE.portraitMinHeight || d.w > BOX.portrait.w || d.h > BOX.portrait.h || Math.abs(d.w / d.h - 2 / 3) > 0.03)
@@ -127,8 +150,17 @@ for (const hero of heroes) {
     const t = touches(d.px, d.w, d.h);
     if (t.length) bad.cut.push(`${f} (${t.join('/')})`);
     const m = mask(d.px, d.w, d.h);
-    if (!base) base = m;
-    else {
+    const s = span(d.px, d.w, d.h);
+    if (!base) {
+      base = m;
+      baseSpan = s;
+    } else if (poses) {
+      const dh = s.height / baseSpan!.height - 1;
+      const df = (s.bottom - baseSpan!.bottom) / d.h;
+      worstSize = Math.max(worstSize, Math.abs(dh));
+      if (Math.abs(dh) > GATE.poseHeight || Math.abs(df) > GATE.poseFeet)
+        bad.mood.push(`${f} (height ${dh >= 0 ? '+' : ''}${(dh * 100).toFixed(1)} %, feet ${(df * 100).toFixed(1)} %)`);
+    } else {
       const v = iou(base, m);
       worstIoU = Math.min(worstIoU, v);
       if (v < GATE.moodIoU) bad.mood.push(`${f} (IoU ${v.toFixed(2)})`);
@@ -141,7 +173,10 @@ for (const hero of heroes) {
     bad.edge.join('; ') || `no halo or screen fringe (worst halo ${worstHalo.toFixed(3)}, tint ${(worstTint * 100).toFixed(1)} %)`,
   );
   add('portrait framing', !bad.cut.length, bad.cut.length ? `cut off at ${bad.cut.join('; ')}` : 'whole figure inside the frame');
-  add('mood alignment', !bad.mood.length, bad.mood.join('; ') || `moods match the base silhouette (worst IoU ${worstIoU.toFixed(2)})`);
+  const fine = poses
+    ? `pose moods keep her size and footing (worst height ${(worstSize * 100).toFixed(1)} %)`
+    : `moods match the base silhouette (worst IoU ${worstIoU.toFixed(2)})`;
+  add('mood alignment', !bad.mood.length, bad.mood.join('; ') || fine);
 
   // 3. Chibi frames: square, clean, fit the front frame without heavy rescaling
   const chibis = CHIBI_FILES.filter((f) => existsSync(`${dir}/${f}.webp`));
@@ -225,26 +260,23 @@ for (const hero of heroes) {
   );
 
   // c2) every hand in every portrait, 1.6× (HAND_BOXES): count fingers, look for nails on the palm side
-  const boxes = HAND_BOXES[id] ?? [];
-  if (boxes.length) {
-    const Z = 1.6; // the portrait is drawn 1024·Z wide, whatever its file size, so boxes line up
-    const cells = ['portrait', ...MOODS.map((m) => `portrait-${m}`)]
-      .filter((f) => existsSync(`${dir}/${f}.webp`))
-      .flatMap((f) =>
-        boxes.map(
-          ([x, y, w, h]) =>
-            `<div style="position:relative;width:${w * Z}px;height:${h * Z}px;overflow:hidden;background:#2a1a2e"><img src="${url(`${dir}/${f}.webp`)}" style="position:absolute;left:${-x * Z}px;top:${-y * Z}px;width:${1024 * Z}px">${label(f.replace('portrait-', ''))}</div>`,
-        ),
-      );
-    const rowW = boxes.reduce((s, b) => s + b[2] * Z + 2, 0) * 5;
+  const Z = 1.6; // the portrait is drawn 1024·Z wide, whatever its file size, so boxes line up
+  const hands = ['portrait', ...MOODS.map((m) => `portrait-${m}`)]
+    .filter((f) => existsSync(`${dir}/${f}.webp`))
+    .flatMap((f) =>
+      handBoxes(id, f).map(
+        ([x, y, w, h]) =>
+          `<div style="position:relative;width:${w * Z}px;height:${h * Z}px;overflow:hidden;background:#2a1a2e"><img src="${url(`${dir}/${f}.webp`)}" style="position:absolute;left:${-x * Z}px;top:${-y * Z}px;width:${1024 * Z}px">${label(f.replace('portrait-', ''))}</div>`,
+      ),
+    );
+  if (hands.length)
     await sheet(
       page,
       `${OUT}/${id}-2b-hands.png`,
-      `<div style="display:grid;grid-template-columns:repeat(${boxes.length * 5},auto);gap:2px;width:max-content">${cells.join('')}</div>`,
-      Math.ceil(rowW),
-      Math.ceil(Math.max(...boxes.map((b) => b[3])) * Z * 2 + 4),
+      `<div style="display:flex;flex-wrap:wrap;gap:2px;width:1800px">${hands.join('')}</div>`,
+      1800,
+      300,
     );
-  }
 
   // d) gallery pictures, for hands and anatomy
   await sheet(

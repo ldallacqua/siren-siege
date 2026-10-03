@@ -44,6 +44,8 @@ const AMBIENT: Record<ChatScene, Ambient> = {
 
 const PAUSE: Record<string, number> = { '.': 170, '!': 170, '?': 170, ',': 80, ';': 90, ':': 90, '—': 120 };
 
+/** How long the old pose stays while it fades under the new one (`.leave` in style.css). */
+const MOOD_SWAP_MS = 400;
 let opening = false;
 
 /** Opens a chat once her portraits are decoded, so mood changes never flash. */
@@ -144,12 +146,15 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     mood = m;
     const img = artChain([portraitFile(ep.heroine, m), portraitFile(ep.heroine)], ep.heroine, d.name, true, 'chat-art enter');
     capUpscale(img);
-    // Swap only once the new face is decoded, so the old one never blinks out first.
+    // Swap only once the new picture is decoded, so the old one never blinks out first.
+    // Moods are different poses: the old one fades out under the new one (style.css
+    // `.leave`) instead of vanishing, or an arm that moved would pop out of the air.
     const swap = () => {
       if (mood !== m) return;
       const old = [...portrait.children];
+      old.forEach((o) => o.classList.add('leave'));
       portrait.append(img);
-      window.setTimeout(() => old.forEach((o) => o.remove()), 260);
+      window.setTimeout(() => old.forEach((o) => o.remove()), MOOD_SWAP_MS);
     };
     if (!portrait.firstChild) swap();
     else img.decode().then(swap, swap);

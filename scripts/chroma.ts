@@ -362,6 +362,19 @@ export function ghostBias(px: Uint8ClampedArray, W: number, H: number): number {
   return 63 / 255;
 }
 
+/**
+ * Cleans a cut-out the generator made transparent itself (Codex's image tool with
+ * `transparent_background`): its matte leaves a soft fringe of near-invisible pixels
+ * (alpha 1–4, the glow it painted behind her) up to ~10 px out, which the halo check
+ * counts. Dropping alpha under the noise floor removes it (halo 0.3–0.4 → ≤ 0.003 on
+ * Scarlet's pose moods). Returns whether the image had transparency to clean.
+ */
+export function cleanAlpha(px: Uint8ClampedArray, W: number, H: number): boolean {
+  const corners = [0, W - 1, (H - 1) * W, W * H - 1].every((n) => px[n * 4 + 3] === 0);
+  if (corners) removeBias(px, NOISE_FLOOR);
+  return corners;
+}
+
 export function removeBias(px: Uint8ClampedArray, bias: number): void {
   if (bias <= 0) return;
   for (let i = 3; i < px.length; i += 4) {

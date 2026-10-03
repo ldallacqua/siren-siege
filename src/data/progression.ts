@@ -49,6 +49,14 @@ export const GALLERY: GalleryItem[] = HEROINES.flatMap((h) =>
  */
 export const FULL_BODY: ReadonlySet<string> = new Set(['scarlet', 'yuki', 'kaede', 'selene', 'nemu']);
 
+/**
+ * Chat moods: each heroine has a `portrait-<mood>.webp` per mood, shown line by line.
+ * Each mood is a whole pose and expression (her body shows the emotion), not just a
+ * new face; see docs/ART_GUIDE.md §5.4. Chat lines may only use these.
+ */
+export const MOODS = ['smile', 'laugh', 'tease', 'wink', 'blush', 'shy', 'pout', 'angry', 'sad'] as const;
+export type Mood = (typeof MOODS)[number];
+
 /** Portrait used in shop, chat and roster. Mood variants: portrait-<mood>.webp */
 export function portraitFile(heroine: string, mood?: string): string {
   return mood ? `art/${heroine}/portrait-${mood}.webp` : `art/${heroine}/portrait.webp`;

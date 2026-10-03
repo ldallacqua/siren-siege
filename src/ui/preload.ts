@@ -1,6 +1,6 @@
 import type { ChatEpisode } from '../data/types.ts';
 import { HEROINES } from '../data/heroines.ts';
-import { portraitFile } from '../data/progression.ts';
+import { MOODS, portraitFile } from '../data/progression.ts';
 
 /**
  * Image preloading. Art is decoded before a screen that swaps pictures (chat
@@ -49,8 +49,6 @@ export function preloadAll(files: string[], maxMs = 1500): Promise<void> {
   const all = Promise.all(files.map(preload)).then(() => undefined);
   return Promise.race([all, new Promise<void>((r) => window.setTimeout(r, maxMs))]);
 }
-
-const MOODS = ['smile', 'tease', 'smirk', 'wink', 'laugh', 'blush', 'shy', 'pout', 'grin'];
 
 /** Every picture a chat can show: her portrait and each mood it uses. */
 export function chatFiles(ep: ChatEpisode): string[] {

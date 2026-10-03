@@ -1,7 +1,16 @@
 // What heroine art the game expects: file names, size boxes, encoding. Shared by
 // art-import.ts (conversion) and art-check.ts (the art gate). See docs/ART_GUIDE.md §2.
 
-export const MOODS = ['smile', 'tease', 'smirk', 'wink', 'laugh', 'blush', 'shy', 'pout', 'grin'] as const;
+import { MOODS } from '../src/data/progression.ts';
+
+export { MOODS };
+
+/**
+ * Heroines whose moods are whole poses (her body shows the emotion), not the base
+ * portrait with a new face. The gate checks their moods keep her size and footing
+ * instead of her silhouette. Every heroine moves here as her art is redone.
+ */
+export const POSE_MOODS: ReadonlySet<string> = new Set(['scarlet']);
 export const CHIBI_FILES = ['chibi', 'chibi-attack', 'chibi-back', 'chibi-back-attack'] as const;
 export const GALLERY_FILES = [1, 2, 3, 4, 5].map((n) => `gallery-${n}`);
 
@@ -22,17 +31,55 @@ export const BOX: Record<ArtKind, { w: number; h: number }> = {
   chibi: { w: 256, h: 256 },
 };
 
+type Box = [number, number, number, number];
+
 /**
  * Where her hands are in her portraits (x, y, w, h in 1024×1536 portrait pixels), so
  * the art gate's review sheet zooms on every hand in every mood: the most common
- * defect (missing or extra fingers, nails on the palm side). Update when a base
- * portrait changes pose; a new heroine adds hers.
+ * defect (missing or extra fingers, nails on the palm side). One list when every mood
+ * shares the base pose; one list per file for pose moods (POSE_MOODS). Update when a
+ * picture changes pose; a new heroine adds hers.
  */
-export const HAND_BOXES: Record<string, [number, number, number, number][]> = {
-  scarlet: [
-    [170, 210, 180, 200],
-    [700, 220, 180, 200],
-  ],
+export const HAND_BOXES: Record<string, Box[] | Record<string, Box[]>> = {
+  scarlet: {
+    portrait: [
+      [170, 210, 180, 200],
+      [700, 220, 180, 200],
+    ],
+    'portrait-smile': [
+      [490, 50, 180, 180],
+      [300, 410, 180, 160],
+    ],
+    'portrait-laugh': [
+      [520, 100, 180, 180],
+      [180, 600, 180, 180],
+    ],
+    'portrait-tease': [
+      [230, 150, 160, 180],
+      [610, 480, 180, 180],
+    ],
+    'portrait-wink': [
+      [200, 190, 180, 170],
+      [520, 460, 180, 160],
+    ],
+    'portrait-blush': [
+      [480, 120, 180, 180],
+      [220, 620, 180, 180],
+    ],
+    'portrait-shy': [[450, 540, 180, 170]],
+    'portrait-pout': [
+      [360, 440, 180, 170],
+      [560, 440, 180, 170],
+    ],
+    'portrait-angry': [
+      [160, 110, 190, 190],
+      [780, 180, 220, 190],
+    ],
+    'portrait-sad': [
+      [330, 320, 180, 160],
+      [300, 660, 180, 170],
+    ],
+  },
   yuki: [
     [150, 200, 200, 220],
     [700, 320, 180, 200],
@@ -50,6 +97,13 @@ export const HAND_BOXES: Record<string, [number, number, number, number][]> = {
     [690, 690, 180, 200],
   ],
 };
+
+/** Hand boxes for one portrait file (`portrait` or `portrait-<mood>`). */
+export function handBoxes(id: string, file: string): Box[] {
+  const b = HAND_BOXES[id];
+  if (!b) return [];
+  return Array.isArray(b) ? b : (b[file] ?? []);
+}
 
 /** Portraits and chibis are cut-outs: generated on a flat screen that gets keyed out. */
 export const isCutout = (k: ArtKind): boolean => k !== 'gallery';

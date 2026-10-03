@@ -2392,6 +2392,16 @@ body.in-battle .zoom-ctl {
     opacity: 0;
   }
 }
+/* The old pose waits until the new one is mostly in, then fades: where the two overlap
+   she never turns see-through, and the parts that moved dissolve instead of popping. */
+.chat-portrait .chat-art.leave {
+  animation: mood-out 0.26s ease-in 0.12s forwards;
+}
+@keyframes mood-out {
+  to {
+    opacity: 0;
+  }
+}
 .chat.narration .chat-art {
   filter: brightness(0.45) saturate(0.6);
   transition: filter 0.3s;

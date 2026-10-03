@@ -4,11 +4,9 @@ import { EPISODES, PROLOGUE } from '../src/data/dialogues.ts';
 import { ENEMIES, ENEMY_BY_ID, rbe } from '../src/data/enemies.ts';
 import { HEROINES } from '../src/data/heroines.ts';
 import { MAPS, WAVES } from '../src/data/maps.ts';
-import { BOND_XP, FULL_BODY, GALLERY, MAX_BOND } from '../src/data/progression.ts';
+import { existsSync } from 'node:fs';
+import { BOND_XP, FULL_BODY, GALLERY, MAX_BOND, MOODS, portraitFile } from '../src/data/progression.ts';
 import { Path } from '../src/game/sim/path.ts';
-
-/** Moods the art pipeline knows about (docs/ART_DIRECTION.md). */
-const MOODS = ['smile', 'tease', 'smirk', 'wink', 'laugh', 'blush', 'shy', 'pout', 'grin'];
 
 describe('heroines', () => {
   it('have unique ids and are adults', () => {
@@ -142,6 +140,10 @@ describe('dialogues', () => {
         for (const l of links) expect(nodes.has(l), `${ep.id}:${n.id} -> ${l}`).toBe(true);
         expect(n.end || links.length > 0, `${ep.id}:${n.id} is a dead end without end:true`).toBeTruthy();
         if (n.mood) expect(MOODS, `${ep.id}:${n.id} mood`).toContain(n.mood);
+        // a heroine with art must have the picture for every mood her lines use
+        // (otherwise the chat falls back to her base pose, which may not fit the line)
+        const art = existsSync(`public/${portraitFile(ep.heroine)}`);
+        if (n.mood && art) expect(existsSync(`public/${portraitFile(ep.heroine, n.mood)}`), `${ep.id}:${n.id} ${n.mood} art`).toBe(true);
         if (n.choices) for (const c of n.choices) expect(c.affection).toBeGreaterThanOrEqual(0);
       }
       // Reachability + termination (graph must be acyclic from start and reach an end node)

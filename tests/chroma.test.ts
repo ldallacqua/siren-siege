@@ -1,6 +1,6 @@
 // Green/blue-screen keying (scripts/chroma.ts), on synthetic images.
 import { describe, expect, it } from 'vitest';
-import { detectScreen, edgeReport, edgeTint, ghostBias, keyScreen, removeBias, screenColor } from '../scripts/chroma.ts';
+import { cleanAlpha, detectScreen, edgeReport, edgeTint, ghostBias, keyScreen, removeBias, screenColor } from '../scripts/chroma.ts';
 
 /** A W×H image: a screen colour with a dark disc ("her hair") in the middle, soft-edged. */
 function disc(W: number, H: number, screen: [number, number, number], her: [number, number, number] = [40, 30, 36]) {
@@ -119,5 +119,25 @@ describe('edge report and old-art repair', () => {
     expect(edgeReport(px, W, W).halo).toBe(0);
     // opaque pixels stay opaque
     expect(px[((W / 2) * W + W / 2) * 4 + 3]).toBe(255);
+  });
+
+  it("cleans the faint fringe of a generator's own transparency, and leaves opaque art alone", () => {
+    const W = 120;
+    // the generator's matte: alpha 3 out to 10 px around her, a soft rim (128) at her edge
+    const px = new Uint8ClampedArray(W * W * 4);
+    const r = W * 0.25;
+    for (let n = 0; n < W * W; n++) {
+      const d = Math.hypot((n % W) - W / 2, Math.floor(n / W) - W / 2);
+      px[n * 4 + 3] = d <= r ? 255 : d <= r + 1 ? 128 : d <= r + 10 ? 3 : 0;
+    }
+    expect(edgeReport(px, W, W).halo).toBeGreaterThan(0.5);
+    expect(cleanAlpha(px, W, W)).toBe(true);
+    expect(edgeReport(px, W, W).halo).toBe(0);
+    const rim = px[((W / 2) * W + W / 2 + Math.ceil(r) + 1) * 4 + 3];
+    expect(rim).toBeGreaterThan(100); // her soft edge survives
+    // an opaque picture (corners not transparent) is not a cut-out: untouched
+    const scene = new Uint8ClampedArray(16 * 16 * 4).fill(200);
+    expect(cleanAlpha(scene, 16, 16)).toBe(false);
+    expect(scene.every((v) => v === 200)).toBe(true);
   });
 });

@@ -6,6 +6,15 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ---
 
+### B-20 · P1 · Pose moods for every heroine (🔒 owner verdict on Scarlet's)
+
+Moods are becoming whole poses (D-029). Scarlet's nine are done on branch `wip/pose-moods` (not merged: `main` and the live game still have face-only moods and the old mood list). The owner tries her chats (`npm run dev`, `/?dev`, Messages → Scarlet) and looks at `artifacts/art-check/scarlet-2-moods.png` and `scarlet-2b-hands.png`.
+
+- If he likes it: merge the branch, then redo Yuki, Kaede, Selene and Nemu the same way (ART_GUIDE §5.4 and §9, real transparency; poses written for each character from LORE), add each to `POSE_MOODS` and give her per-picture `HAND_BOXES` (`scripts/artSpec.ts`), tag `angry`/`sad` on the chat lines that call for them, and record her poses in ART_ASSETS. Each set goes through the art gate and his sign-off. Consider redoing Scarlet's base `portrait.webp` with real transparency too (its source is lost; needs his approval of the new base).
+- If he doesn't: delete the branch; keep `cleanAlpha` and the transparent-background recipe (cherry-pick the script and doc parts), they stand on their own.
+- Later (his idea, with B-15 outfits): each outfit gets its own nine poses.
+- Accept: every heroine in `POSE_MOODS`, art gate passes, ART_QA table signed.
+
 ### B-18 · P1 · Every heroine through the art gate (owner sign-off)
 
 The art gate (`docs/ART_QA.md`) is in place and every heroine passes its automated half; Nemu is incomplete (no gallery). Remaining is the owner's half, per the ART_QA status table:
@@ -17,7 +26,7 @@ The art gate (`docs/ART_QA.md`) is in place and every heroine passes its automat
 
 ### B-19 · P3 · Sharper portraits for large high-DPI screens (owner decision)
 
-Portraits are 1536 px tall (the generator's maximum). On a 4K screen at 200 % the chat and home now show her smaller (head to ankle) to stay sharp (`MAX_UPSCALE` 1.25), where 1080p shows head to mid-thigh. Getting that framing back needs portraits ~3000 px tall: an AI upscaler (e.g. Real-ESRGAN anime, a new local tool) or a generator that outputs larger images. Every upscaled portrait goes through the art gate again (hands!).
+Portraits are 1536 px tall (the generator's maximum). On a 4K screen at 200 % the chat and home now show her smaller (head to ankle) to stay sharp (`MAX_UPSCALE` 1.25), where 1080p shows head to mid-thigh. Getting that framing back needs portraits ~3000 px tall: an AI upscaler (e.g. Real-ESRGAN anime, a new local tool) or a generator that outputs larger images. Codex's built-in image tool has no size option (checked 2026-10-03: always 1024×1536); its own notes say the paid API route (`gpt-image-2` with an `OPENAI_API_KEY`) takes sizes up to 2160×3840 but cannot output transparency, so that route would mean an API key (cost per image) plus the green screen again. Every upscaled portrait goes through the art gate again (hands!).
 
 - Accept: owner chooses; if done, `MAX_UPSCALE` framing on 4K matches 1080p and the gate passes.
 
