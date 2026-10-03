@@ -38,6 +38,23 @@ Selene's approved design, for future art of her: the owner asked for cleavage li
 
 Prompt recipe (one Codex call per picture, `-i portrait.webp`): the portrait is the identity reference (list her face, hair, eyes, skin and signature details); "draw the same woman in a new pose, a new outfit and a full illustrated scene"; the theme; the scene paragraph (place, clothes, what each hand is doing, props from her lore, light, expression); the setting note (Moonlit Isles, Japanese-inspired fantasy under a huge moon, no modern objects); a HANDS paragraph asking for carefully drawn hands and nails; the style and adult-character lines from ART_GUIDE §5.1; wide 3:2 with a full painted background and her face near the centre. Kaede's hair came out longer than in her portrait; the owner approved it as is, but say "short-to-mid length as in the reference" in future prompts.
 
+## Gallery 3, "Poolside" (2026-10-03)
+
+`gallery-3.webp` for all four (1536×1024, opaque), each approved by the owner. Same recipe as gallery 2.
+
+| Heroine | Scene                                                                                                                                                                  |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scarlet | Standing at the moonlit shrine pool (a vampire only swims by moonlight): black one-piece with crimson trim, sheer black sarong, a lace parasol as a joke about the sun |
+| Yuki    | An outdoor hot spring in the snow, the place Kaede took her: white frilled bikini, frost flowers spreading where her hand touches the rock                             |
+| Kaede   | Knee-deep in the surf on the southern Ember coast, kicking a splash at the viewer, a bonfire she lit on the beach behind her                                           |
+| Selene  | Wading along the moonlit shore below the shrine: lilac one-piece with a sheer sarong, straw hat in hand, motes of freed memories rising from the water                 |
+
+What went wrong on the way, for next time:
+
+- Reclining or lying poses in swimwear go wrong: Scarlet's first take (reclining at the pool's edge) had legs the owner called intertwined, and the image tool's filter then refused all three attempts to fix that pose (two edits, one fresh take). A standing pose in a one-piece passed at once. Prefer standing or sitting-upright poses for swimwear.
+- Selene's first take looked back over her shoulder: her torso twisted impossibly and the high-cut swimsuit read as bare. Ask for a front or three-quarter view with the whole body turned the same way, and a normal swimsuit leg line.
+- Small fixes (Selene's finger through the hat brim) work as an edit: attach the picture as image 1 and the portrait as image 2, and ask to redraw image 1 with exactly one thing changed.
+
 ## Visual reference and prompt set
 
 Use each committed `portrait.webp` as the identity reference for future art. Follow [ART_DIRECTION.md](ART_DIRECTION.md) and [ART_GUIDE.md](ART_GUIDE.md), with these production choices:
