@@ -25,9 +25,9 @@ Kaede's approved design, for future art of her: left hand on her hip with the el
 
 Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below; her chibi was redone to match on 2026-10-03). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
-## Pose moods (2026-10-03, Scarlet approved)
+## Pose moods (2026-10-03: Scarlet and Yuki approved)
 
-The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach; the other four follow one at a time (B-20) and until then keep face-only moods and no `angry` or `sad`.
+The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach, then Yuki's; Kaede, Selene and Nemu follow one at a time (B-20) and until then keep face-only moods and no `angry` or `sad`.
 
 | Mood  | Scarlet's pose                                                                                      |
 | ----- | --------------------------------------------------------------------------------------------------- |
@@ -42,6 +42,22 @@ The owner wants each mood to be a whole pose and expression instead of the base 
 | sad   | head bowed, eyes downcast, one hand holding her other arm, one revolver hanging at her side         |
 
 Lessons: the first `angry` (wide battle stance, arm fully out) lost a boot to the image edge and was redone with "everything inside the image with a margin"; `smile` and `laugh` came back with red nail polish and `wink` with black, fixed with an edit that changed only the nails (her nails are natural); the filter refused the first `wink` (blowing gun smoke near her lips) and passed a plainer one. The owner rejected the first `blush`, `tease` and `shy` for their hands (a hand lying on a revolver instead of gripping it, a second row of knuckles, clasped hands with no countable fingers); the replacements use hand poses the generator gets right: a closed fist, a hand on the hip, an arm behind her back. Her base `portrait.webp` was regenerated with real transparency too (an exact recreation of the keyed one, owner picked take A of two): clean crimson hair edges, halo 0.002 against 0.022.
+
+Yuki keeps her staff in every pose (a closed grip around the shaft is a hand the generator draws well), and her long sleeves hide a hand wherever the pose allows:
+
+| Mood  | Yuki's pose                                                                                          |
+| ----- | ---------------------------------------------------------------------------------------------------- |
+| smile | weight on one leg, head tilted, staff upright in one hand, the other hand inside her sleeve          |
+| laugh | eyes closed, laughing behind a raised sleeve (hand inside it), leaning on the staff                  |
+| tease | leaning in, a loose fist under her chin, staff upright in the other hand, half-lidded eyes           |
+| wink  | one eye closed, staff resting on her shoulder, the other hand on her hip                             |
+| blush | bright pink cheeks, eyes to the side, a hand on her cheek, staff held close                          |
+| shy   | the lower half of her face hidden behind a raised sleeve, staff held close, knees together           |
+| pout  | turned away, cheeks puffed, arms folded with both hands in her sleeves, staff in the crook of an arm |
+| angry | feet apart, staff gripped in both hands across her body, hair and sleeves in a freezing wind         |
+| sad   | head bowed, both hands holding the staff close, her temple resting against it                        |
+
+Lessons from Yuki: the first `smile` (a hand tucking her hair) came back with dark grey nails that two nail-only edits did not change, so the pose was replaced; no line of hers uses `angry` yet. Her regenerated base portrait was rejected (the raised hand lost its detail and the feet changed shape): a "recreate exactly" take redraws small parts, so give the generator enlarged close-ups of the parts that must survive (extra `-i` images) and compare them at 3× before showing the owner.
 
 ## Gallery 2, "Off Duty" (2026-10-02)
 

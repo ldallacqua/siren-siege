@@ -10,7 +10,7 @@ export { MOODS };
  * portrait with a new face. The gate checks their moods keep her size and footing
  * instead of her silhouette. Every heroine moves here as her art is redone.
  */
-export const POSE_MOODS: ReadonlySet<string> = new Set(['scarlet']);
+export const POSE_MOODS: ReadonlySet<string> = new Set(['scarlet', 'yuki']);
 export const CHIBI_FILES = ['chibi', 'chibi-attack', 'chibi-back', 'chibi-back-attack'] as const;
 export const GALLERY_FILES = [1, 2, 3, 4, 5].map((n) => `gallery-${n}`);
 
@@ -77,10 +77,39 @@ export const HAND_BOXES: Record<string, Box[] | Record<string, Box[]>> = {
       [300, 660, 180, 170],
     ],
   },
-  yuki: [
-    [150, 200, 200, 220],
-    [700, 320, 180, 200],
-  ],
+  yuki: {
+    portrait: [
+      [160, 180, 190, 190],
+      [700, 330, 180, 190],
+    ],
+    'portrait-smile': [[700, 320, 180, 180]],
+    'portrait-laugh': [
+      [330, 110, 190, 190],
+      [673, 340, 180, 180],
+    ],
+    'portrait-tease': [
+      [387, 185, 180, 180],
+      [712, 350, 180, 180],
+    ],
+    'portrait-wink': [
+      [600, 228, 180, 180],
+      [380, 423, 180, 180],
+    ],
+    'portrait-blush': [
+      [388, 143, 180, 180],
+      [643, 343, 180, 180],
+    ],
+    'portrait-shy': [
+      [370, 160, 190, 190],
+      [597, 333, 180, 180],
+    ],
+    'portrait-pout': [[490, 330, 220, 200]],
+    'portrait-angry': [
+      [628, 207, 180, 180],
+      [493, 407, 180, 180],
+    ],
+    'portrait-sad': [[540, 280, 180, 240]],
+  },
   kaede: [
     [160, 170, 200, 180],
     [580, 470, 180, 170],

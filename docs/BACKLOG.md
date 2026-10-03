@@ -6,11 +6,11 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ---
 
-### B-20 · P1 · Pose moods for every heroine (Scarlet done; Yuki next)
+### B-20 · P1 · Pose moods for every heroine (Scarlet and Yuki done; Kaede next)
 
-Moods are whole poses (D-029). The owner approved Scarlet's nine and the approach on 2026-10-03. Branch `wip/pose-moods` holds the work; `main` and the live game still have face-only moods and the old mood list until it is merged.
+Moods are whole poses (D-029). The owner approved Scarlet's nine and the approach on 2026-10-03, then Yuki's nine. Still open for Yuki: her base portrait with real transparency (he rejected the first two takes: the raised hand lost detail and the feet changed). Branch `wip/pose-moods` holds the work; `main` and the live game still have face-only moods and the old mood list until it is merged.
 
-For each of Yuki, Kaede, Selene and Nemu, one heroine at a time:
+For each of Kaede, Selene and Nemu, one heroine at a time:
 
 1. Regenerate her base `portrait.webp` with real transparency (ART_GUIDE §9 step 3: an exact recreation, two takes, owner picks). It is the reference for her moods.
 2. Generate nine poses written for her character (LORE; ART_GUIDE §5.4 and §9, `transparent_background`). Use hand poses the generator gets right (ART_ASSETS "Pose moods" lessons).
