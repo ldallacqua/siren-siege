@@ -25,9 +25,9 @@ Kaede's approved design, for future art of her: left hand on her hip with the el
 
 Selene's approved design, for future art of her: the owner asked for cleavage like the other heroines, so her gown now has an open plunging V neckline with halter straps (this replaces the covered high-neck bodice described below; her chibi was redone to match on 2026-10-03). Right hand raised with the fingertips on her bare shoulder, glossy lilac almond-shaped nails, left hand holding a tall moon bow upright at her side (large gold crescent above a dark grip, lower tip around her knee), thick side braid over her left shoulder, gold heeled sandals. The owner checks hands and nails closely: review both hands zoomed in before showing him a candidate.
 
-## Pose moods (2026-10-03: Scarlet, Yuki, Kaede and Selene approved)
+## Pose moods (2026-10-03: all five heroines approved)
 
-The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach, then Yuki's, Kaede's and Selene's; Nemu is the last (B-20) and until then keeps face-only moods and no `angry` or `sad`.
+The owner wants each mood to be a whole pose and expression instead of the base portrait with a new face (D-029). Scarlet is the first; her nine `portrait-<mood>.webp` were generated with her `portrait.webp` as the reference and real transparency from the image tool (`transparent_background`, no green screen). The owner approved her set and the approach, then Yuki's, Kaede's, Selene's and Nemu's: every heroine now has nine pose moods.
 
 | Mood  | Scarlet's pose                                                                                      |
 | ----- | --------------------------------------------------------------------------------------------------- |
@@ -90,6 +90,22 @@ Selene holds her bow by its grip in every pose and never draws the string (a str
 | sad   | head bowed, tears welling, bow at her side, her free hand holding her bow arm                |
 
 Lessons from Selene: the first `shy` had a stray finger sticking out beside the grip; an edit that named it ("a stray finger sticks out to the side… remove it; the lower hand is a simple closed grip") removed it and kept everything else. `smile` and `shy` failed once with "Selected model is at capacity": that is not a refusal, just run them again.
+
+Nemu's long haori sleeves hide a hand in six of her nine poses. The lollipop is in her mouth unless she holds it; the hairpins are tucked in her belt except in `angry`:
+
+| Mood  | Nemu's pose                                                                                     |
+| ----- | ----------------------------------------------------------------------------------------------- |
+| smile | weight on one leg, a hand on her hip, the other in her sleeve, a small lazy smile               |
+| laugh | eyes closed, laughing behind a raised sleeve, the lollipop held down at her side                |
+| tease | upright, chin on a loose fist, the other hand on her hip, a smug smile around the lollipop      |
+| wink  | one eye closed, the lollipop held up beside her cheek, the other hand on her hip                |
+| blush | pink cheeks, eyes away, a fist pulling her collar up to her cheek, the other hand in her sleeve |
+| shy   | both sleeves raised over the lower half of her face, only her eyes showing, toes turned in      |
+| pout  | arms crossed with both hands in her sleeves, turned away, the lollipop stick in her pout        |
+| angry | feet apart, both hairpins in one fist beside her shoulder, the other a fist, eyes glowing       |
+| sad   | head bowed, eyes down, one hand holding her other arm, the other hand in her sleeve             |
+
+Lessons from Nemu: the image filter refused `tease` and `sad` (a "sexual" flag; she is the petite one, and "leans toward the viewer" and "tears" seem to tip it). One retry with plainer wording passed: the character line without "showing cleavage" (the reference image keeps the outfit anyway), "stands upright" for leaning, "eyes looking down, a small frown" for tears.
 
 ## Gallery 2, "Off Duty" (2026-10-02)
 

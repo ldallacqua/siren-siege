@@ -6,20 +6,6 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ---
 
-### B-20 · P1 · Pose moods for every heroine (only Nemu left)
-
-Moods are whole poses (D-029). The owner approved Scarlet's nine and the approach on 2026-10-03, then Yuki's, Kaede's and Selene's. All four are on `main` and live. Base portraits are not regenerated (his decision after Yuki's and Kaede's takes changed hands and feet): the approved original is the reference for the poses.
-
-For Nemu:
-
-1. Generate nine poses written for her character (LORE; ART_GUIDE §5.4 and §9, `transparent_background`). Use hand poses the generator gets right (ART_ASSETS "Pose moods" lessons).
-2. `npm run art`, add her to `POSE_MOODS`, give her per-picture `HAND_BOXES` (`scripts/artSpec.ts`), review the hands sheet at 3×.
-3. **Show the owner before committing** (the moods sheet, the hands sheet, a chat screenshot). He rejects on hands: every finger countable, every held object actually gripped.
-4. After his sign-off: tag `angry`/`sad` and a mood on every line of her chats, record her poses in ART_ASSETS and the ART_QA table.
-
-- Later (his idea, with B-15 outfits): each outfit gets its own nine poses.
-- Accept: every heroine in `POSE_MOODS`, art gate passes, ART_QA table signed.
-
 ### B-18 · P1 · Every heroine through the art gate (owner sign-off)
 
 The art gate (`docs/ART_QA.md`) is in place and every heroine passes its automated half; Nemu is incomplete (no gallery). Remaining is the owner's half, per the ART_QA status table:
