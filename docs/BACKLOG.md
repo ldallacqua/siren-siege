@@ -8,18 +8,17 @@ Legend: **P1** next · **P2** soon · **P3** later · 🔒 blocked (reason given
 
 ### B-20 · P1 · Pose moods for every heroine (Scarlet and Yuki done; Kaede next)
 
-Moods are whole poses (D-029). The owner approved Scarlet's nine and the approach on 2026-10-03, then Yuki's nine. Still open for Yuki: her base portrait with real transparency (he rejected the first two takes: the raised hand lost detail and the feet changed). Branch `wip/pose-moods` holds the work; `main` and the live game still have face-only moods and the old mood list until it is merged.
+Moods are whole poses (D-029). The owner approved Scarlet's nine and the approach on 2026-10-03, then Yuki's nine. Both are merged to `main` and live. Base portraits are not regenerated (his decision after Yuki's and Kaede's takes changed hands and feet): the approved original is the reference for the poses.
 
 For each of Kaede, Selene and Nemu, one heroine at a time:
 
-1. Regenerate her base `portrait.webp` with real transparency (ART_GUIDE §9 step 3: an exact recreation, two takes, owner picks). It is the reference for her moods.
-2. Generate nine poses written for her character (LORE; ART_GUIDE §5.4 and §9, `transparent_background`). Use hand poses the generator gets right (ART_ASSETS "Pose moods" lessons).
-3. `npm run art`, add her to `POSE_MOODS`, give her per-picture `HAND_BOXES` (`scripts/artSpec.ts`), review the hands sheet at 3×.
-4. **Show the owner before committing** (the moods sheet, the hands sheet, a chat screenshot). He rejects on hands: every finger countable, every held object actually gripped.
-5. After his sign-off: tag `angry`/`sad` and a mood on every line of her chats, record her poses in ART_ASSETS and the ART_QA table.
+1. Generate nine poses written for her character (LORE; ART_GUIDE §5.4 and §9, `transparent_background`). Use hand poses the generator gets right (ART_ASSETS "Pose moods" lessons).
+2. `npm run art`, add her to `POSE_MOODS`, give her per-picture `HAND_BOXES` (`scripts/artSpec.ts`), review the hands sheet at 3×.
+3. **Show the owner before committing** (the moods sheet, the hands sheet, a chat screenshot). He rejects on hands: every finger countable, every held object actually gripped.
+4. After his sign-off: tag `angry`/`sad` and a mood on every line of her chats, record her poses in ART_ASSETS and the ART_QA table.
 
 - Later (his idea, with B-15 outfits): each outfit gets its own nine poses.
-- Accept: every heroine in `POSE_MOODS`, art gate passes, ART_QA table signed, branch merged to `main`.
+- Accept: every heroine in `POSE_MOODS`, art gate passes, ART_QA table signed.
 
 ### B-18 · P1 · Every heroine through the art gate (owner sign-off)
 

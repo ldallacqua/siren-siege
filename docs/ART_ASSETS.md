@@ -57,7 +57,7 @@ Yuki keeps her staff in every pose (a closed grip around the shaft is a hand the
 | angry | feet apart, staff gripped in both hands across her body, hair and sleeves in a freezing wind         |
 | sad   | head bowed, both hands holding the staff close, her temple resting against it                        |
 
-Lessons from Yuki: the first `smile` (a hand tucking her hair) came back with dark grey nails that two nail-only edits did not change, so the pose was replaced; no line of hers uses `angry` yet. Her regenerated base portrait was rejected (the raised hand lost its detail and the feet changed shape): a "recreate exactly" take redraws small parts, so give the generator enlarged close-ups of the parts that must survive (extra `-i` images) and compare them at 3× before showing the owner.
+Lessons from Yuki: the first `smile` (a hand tucking her hair) came back with dark grey nails that two nail-only edits did not change, so the pose was replaced; no line of hers uses `angry` yet. Regenerating her base portrait with real transparency was tried and dropped: a "recreate exactly" take redraws small parts (the raised hand lost its detail, the feet changed shape; a second round with enlarged close-ups of those parts as extra `-i` images came close but shifted her skin tone). The owner's decision: approved originals stay as they are, and only new images use real transparency. Kaede's two takes were not used either.
 
 ## Gallery 2, "Off Duty" (2026-10-02)
 
