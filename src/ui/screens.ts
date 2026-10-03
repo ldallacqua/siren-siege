@@ -5,12 +5,12 @@ import { ENEMIES } from '../data/enemies.ts';
 import { MAPS, WAVES } from '../data/maps.ts';
 import { paintMap } from '../game/mapArt.ts';
 import { BESTIARY, BESTIARY_NOTE, CODEX, IDLE_LINES, STORIES } from '../data/lore.ts';
-import { GALLERY, portraitFile } from '../data/progression.ts';
+import { GALLERY, HOME_SCENE, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode, GalleryItem } from '../data/types.ts';
 import { dev, heroineLevel, isMapUnlocked, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
 import { openLightbox } from './art.ts';
 import { playChat, startAmbient, type Ambient } from './chat.ts';
-import { artChain, bondBar, capUpscale, closeScreens, show, topbar } from './common.ts';
+import { artChain, backdrop, bondBar, capUpscale, closeScreens, sceneUrl, show, topbar } from './common.ts';
 import { h, hex, toast } from './dom.ts';
 import { applyCalm, parallax, stagger, tilt } from './motion.ts';
 import { showUpgradeTree } from './upgradeTree.ts';
@@ -72,6 +72,9 @@ export function showHome(a: HomeActions): void {
     return img;
   };
   let hero = heroFor(d.id);
+  // Her own place behind her (a scene from her chats).
+  const placeFor = (id: string) => backdrop(HOME_SCENE[id] ?? 'menu', 'home-art');
+  let place = placeFor(d.id);
   const heroWrap = h('button', { class: 'lobby-hero', 'aria-label': 'Talk to her', onclick: () => talk() }, hero);
   const bubble = h('div', { class: 'lobby-bubble', 'aria-live': 'polite' });
   const fx = h('canvas', { class: 'home-fx', 'aria-hidden': 'true', 'data-depth': '22' });
@@ -115,6 +118,11 @@ export function showHome(a: HomeActions): void {
     next.classList.add('swap');
     hero.replaceWith(next);
     hero = next;
+    // The new place fades in over the old one, which then goes.
+    const old = place;
+    place = placeFor(id);
+    old.after(place);
+    window.setTimeout(() => old.remove(), 800);
     // A wash of her colour rolls across the scene, and her particles take over.
     const wash = h('div', { class: 'home-wash' });
     heroWrap.before(wash);
@@ -135,6 +143,7 @@ export function showHome(a: HomeActions): void {
     'section',
     { class: 'screen home lobby', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
     h('div', { class: 'home-bg' }),
+    place,
     h('div', { class: 'home-moon', 'data-depth': '8' }),
     fx,
     heroWrap,
@@ -471,7 +480,7 @@ export function showProfile(id: string, a: HomeActions): void {
   show(
     h(
       'section',
-      { class: 'screen profile', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
+      { class: 'screen profile', style: `--c:${hex(d.color)};--a:${hex(d.accent)};--scene:${sceneUrl(HOME_SCENE[id] ?? 'menu')}` },
       topbar('Heroines', () => showRoster(a)),
       h(
         'div',

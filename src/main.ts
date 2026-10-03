@@ -12,6 +12,7 @@ import { h, toast } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
 import { playChat } from './ui/chat.ts';
+import { backdrop } from './ui/common.ts';
 import { applyCalm, wipe } from './ui/motion.ts';
 import { preload, warmArt } from './ui/preload.ts';
 import { portraitFile } from './data/progression.ts';
@@ -308,6 +309,7 @@ function showSplash(): void {
   const el = h(
     'button',
     { class: 'splash', 'aria-label': 'Tap to begin', autofocus: true },
+    backdrop('menu', 'splash-art'),
     h('div', { class: 'splash-moon' }),
     h('div', { class: 'splash-logo' }, h('span', null, 'Siren'), h('span', null, 'Siege')),
     h('div', { class: 'splash-tag' }, 'A moonlit tower defense'),

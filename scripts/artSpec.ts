@@ -1,9 +1,12 @@
 // What heroine art the game expects: file names, size boxes, encoding. Shared by
 // art-import.ts (conversion) and art-check.ts (the art gate). See docs/ART_GUIDE.md §2.
 
-import { MOODS } from '../src/data/progression.ts';
+import { MOODS, SCENE_FILES } from '../src/data/progression.ts';
 
-export { MOODS };
+export { MOODS, SCENE_FILES };
+
+/** Folder under public/art for the painted backdrops (chat scenes and `menu`), not a heroine. */
+export const SCENES_DIR = 'scenes';
 
 /**
  * Heroines whose moods are whole poses (her body shows the emotion), not the base
@@ -14,7 +17,7 @@ export const POSE_MOODS: ReadonlySet<string> = new Set(['scarlet', 'yuki', 'kaed
 export const CHIBI_FILES = ['chibi', 'chibi-attack', 'chibi-back', 'chibi-back-attack'] as const;
 export const GALLERY_FILES = [1, 2, 3, 4, 5].map((n) => `gallery-${n}`);
 
-export type ArtKind = 'portrait' | 'gallery' | 'chibi';
+export type ArtKind = 'portrait' | 'gallery' | 'chibi' | 'scene';
 
 /** Kind of a base name (no extension), or null if the name isn't one the game uses. */
 export function kindOf(base: string): ArtKind | null {
@@ -29,6 +32,7 @@ export const BOX: Record<ArtKind, { w: number; h: number }> = {
   portrait: { w: 1200, h: 1600 },
   gallery: { w: 1600, h: 1200 },
   chibi: { w: 256, h: 256 },
+  scene: { w: 1920, h: 1280 },
 };
 
 type Box = [number, number, number, number];
@@ -216,10 +220,10 @@ export function handBoxes(id: string, file: string): Box[] {
 }
 
 /** Portraits and chibis are cut-outs: generated on a flat screen that gets keyed out. */
-export const isCutout = (k: ArtKind): boolean => k !== 'gallery';
+export const isCutout = (k: ArtKind): boolean => k === 'portrait' || k === 'chibi';
 
 /**
  * WebP quality. Cut-outs are shown big in chats on desktop, where 0.85 showed blocky
  * hair; gallery pictures are busy scenes where it doesn't show.
  */
-export const QUALITY: Record<ArtKind, number> = { portrait: 0.92, chibi: 0.92, gallery: 0.85 };
+export const QUALITY: Record<ArtKind, number> = { portrait: 0.92, chibi: 0.92, gallery: 0.85, scene: 0.82 };

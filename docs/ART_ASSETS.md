@@ -169,6 +169,36 @@ What went wrong on the way, for next time:
 - An edit that redraws one hand (image 1 the picture, image 2 the portrait, "redraw image 1 with exactly one thing changed") fixed Scarlet's and Yuki's After Hours. Fresh takes that describe simple hand poses fixed the rest: the back of the hand toward the viewer, hands closed around a cup, a hand flat on a table. Palm-up open hands and a flame floating above a palm failed repeatedly, so Kaede's After Hours moved the flame to a candle.
 - Keep props away from the chest; hold them at the waist or beside the face.
 
+## Backdrops (2026-10-03)
+
+17 paintings in `public/art/scenes/` (1536×1024, opaque, about 2.5 MB together), all first takes, approved by the owner: one per chat scene and `menu`. Where they show is in UI_STYLE "Backdrops" and D-030.
+
+| File        | Place                                                         | Also used for            |
+| ----------- | ------------------------------------------------------------- | ------------------------ |
+| `night`     | Barracks room, moonlit window                                 |                          |
+| `armory`    | Armory and war room, oil lamps over a map table               |                          |
+| `fireside`  | Fireside hall, stone hearth, crimson drapes                   |                          |
+| `bloodmoon` | Stone balcony under a red moon                                | Scarlet's lobby and Bond |
+| `dawn`      | Watchtower at dawn over misty hills                           |                          |
+| `snow`      | Snowy shrine garden, stone lantern, plum tree                 | Yuki's lobby and Bond    |
+| `lake`      | Frozen pond in a pine forest under a full moon                |                          |
+| `onsen`     | Outdoor hot spring, paper lantern, steam                      |                          |
+| `festival`  | Shrine courtyard at a night festival, strings of red lanterns | Kaede's lobby and Bond   |
+| `training`  | Training ground at sunset                                     |                          |
+| `roof`      | Shrine rooftop, huge full moon                                | Selene's lobby and Bond  |
+| `parlor`    | Fortune-telling parlor, cushions, violet drapes               |                          |
+| `moongate`  | Stone chamber with the round Moongate, red cracks             |                          |
+| `archive`   | Shrine archive, scroll shelves, one reading lamp              |                          |
+| `teahouse`  | Tea room at night, round window, pink and amber lanterns      | Nemu's lobby and Bond    |
+| `dream`     | A hazy dream of the tea house in pink and violet mist         |                          |
+| `menu`      | The shrine from its courtyard: torii, hall, pale moon, mist   | Title and menu screens   |
+
+The prompt frame (only the place and its main feature change per picture):
+
+> Use your image generation tool to create ONE image (a normal opaque picture, no transparency) … A background painting for an anime visual-novel game set at the Moonlit Shrine, a Japanese-fantasy mountain shrine. THE PLACE: _(two sentences)_. STYLE: high-quality painted anime background art, the look of premium gacha and visual-novel backgrounds: painterly, soft atmospheric lighting, a gentle depth-of-field softness, a rich but dark and moody palette. It sits behind a character and dialogue text, so it is calm and a little dim: no harsh detail, no bright busy spots, no strong contrast in the middle. COMPOSITION: wide 3:2 landscape, seen at standing eye level. EMPTY of people: no characters, no figures, no silhouettes, no animals. The centre of the image is open, calm space with clear floor or ground where a character will stand later. The main feature of the place (_feature_) sits in the upper centre, so the picture still reads when it is cropped to its central vertical third on a phone. The lower third is darker and simple. No text, letters, calligraphy, signs with writing, logos, UI, frames, borders or watermarks anywhere.
+
+Notes for next time: the prompts ask for "plain" lanterns and no signs with writing, because generators put fake lettering on festival stalls and lanterns. Generate a new one with the same frame so it matches the set, drop the PNG in `public/art/scenes/`, add its name to `ChatScene` (`src/data/types.ts`) and `CHAT_SCENES`, and run `npm run art`.
+
 ## Visual reference and prompt set
 
 Use each committed `portrait.webp` as the identity reference for future art. Follow [ART_DIRECTION.md](ART_DIRECTION.md) and [ART_GUIDE.md](ART_GUIDE.md), with these production choices:

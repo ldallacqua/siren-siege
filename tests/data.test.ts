@@ -5,7 +5,18 @@ import { ENEMIES, ENEMY_BY_ID, rbe } from '../src/data/enemies.ts';
 import { HEROINES } from '../src/data/heroines.ts';
 import { MAPS, WAVES } from '../src/data/maps.ts';
 import { existsSync } from 'node:fs';
-import { BOND_XP, FULL_BODY, GALLERY, MAX_BOND, MOODS, portraitFile } from '../src/data/progression.ts';
+import {
+  BOND_XP,
+  CHAT_SCENES,
+  FULL_BODY,
+  GALLERY,
+  HOME_SCENE,
+  MAX_BOND,
+  MOODS,
+  SCENE_FILES,
+  portraitFile,
+  sceneFile,
+} from '../src/data/progression.ts';
 import { Path } from '../src/game/sim/path.ts';
 
 describe('heroines', () => {
@@ -185,5 +196,17 @@ describe('art framing', () => {
   it('FULL_BODY only names real heroines', () => {
     const ids = new Set(HEROINES.map((h) => h.id));
     for (const id of FULL_BODY) expect(ids.has(id), id).toBe(true);
+  });
+});
+
+describe('painted backdrops', () => {
+  it('cover every chat scene and give each heroine a place', () => {
+    const scenes: readonly string[] = CHAT_SCENES;
+    for (const ep of [...EPISODES, PROLOGUE]) if (ep.scene) expect(scenes, ep.id).toContain(ep.scene);
+    for (const d of HEROINES) expect(scenes, d.id).toContain(HOME_SCENE[d.id]);
+  });
+  it('are all there once any is (a missing one would show the plain CSS scene among painted ones)', () => {
+    const have = SCENE_FILES.filter((s) => existsSync(`public/${sceneFile(s)}`));
+    if (have.length) expect(have).toEqual(SCENE_FILES);
   });
 });

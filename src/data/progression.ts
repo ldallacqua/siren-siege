@@ -1,4 +1,4 @@
-import type { GalleryItem } from './types.ts';
+import type { ChatScene, GalleryItem } from './types.ts';
 import { HEROINES } from './heroines.ts';
 
 /** Bond level thresholds (total XP needed to reach level index+1). */
@@ -56,6 +56,44 @@ export const FULL_BODY: ReadonlySet<string> = new Set(['scarlet', 'yuki', 'kaede
  */
 export const MOODS = ['smile', 'laugh', 'tease', 'wink', 'blush', 'shy', 'pout', 'angry', 'sad'] as const;
 export type Mood = (typeof MOODS)[number];
+
+/**
+ * Painted backdrops, `public/art/scenes/<name>.webp`: one per chat scene, plus `menu`
+ * (the shrine courtyard) for the title and menu screens. Like all art they are
+ * optional: without the file the CSS-painted scene shows.
+ */
+export const CHAT_SCENES = [
+  'night',
+  'armory',
+  'fireside',
+  'bloodmoon',
+  'dawn',
+  'snow',
+  'lake',
+  'onsen',
+  'festival',
+  'training',
+  'roof',
+  'parlor',
+  'moongate',
+  'archive',
+  'teahouse',
+  'dream',
+] as const satisfies readonly ChatScene[];
+export const SCENE_FILES: readonly string[] = [...CHAT_SCENES, 'menu'];
+
+export function sceneFile(name: string): string {
+  return `art/scenes/${name}.webp`;
+}
+
+/** Where each heroine is shown on her own screens (lobby, Bond, profile): a place from her chats. */
+export const HOME_SCENE: Record<string, ChatScene> = {
+  scarlet: 'bloodmoon',
+  yuki: 'snow',
+  kaede: 'festival',
+  selene: 'roof',
+  nemu: 'teahouse',
+};
 
 /** Portrait used in shop, chat and roster. Mood variants: portrait-<mood>.webp */
 export function portraitFile(heroine: string, mood?: string): string {

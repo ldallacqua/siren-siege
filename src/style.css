@@ -854,10 +854,34 @@ body.in-battle .zoom-ctl {
   overflow-y: auto;
   padding: calc(14px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom))
     calc(16px + env(safe-area-inset-left));
+  /* --scene: a painted backdrop (common.ts show()), faint under a veil so text stays readable */
+  --veil: linear-gradient(rgba(13, 9, 20, 0.76), rgba(13, 9, 20, 0.88));
   background:
     radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 79, 139, 0.12), transparent 70%),
-    radial-gradient(ellipse 60% 60% at 100% 100%, rgba(120, 70, 200, 0.1), transparent 70%), var(--ink-1);
+    radial-gradient(ellipse 60% 60% at 100% 100%, rgba(120, 70, 200, 0.1), transparent 70%),
+    var(--veil),
+    var(--scene, none) center / cover no-repeat,
+    var(--ink-1);
   animation: rise 0.22s var(--ease);
+}
+
+/* Painted backdrop layer (common.ts backdrop()): fades in when its picture is ready. */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: center / cover no-repeat;
+  opacity: 0;
+  transition: opacity 0.6s ease-out;
+}
+.backdrop.on {
+  opacity: 1;
+}
+.backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 4, 12, var(--dim, 0.5));
 }
 @keyframes rise {
   from {
@@ -879,7 +903,7 @@ body.in-battle .zoom-ctl {
   gap: 12px;
   margin: calc(-14px - env(safe-area-inset-top)) -16px 16px;
   padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
-  background: linear-gradient(180deg, var(--ink-1) 70%, transparent);
+  background: linear-gradient(180deg, rgba(13, 9, 20, 0.94) 60%, transparent);
 }
 .screen-top h2 {
   margin: 0;
@@ -920,6 +944,17 @@ body.in-battle .zoom-ctl {
     radial-gradient(ellipse 70% 60% at 55% 40%, color-mix(in srgb, var(--c) 32%, transparent), transparent 70%),
     radial-gradient(ellipse 50% 40% at 20% 100%, rgba(255, 79, 139, 0.12), transparent 70%), linear-gradient(180deg, #120b1b, #07040b);
   transition: background 0.6s;
+}
+.home-art {
+  --dim: 0.42;
+}
+.home-art::after {
+  background:
+    radial-gradient(ellipse 70% 60% at 55% 40%, color-mix(in srgb, var(--c) 20%, transparent), transparent 70%), rgba(8, 4, 12, var(--dim));
+}
+.backdrop.on ~ .home-moon,
+.backdrop.on ~ .splash-moon {
+  opacity: 0;
 }
 .home-moon {
   position: absolute;
@@ -1796,7 +1831,11 @@ body.in-battle .zoom-ctl {
 /* ------------------------------------------------------------------ profile */
 
 .profile {
-  background: radial-gradient(ellipse 60% 70% at 20% 30%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%), var(--ink-1);
+  background:
+    radial-gradient(ellipse 60% 70% at 20% 30%, color-mix(in srgb, var(--c) 22%, transparent), transparent 70%),
+    var(--veil),
+    var(--scene, none) center / cover no-repeat,
+    var(--ink-1);
 }
 .profile-body {
   display: grid;
@@ -2100,6 +2139,13 @@ body.in-battle .zoom-ctl {
 .chat-scene {
   z-index: 0;
   background: linear-gradient(180deg, #120b1f, #06030a);
+}
+.scene-art {
+  --dim: 0.4;
+}
+.scene-art.on ~ .scene-a,
+.scene-art.on ~ .scene-b {
+  display: none;
 }
 .chat-scene .scene-c {
   /* shared: the heroine's color glows behind her, and a floor shadow */
@@ -2881,10 +2927,18 @@ body.in-battle .zoom-ctl {
   text-align: center;
 }
 .results.won {
-  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(232, 193, 112, 0.22), transparent 70%), var(--ink-1);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(232, 193, 112, 0.22), transparent 70%),
+    var(--veil),
+    var(--scene, none) center / cover no-repeat,
+    var(--ink-1);
 }
 .results.lost {
-  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255, 93, 108, 0.16), transparent 70%), var(--ink-1);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255, 93, 108, 0.16), transparent 70%),
+    var(--veil),
+    var(--scene, none) center / cover no-repeat,
+    var(--ink-1);
 }
 .results-kicker {
   margin-top: 4vh;
@@ -4037,6 +4091,9 @@ input[type='range']::-moz-range-thumb {
   border: 0;
   width: 100%;
   color: var(--text);
+}
+.splash-art {
+  --dim: 0.5;
 }
 .splash-moon {
   position: absolute;

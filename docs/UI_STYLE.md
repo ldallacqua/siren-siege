@@ -22,6 +22,16 @@ The visual language for every screen. Read it before touching `src/style.css`, `
 - Per heroine: components set `--c` (her color) and `--a` (her accent) inline; use them for her name, frame edge and glow, never as a large fill.
 - Shape: `--cut` chamfer size; `--r` panel radius (6 px). Interactive elements are chamfered, containers are softly rounded.
 
+## Backdrops
+
+No screen is a flat dark fill: each sits on a painted backdrop (`public/art/scenes`), kept **faint** so the heroine and the text stay the subject.
+
+- Chats: the scene's painting under `--dim` 0.4, with her colour glow and floor shadow (`.scene-c`) on top; the canvas particles stay.
+- Lobby and Bond screen: the featured heroine's own place (`HOME_SCENE`) under `--dim` ~0.42 with a wash of her colour; the lobby crossfades it when she changes.
+- Title: the shrine courtyard (`menu`). Menu screens (lists, profile, results): the same courtyard, or her place on the profile, under `--veil` (76–88 % ink), so it reads as texture, not as a picture.
+- A screen with a backdrop uses `backdrop(name)` (`src/ui/common.ts`) for fixed layouts or the `--scene` variable for scrolling ones. Art stays optional: without the file the old CSS-painted scene shows.
+- Don't raise the brightness to show a painting off. If text loses contrast on a phone, raise `--dim`/`--veil`.
+
 ## Typography
 
 - **Cinzel 600/700:** logo, screen titles, heroine names, chat speaker plates, results headline. Title case, letter-spacing 0.02–0.04em.

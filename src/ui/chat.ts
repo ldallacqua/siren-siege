@@ -1,10 +1,10 @@
 import { VOICE, sound } from '../audio/sound.ts';
 import { episodesFor } from '../data/dialogues.ts';
 import { HEROINE_BY_ID } from '../data/heroines.ts';
-import { GALLERY, MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
+import { GALLERY, MAX_BOND, bondProgress, portraitFile, sceneFile } from '../data/progression.ts';
 import type { ChatEpisode, ChatNode, ChatScene } from '../data/types.ts';
 import { addXp, persist, reducedMotion, save } from '../state/save.ts';
-import { artChain, capUpscale, show } from './common.ts';
+import { artChain, backdrop, capUpscale, show } from './common.ts';
 import { h, hex } from './dom.ts';
 import { icon } from './icons.ts';
 import { chatFiles, preloadAll } from './preload.ts';
@@ -52,7 +52,7 @@ let opening = false;
 export function playChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions = {}): void {
   if (opening) return;
   opening = true;
-  void preloadAll(chatFiles(ep), 1500).then(() => {
+  void preloadAll([...chatFiles(ep), sceneFile(ep.scene ?? 'night')], 1500).then(() => {
     opening = false;
     openChat(ep, onCloseRaw, opts);
   });
@@ -101,7 +101,14 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   const screen = h(
     'section',
     { class: `screen chat scene-${scene}`, style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
-    h('div', { class: 'chat-scene' }, h('div', { class: 'scene-a' }), h('div', { class: 'scene-b' }), h('div', { class: 'scene-c' })),
+    h(
+      'div',
+      { class: 'chat-scene' },
+      backdrop(scene, 'scene-art'),
+      h('div', { class: 'scene-a' }),
+      h('div', { class: 'scene-b' }),
+      h('div', { class: 'scene-c' }),
+    ),
     fx,
     portrait,
     hearts,

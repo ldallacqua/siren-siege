@@ -2,11 +2,11 @@ import { VOICE, sound } from '../audio/sound.ts';
 import { episodesFor } from '../data/dialogues.ts';
 import { GIFTS, GIFT_BY_ID, GIFT_LINES, tasteOf } from '../data/gifts.ts';
 import { HEROINES, HEROINE_BY_ID } from '../data/heroines.ts';
-import { MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
+import { HOME_SCENE, MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode } from '../data/types.ts';
 import { giftCount, giveGift, heroineLevel, isUnlocked, save } from '../state/save.ts';
 import { playChat } from './chat.ts';
-import { artChain, goingBack, show, topbar } from './common.ts';
+import { artChain, backdrop, goingBack, show, topbar } from './common.ts';
 import { gold, h, hex, toast } from './dom.ts';
 import { giftIcon } from './giftArt.ts';
 import { icon } from './icons.ts';
@@ -293,6 +293,7 @@ export function showBond(id: string, back: () => void): void {
     'section',
     { class: 'screen bond', style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
     h('div', { class: 'home-bg' }),
+    backdrop(HOME_SCENE[id] ?? 'menu', 'home-art'),
     h('div', { class: 'bs-art' }, artChain([portraitFile(id)], id, d.name, true, 'bs-hero')),
     hearts,
     topbar('Bond', () => showMessages(back)),

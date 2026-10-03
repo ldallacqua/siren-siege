@@ -5,7 +5,8 @@
 //   npm run art -- --keep  convert but keep the sources
 //
 // Sizing: images are scaled down (never up, never cropped) to fit the box for their
-// kind — portraits 1200×1600, gallery 1600×1200, chibi frames 256×256. Transparency is kept.
+// kind — portraits 1200×1600, gallery 1600×1200, chibi frames 256×256, backdrops in
+// public/art/scenes 1920×1280. Transparency is kept.
 // Green/blue screen: a portrait or chibi whose four corners are flat green (or blue, for
 // heroines with fire or yellow, where a green fringe would show) gets the screen keyed
 // out to transparent, with the screen colour unmixed from her edges (scripts/chroma.ts).
@@ -16,7 +17,7 @@ import { existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileS
 import { extname, join } from 'node:path';
 import { HEROINES } from '../src/data/heroines.ts';
 import { cleanAlpha, keyScreen } from './chroma.ts';
-import { BOX, QUALITY, isCutout, kindOf, type ArtKind } from './artSpec.ts';
+import { BOX, QUALITY, SCENES_DIR, SCENE_FILES, isCutout, kindOf, type ArtKind } from './artSpec.ts';
 import { dataUrlOf, decode, encode, launch } from './browser.ts';
 
 const ROOT = 'public/art';
@@ -31,7 +32,8 @@ if (!existsSync(ROOT)) throw new Error(`${ROOT} not found — run from the repo 
 for (const dir of readdirSync(ROOT)) {
   const full = join(ROOT, dir);
   if (!statSync(full).isDirectory()) continue;
-  if (!IDS.has(dir)) {
+  const scenes = dir === SCENES_DIR;
+  if (!scenes && !IDS.has(dir)) {
     problems.push(`${full}/ — unknown heroine id (expected one of: ${[...IDS].join(', ')})`);
     continue;
   }
@@ -39,7 +41,7 @@ for (const dir of readdirSync(ROOT)) {
     if (file === 'README.md' || file === '.gitkeep') continue;
     const ext = extname(file).toLowerCase();
     const base = file.slice(0, file.length - ext.length).toLowerCase();
-    const kind = kindOf(base);
+    const kind: ArtKind | null = scenes ? (SCENE_FILES.includes(base) ? 'scene' : null) : kindOf(base);
     if (!SOURCE_EXT.has(ext) || !kind) {
       problems.push(`${full}/${file} — not a name the game uses (see docs/ART_GUIDE.md §2)`);
       continue;

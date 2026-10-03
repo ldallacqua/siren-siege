@@ -60,7 +60,7 @@ src/
     dialogues.ts     Chat episodes (node graph, Bond 1/3/5/7/9 per heroine) + PROLOGUE
     gifts.ts         Gift items, heroine tastes, gift XP, battle drops, reaction lines
     lore.ts          Codex entries, bestiary text, per-heroine story entries unlocked by Bond
-    progression.ts   Bond XP thresholds, gallery slots, art file naming
+    progression.ts   Bond XP thresholds, gallery slots, art file naming, moods, scenes
   game/
     sim/             PURE LOGIC, no Phaser/DOM. Deterministic, fixed 60 Hz.
       BattleSim.ts     Spawning, movement, targeting, projectiles, damage/pop, economy, waves
@@ -80,7 +80,7 @@ src/
     preload.ts       Image preloading + known-missing art (chats wait for their moods)
     screens.ts       Home, roster, profile, codex, gallery, results, pause, options, settings
     chat.ts          Visual-novel chat player (scenes, ambient canvas, voice blips, log/auto/skip, end card)
-    common.ts        show(), artChain(), bondBar(), topbar() shared by screens
+    common.ts        show(), artChain(), backdrop(), bondBar(), topbar() shared by screens
     art.ts           Loads public/art files, falls back to generated SVG placeholders; lightbox
     icons.ts         Inline SVG icon set (use this, never emoji/unicode glyphs in UI chrome)
     dom.ts           h() hyperscript helper, toast, formatters
@@ -92,6 +92,7 @@ scripts/           balance-sim.ts, smoke.ts, art-import.ts + art-check.ts (the a
 public/sw.js       Service worker (installable PWA, offline); public/manifest.webmanifest
 tests/             data, sim, chibi, camera and audio tests
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
+public/art/scenes/ Painted backdrops: one per chat scene + menu (SCENE_FILES in progression.ts)
 docs/              GDD, ARCHITECTURE, UI_STYLE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
 public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 ```

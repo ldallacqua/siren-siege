@@ -1,7 +1,7 @@
-import { FULL_BODY, MAX_BOND, bondProgress } from '../data/progression.ts';
+import { FULL_BODY, MAX_BOND, bondProgress, sceneFile } from '../data/progression.ts';
 import { save } from '../state/save.ts';
 import { placeholderArt } from './art.ts';
-import { present } from './preload.ts';
+import { exists, preload, present } from './preload.ts';
 import { h } from './dom.ts';
 import { icon } from './icons.ts';
 import { calm, countTo } from './motion.ts';
@@ -49,10 +49,32 @@ export function show(el: HTMLElement): void {
     el.classList.add(back ? 'enter-back' : 'enter-fwd');
     retire(prev, back ? 'leave-back' : 'leave-fwd');
   } else prev?.remove();
+  // Menu screens paint the shrine courtyard behind their content (style.css, --scene).
+  if (!el.style.getPropertyValue('--scene')) el.style.setProperty('--scene', sceneUrl('menu'));
   r.append(el);
   // The page itself never scrolls (screens scroll inside); undo any stray scroll-into-view.
   document.scrollingElement?.scrollTo(0, 0);
   el.querySelector<HTMLElement>('[autofocus], button')?.focus({ preventScroll: true });
+}
+
+/** CSS `url()` of a painted backdrop, absolute so it resolves the same from a stylesheet or an inline style. */
+export const sceneUrl = (name: string): string => `url("${new URL(sceneFile(name), document.baseURI).href}")`;
+
+/**
+ * A painted backdrop layer (public/art/scenes). It fades in once its picture is
+ * decoded and stays empty when the file doesn't exist, so whatever is painted
+ * underneath in CSS remains the fallback.
+ */
+export function backdrop(name: string, className = ''): HTMLElement {
+  const el = h('div', { class: `backdrop ${className}` });
+  const file = sceneFile(name);
+  const on = () => {
+    el.style.backgroundImage = sceneUrl(name);
+    el.classList.add('on');
+  };
+  if (exists(file)) on();
+  else void preload(file).then((ok) => ok && on());
+  return el;
 }
 
 /** Image with a chain of candidate files, ending in the generated placeholder. */
