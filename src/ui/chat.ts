@@ -10,10 +10,12 @@ import { icon } from './icons.ts';
 import { chatFiles, preloadAll } from './preload.ts';
 
 /**
- * Visual-novel chat player: painted scene + ambient particles, breathing
- * portrait with mood crossfades, typewriter with per-heroine voice blips,
- * choices with affection feedback, Bond meter, backlog, auto and skip, and an
- * end card with Bond gained and unlocks.
+ * The story screen (docs/VN_DIRECTION.md section 7): the painted scene at full
+ * brightness with ambient particles, a big breathing sprite with mood crossfades,
+ * a frameless text window in the speaker's colour, typewriter with per-heroine
+ * voice blips, choice bars with affection feedback, chapter ribbon, Bond meter,
+ * quick menu (log, auto, skip), and an end card with Bond gained and unlocks.
+ * A tap anywhere on the picture advances.
  */
 
 export interface ChatOptions {
@@ -84,23 +86,32 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   // ---------------------------------------------------------------- DOM
   const portrait = h('div', { class: 'chat-portrait' });
   const name = h('div', { class: 'chat-name' });
-  const text = h('div', { class: 'chat-text', 'aria-live': 'polite' });
-  const more = h('div', { class: 'chat-more' }, icon('next'));
+  // The whole line is laid out from the first letter (the part not typed yet is
+  // invisible), so words never jump to the next row while it types.
+  const line = h('span', { class: 'chat-line' });
+  const rest = h('span', { class: 'chat-rest', 'aria-hidden': 'true' });
+  const more = h('i', { class: 'chat-more', 'aria-hidden': 'true' });
+  const text = h('div', { class: 'chat-text', 'aria-live': 'polite' }, line, rest, more);
   const choices = h('div', { class: 'chat-choices' });
-  const box = h('div', { class: 'chat-box', onclick: () => advance() }, name, text, more);
+  const box = h('div', { class: 'chat-box' }, name, text);
   const hearts = h('div', { class: 'chat-hearts', 'aria-hidden': 'true' });
   const fx = h('canvas', { class: 'chat-fx', 'aria-hidden': 'true' });
   const bondFill = h('span', { class: 'bond-fill' });
   const bondGain = h('span', { class: 'chat-bond-gain' });
   const bondLvl = h('span', { class: 'chat-bond-lvl' });
-  const autoBtn = h(
-    'button',
-    { class: 'btn icon chat-tool', title: 'Auto (A)', 'aria-label': 'Auto', onclick: () => setAuto(!auto) },
-    icon('play'),
-  );
+  const autoBtn = h('button', { class: 'chat-tool', title: 'Auto (A)', 'aria-pressed': 'false', onclick: () => setAuto(!auto) }, 'Auto');
+  const episode = episodesFor(ep.heroine).findIndex((e) => e.id === ep.id) + 1;
+  const kicker = opts.noReward ? 'Prologue' : episode ? `${first} · Episode ${episode}` : `${first} · Bond ${ep.level}`;
   const screen = h(
     'section',
-    { class: `screen chat scene-${scene}`, style: `--c:${hex(d.color)};--a:${hex(d.accent)}` },
+    {
+      class: `screen chat scene-${scene}`,
+      style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
+      // Anywhere on the picture advances; buttons and the layers above it do their own thing.
+      onclick: (e: Event) => {
+        if (!(e.target as Element).closest('button, .chat-log, .chat-end')) advance();
+      },
+    },
     h(
       'div',
       { class: 'chat-scene' },
@@ -115,24 +126,25 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     h(
       'header',
       { class: 'chat-top' },
-      h('div', { class: 'chat-ep' }, h('small', null, opts.noReward ? 'Prologue' : `${first} · Bond ${ep.level}`), ep.title),
+      h('div', { class: 'chat-ep' }, h('small', null, kicker), h('b', null, ep.title)),
       opts.noReward
         ? null
         : h('div', { class: 'chat-bond', title: 'Bond' }, icon('heart'), bondLvl, h('span', { class: 'bond-track' }, bondFill), bondGain),
+      h('button', { class: 'btn icon chat-close', onclick: () => finish(false), title: 'Leave', 'aria-label': 'Leave' }, icon('close')),
+    ),
+    choices,
+    h(
+      'div',
+      { class: 'chat-bottom' },
+      box,
       h(
-        'div',
-        { class: 'chat-tools' },
-        h('button', { class: 'btn icon chat-tool', title: 'Log (L)', 'aria-label': 'Log', onclick: () => openLog() }, icon('chat')),
+        'nav',
+        { class: 'chat-tools', 'aria-label': 'Quick menu' },
+        h('button', { class: 'chat-tool', title: 'Log (L)', onclick: () => openLog() }, 'Log'),
         autoBtn,
-        h(
-          'button',
-          { class: 'btn icon chat-tool', title: 'Skip to next choice (S)', 'aria-label': 'Skip', onclick: () => skip() },
-          icon('fast'),
-        ),
-        h('button', { class: 'btn icon chat-tool chat-close', onclick: () => finish(false), title: 'Leave' }, icon('close')),
+        h('button', { class: 'chat-tool', title: 'Skip to next choice (S)', onclick: () => skip() }, 'Skip'),
       ),
     ),
-    h('div', { class: 'chat-bottom' }, box, choices),
   );
 
   const paintBond = () => {
@@ -184,8 +196,10 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     name.className = `chat-name ${speaker === 'you' ? 'you' : ''}`;
     fullText = node.text;
     log.push({ who: name.textContent, text: node.text, kind: speaker });
-    text.textContent = '';
+    line.textContent = '';
+    rest.textContent = fullText;
     choices.replaceChildren();
+    screen.classList.remove('choosing');
     more.classList.remove('on');
     clearTimeout(typing);
     clearTimeout(autoTimer);
@@ -193,7 +207,8 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     const step = () => {
       if (closed) return;
       i++;
-      text.textContent = fullText.slice(0, i);
+      line.textContent = fullText.slice(0, i);
+      rest.textContent = fullText.slice(i);
       const ch = fullText[i - 1];
       if (speaker !== 'narration' && i % 2 === 0 && /[a-z]/i.test(ch)) sound.play('blip', speaker === 'you' ? 1 : voice);
       if (i >= fullText.length) return doneTyping();
@@ -206,21 +221,20 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   const doneTyping = () => {
     clearTimeout(typing);
     typing = 0;
-    text.textContent = fullText;
+    line.textContent = fullText;
+    rest.textContent = '';
     if (node.choices) {
+      screen.classList.add('choosing');
       choices.replaceChildren(
         ...node.choices.map((c, k) =>
           h(
             'button',
             {
-              class: 'btn choice',
+              class: 'choice',
+              title: `Key ${k + 1}`,
               onpointerenter: () => sound.play('tap', 1.2),
-              onclick: (e: Event) => {
-                e.stopPropagation();
-                pickChoice(c.next, c.affection, c.text, k);
-              },
+              onclick: () => pickChoice(c.next, c.affection, c.text, k),
             },
-            h('kbd', null, String(k + 1)),
             c.text,
           ),
         ),
@@ -277,6 +291,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   const setAuto = (on: boolean) => {
     auto = on;
     autoBtn.classList.toggle('on', on);
+    autoBtn.setAttribute('aria-pressed', String(on));
     sound.play('toggle');
     if (on && !typing && !node.choices) autoTimer = window.setTimeout(advance, 600);
     if (!on) clearTimeout(autoTimer);

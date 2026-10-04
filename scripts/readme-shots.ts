@@ -227,7 +227,7 @@ async function desktop() {
   await page.locator('.chat-box').waitFor();
   await page.waitForTimeout(2500);
   // Tap through to her first question, so the shot shows the branching choices.
-  for (let i = 0; i < 30 && !(await page.locator('.btn.choice').count()); i++) {
+  for (let i = 0; i < 30 && !(await page.locator('.chat-choices .choice').count()); i++) {
     await page.locator('.chat-box').click();
     await page.waitForTimeout(350);
   }

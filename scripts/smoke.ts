@@ -393,6 +393,61 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.locator('.chat-box').waitFor();
   for (let i = 0; i < 3; i++) await page.locator('.chat-box').click();
   await shot('6-chat');
+  // The story screen (docs/VN_DIRECTION.md 7): text sized from the screen, a big sprite that is
+  // never stretched past MAX_UPSCALE, and nothing over her face (the top fifth of the sprite).
+  const stage = () =>
+    page.evaluate(() => {
+      const img = document.querySelector<HTMLImageElement>('.chat-portrait .chat-art:last-child')!;
+      const s = img.getBoundingClientRect();
+      const face = { l: s.left + s.width * 0.34, r: s.right - s.width * 0.34, t: s.top + s.height * 0.03, b: s.top + s.height * 0.19 };
+      const over = ['.chat-ep', '.chat-bond', '.chat-close', '.chat-box', '.chat-tools', '.chat-choices .choice'].filter((sel) =>
+        Array.from(document.querySelectorAll(sel)).some((e) => {
+          const r = e.getBoundingClientRect();
+          return r.width > 0 && r.left < face.r && r.right > face.l && r.top < face.b && r.bottom > face.t;
+        }),
+      );
+      const fits = ['.chat-ep', '.chat-close', '.chat-box', '.chat-tools', '.chat-choices .choice'].every((sel) =>
+        Array.from(document.querySelectorAll(sel)).every((e) => {
+          const r = e.getBoundingClientRect();
+          return r.left >= -1 && r.top >= -1 && r.right <= innerWidth + 1 && r.bottom <= innerHeight + 1;
+        }),
+      );
+      return {
+        over,
+        fits,
+        upscale: (s.height * devicePixelRatio) / img.naturalHeight,
+        spriteH: s.height / innerHeight,
+        text: parseFloat(getComputedStyle(document.querySelector('.chat-text')!).fontSize),
+        tools: Math.min(...Array.from(document.querySelectorAll('.chat-tool'), (e) => e.getBoundingClientRect().height)),
+      };
+    });
+  const checkStage = async (when: string) => {
+    const st = await stage();
+    assert(!st.over.length, `story screen (${when}): ${st.over.join(', ')} covers her face`);
+    assert(st.fits, `story screen (${when}): something is off screen`);
+    assert(st.upscale <= 1.26, `story sprite is stretched ${st.upscale.toFixed(2)}x`);
+    assert(st.spriteH > 0.7, `story sprite is small (${st.spriteH.toFixed(2)} of the screen height)`);
+    assert(st.text >= 17, `story text is ${st.text}px`);
+    assert(st.tools >= 40, `quick menu buttons are ${st.tools}px tall`);
+    if (v.width > v.height && v.height > 520)
+      assert(st.text >= v.height * 0.03, `story text is ${st.text}px, under 3% of a ${v.height}px screen`);
+  };
+  await checkStage('a line');
+  for (let i = 0; i < 40 && !(await page.locator('.chat-choices .choice').count()); i++) await page.locator('.chat-box').click();
+  await page.locator('.chat-choices .choice').first().waitFor({ timeout: 3000 });
+  await checkStage('a choice');
+  await shot('6b-choice');
+  // The log opens over the picture, and a tap inside it does not advance the story behind it.
+  await page.locator('.chat-choices .choice').first().click();
+  await page.locator('.screen.chat:not(.choosing)').waitFor();
+  const current = () =>
+    page.evaluate(() => document.querySelector('.chat-line')!.textContent! + document.querySelector('.chat-rest')!.textContent!);
+  const lineBefore = await current();
+  await page.getByRole('button', { name: 'Log' }).click();
+  await page.locator('.chat-log-list').click();
+  assert((await current()) === lineBefore, 'a tap inside the log advanced the story');
+  await page.keyboard.press('Escape');
+  await page.locator('.chat-log').waitFor({ state: 'detached' });
 
   // Art remains optional, but every shipped first-unlock illustration must load
   // as the real WebP in its lightbox, not silently fall back to an SVG.

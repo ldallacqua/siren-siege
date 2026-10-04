@@ -26,17 +26,17 @@ The visual language for every screen. Read it before touching `src/style.css`, `
 
 No screen is a flat dark fill: each sits on a painted backdrop (`public/art/scenes`), kept **faint** so the heroine and the text stay the subject.
 
-- Chats: the scene's painting under `--dim` 0.4, with her colour glow and floor shadow (`.scene-c`) on top; the canvas particles stay.
+- Chats (the story screen): the scene's painting at full brightness, no veil (`--dim` 0), with only a light grade at the top and bottom (`.scene-c`); the canvas particles stay. This is the one screen where the painting is not faint (D-033).
 - Lobby and Bond screen: the featured heroine's own place (`HOME_SCENE`) under `--dim` ~0.42 with a wash of her colour; the lobby crossfades it when she changes.
 - Title: the shrine courtyard (`menu`). Menu screens (lists, profile, results): the same courtyard, or her place on the profile, under `--veil` (76–88 % ink), so it reads as texture, not as a picture.
 - A screen with a backdrop uses `backdrop(name)` (`src/ui/common.ts`) for fixed layouts or the `--scene` variable for scrolling ones. Art stays optional: without the file the old CSS-painted scene shows.
-- Don't raise the brightness to show a painting off. If text loses contrast on a phone, raise `--dim`/`--veil`.
+- On menus, don't raise the brightness to show a painting off. If text loses contrast on a phone, raise `--dim`/`--veil`.
 
-The story screen (chats and story chapters) is the exception to the dark look: bright picture, no dark panels, colour from the speaker. Its target is `docs/VN_DIRECTION.md` section 7, with mock-ups in `docs/vn/`. It shares the fonts, gold hairlines, diamonds and chamfers with the rest.
+The story screen (chats and story chapters) is the exception to the dark look: bright picture, no dark panels, colour from the speaker. Its target is `docs/VN_DIRECTION.md` section 7, with mock-ups in `docs/vn/`; the look is built (the chat block of `style.css`, sized in `--u` = 1 px on a 1080p-high landscape screen). It shares the fonts, gold hairlines and diamonds with the rest. Text there sits on the picture, so it is white with a dark edge, and nothing may cover her face.
 
 ## Typography
 
-- **Cinzel 600/700:** logo, screen titles, heroine names, chat speaker plates, results headline. Title case, letter-spacing 0.02–0.04em.
+- **Cinzel 600/700:** logo, screen titles, heroine names, the story screen's speaker name and ribbon title, results headline. Title case, letter-spacing 0.02–0.04em.
 - **Barlow Semi Condensed 400–700:** everything else. Button labels and section labels are UPPERCASE, 600, letter-spacing 0.06–0.1em. Numbers use `font-variant-numeric: tabular-nums`.
 - Sizes: 12 / 13 / 15 / 17 / 20 / 28 / 44 px. Don't invent in-between sizes.
 

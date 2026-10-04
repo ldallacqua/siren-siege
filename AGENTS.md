@@ -79,7 +79,7 @@ src/
     bond.ts          Messages: heroine select, her Bond screen (diary of episodes, Talk, Gift); giftArt.ts draws gift badges
     preload.ts       Image preloading + known-missing art (chats wait for their moods)
     screens.ts       Home, roster, profile, codex, gallery, results, pause, options, settings
-    chat.ts          Visual-novel chat player (scenes, ambient canvas, voice blips, log/auto/skip, end card)
+    chat.ts          The story screen (VN_DIRECTION 7): scene, big sprite, frameless window, choice bars, log/auto/skip, end card
     common.ts        show(), artChain(), backdrop(), bondBar(), topbar() shared by screens
     art.ts           Loads public/art files, falls back to generated SVG placeholders; lightbox
     icons.ts         Inline SVG icon set (use this, never emoji/unicode glyphs in UI chrome)

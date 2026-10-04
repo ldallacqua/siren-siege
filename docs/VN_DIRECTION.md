@@ -229,7 +229,7 @@ Same information; now there is a gag (oni law), a relationship (Yuki), four pose
 
 These are mock-ups built from the game's own art (`docs/vn/mock.html`; open it in a browser, `?frame=line|choice|sd`). They are not the game. They show the layout below is within reach with what we have: the portraits, the painted backdrops at full brightness, the two fonts.
 
-Compare with today's player: one heroine, small in the middle of a dimmed scene, a framed dark text box with small type on a desktop screen.
+**Built so far (B-22, 2026-10-03):** the stage and the window of 7.2 and 7.3 for one heroine: bright backdrop, big sprite, frameless window in the speaker's colour, name with a gold rule, text sized from the screen, ribbon, Bond meter, choice bars, quick menu with the tools that exist (Log, Auto, Skip). Not yet: the face icon and a second or third character (B-24), illustrations and chibi cut-ins (B-23, B-27), the other tools (B-25). Before this step the player showed one heroine small in the middle of a dimmed scene, with a framed dark text box.
 
 ### 7.2 The stage
 
@@ -337,10 +337,12 @@ Each step ships on its own and is checked on a phone, a tablet and a big desktop
 
 ## 11. Decisions the owner needs to make
 
-1. **Bright story scenes.** Story scenes drop the dimming and get day and dusk backdrops, while menus stay dark (7.7). Agreed?
-2. **The Commander's voice** (4.3): first-person dry narration, the listed temperament and flaw, still no gender, face or past.
-3. **Parallel routes** (5.3): all five confessions are reachable, and no episode refers to another heroine's.
-4. **Bond 10 "After" episodes** (5.2), and slices on the even Bond levels later.
+Status on 2026-10-03: the owner was asked about 1 to 4 and which heroine comes first, and answered "agreed on all". So 1 to 4 are settled; 9 is still open (it was a question, not a yes or no); 5 to 8 have not been put to him yet.
+
+1. **Bright story scenes.** Story scenes drop the dimming and get day and dusk backdrops, while menus stay dark (7.7). **Agreed.**
+2. **The Commander's voice** (4.3): first-person dry narration, the listed temperament and flaw, still no gender, face or past. **Agreed.**
+3. **Parallel routes** (5.3): all five confessions are reachable, and no episode refers to another heroine's. **Agreed.**
+4. **Bond 10 "After" episodes** (5.2), and slices on the even Bond levels later. **Agreed.**
 5. **The character proposals** (4.2): Scarlet's out-of-date gap, Selene's everyday, Kaede's "never", how love changes each.
 6. **A side cast** (4.4): yes or no, and who.
 7. **Voice:** stay with blips, or plan for a few recorded lines per heroine.

@@ -25,12 +25,9 @@ Portraits are 1536 px tall (the generator's maximum). On a 4K screen at 200 % th
 
 The owner's reference for the story side is Yuzusoft. Order of work is section 9 of that document; decisions waiting for him are its section 11. Each item is checked on phone, tablet and big desktop.
 
-### B-22 · P1 · Story screen look
+### ~~B-22 · P1 · Story screen look~~ (done 2026-10-03, D-033)
 
-The chat player takes the target look (VN_DIRECTION 7.1–7.3, mock in `docs/vn/mock.html`): frameless window in the speaker's colour, name without a plate, text sized from the screen, big sprite cut at the thigh, backdrop at full brightness, chapter ribbon, choice bars, quick menu in small caps. No data change.
-
-- Accept: desktop, tablet and phone screenshots match the mock's layout; text is at least 3 % of the screen height on landscape; her face is never covered; Reduced motion works; smoke passes on all five screens.
-- Needs the owner's answer to decision 1 (bright story scenes).
+The chat player has the target look (VN_DIRECTION 7.1–7.3): frameless window in the speaker's colour, name without a plate, text sized from the screen, big sprite, backdrop at full brightness, chapter ribbon, choice bars, quick menu in small caps. Smoke asserts text size, sprite size and sharpness, and that nothing covers her face, on all five screens. Waiting for the owner's playtest.
 
 ### B-23 · P1 · Pictures inside scenes
 
