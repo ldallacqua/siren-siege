@@ -1,6 +1,6 @@
 import type { ChatEpisode } from '../data/types.ts';
 import { HEROINES } from '../data/heroines.ts';
-import { MOODS, portraitFile } from '../data/progression.ts';
+import { GALLERY, MOODS, portraitFile, sceneFile } from '../data/progression.ts';
 
 /**
  * Image preloading. Art is decoded before a screen that swaps pictures (chat
@@ -50,11 +50,17 @@ export function preloadAll(files: string[], maxMs = 1500): Promise<void> {
   return Promise.race([all, new Promise<void>((r) => window.setTimeout(r, maxMs))]);
 }
 
-/** Every picture a chat can show: her portrait and each mood it uses. */
+/** Every picture a chat can show: each speaker's poses, its scenes and its illustrations. */
 export function chatFiles(ep: ChatEpisode): string[] {
-  const moods = new Set<string>(['smile']);
-  for (const n of ep.nodes) if (n.mood) moods.add(n.mood);
-  return [portraitFile(ep.heroine), ...[...moods].map((m) => portraitFile(ep.heroine, m))];
+  const files = new Set<string>([sceneFile(ep.scene ?? 'night')]);
+  if (!ep.emptyStage) files.add(portraitFile(ep.heroine)).add(portraitFile(ep.heroine, 'smile'));
+  for (const n of ep.nodes) {
+    if (n.speaker === 'her') files.add(portraitFile(n.who ?? ep.heroine, n.mood ?? 'smile'));
+    if (n.scene) files.add(sceneFile(n.scene));
+    const pic = n.cg && GALLERY.find((g) => g.id === n.cg);
+    if (pic) files.add(pic.file);
+  }
+  return [...files];
 }
 
 /** Warm the cache in idle time: every portrait, then every mood variant. */

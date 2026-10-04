@@ -2002,6 +2002,21 @@ body.in-battle .zoom-ctl {
   width: 13px;
   height: 13px;
 }
+/* Story page: a kicker over the title ("Chapter 1-1", "Episode 2") */
+.chat-item b small {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.story-route {
+  margin-top: 6px;
+}
+.story-screen .fine {
+  margin-top: 14px;
+}
 .chat-item.done span {
   color: var(--text-3);
 }
@@ -2158,8 +2173,9 @@ body.in-battle .zoom-ctl {
   --u: max(0.52px, calc(100dvh / 1080));
   --k: 1;
   --gilt: rgba(255, 233, 180, 0.78);
-  /* the window takes the speaker's colour; narration and your own lines are neutral */
-  --w: var(--c);
+  /* the window takes the speaker's colour (set per line by chat.ts); narration and
+     your own lines leave it neutral */
+  --w: #8a7fa6;
   --fs-name: max(17px, calc(38 * var(--u)));
   --fs-text: max(17px, calc(34 * var(--u)));
   --fs-choice: max(16px, calc(32 * var(--u)));
@@ -2169,10 +2185,6 @@ body.in-battle .zoom-ctl {
   --sprite-h: 139dvh;
   --edge: calc(40 * var(--u));
   transition: --w 0.35s;
-}
-.chat.narration,
-.chat.you-speaking {
-  --w: #8a7fa6;
 }
 .chat-scene,
 .chat-scene > div,
@@ -2515,6 +2527,83 @@ body.in-battle .zoom-ctl {
   filter: brightness(0.84) saturate(0.92) drop-shadow(0 calc(10 * var(--u)) calc(30 * var(--u)) rgba(0, 0, 0, 0.45));
 }
 
+/* An illustration inside a scene (a gallery picture) takes the whole screen, over the
+   stage. The whole picture always shows: where the screen is not its shape, a blurred
+   copy of it fills the rest. */
+.chat-cg {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+.chat-cg-pic {
+  position: absolute;
+  inset: 0;
+  background: #06030a;
+  animation: cg-in 0.7s ease-out both;
+}
+.chat-cg-pic.leave {
+  animation: cg-out 0.6s ease-in forwards;
+}
+.chat-cg-fill,
+.chat-cg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.chat-cg-fill {
+  object-fit: cover;
+  scale: 1.12;
+  filter: blur(calc(28 * var(--u))) brightness(0.6) saturate(1.1);
+}
+.chat-cg-img {
+  object-fit: contain;
+}
+/* Close to the picture's own shape (4:3 to 16:9): fill the screen, keeping the top. */
+@media (min-aspect-ratio: 5/4) and (max-aspect-ratio: 9/5) {
+  .chat-cg-img {
+    object-fit: cover;
+    object-position: 50% 8%; /* the text window covers the bottom anyway */
+  }
+}
+/* Upright: the picture sits in the upper part, clear of the text window, a little
+   wider than the screen so it is not a thin strip (it loses a twelfth on each side). */
+@media (max-aspect-ratio: 1/1) {
+  .chat-cg-img {
+    width: 118%;
+    left: -9%;
+    height: 66%;
+    top: 8%;
+  }
+}
+@keyframes cg-in {
+  from {
+    opacity: 0;
+    scale: 1.04;
+  }
+}
+@keyframes cg-out {
+  to {
+    opacity: 0;
+  }
+}
+/* A backdrop being replaced by the next scene's */
+.scene-art.leave {
+  opacity: 0;
+}
+
+/* Hide: nothing over the picture until the next tap. */
+.chat-top,
+.chat-choices {
+  transition: opacity 0.25s;
+}
+.chat.ui-hidden :is(.chat-top, .chat-bottom, .chat-choices) {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* The text window: no frame. A band of the speaker's colour in dark plum rises from
    the bottom edge and fades out above the name. */
 .chat-bottom {
@@ -2608,6 +2697,7 @@ body.in-battle .zoom-ctl {
 /* Quick menu: plain words in small caps, at the bottom right. */
 .chat-tools {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: calc(6 * var(--u));
   margin-top: calc(2 * var(--u));

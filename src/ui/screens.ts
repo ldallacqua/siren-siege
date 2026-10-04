@@ -5,9 +5,23 @@ import { ENEMIES } from '../data/enemies.ts';
 import { MAPS, WAVES } from '../data/maps.ts';
 import { paintMap } from '../game/mapArt.ts';
 import { BESTIARY, BESTIARY_NOTE, CODEX, IDLE_LINES, STORIES } from '../data/lore.ts';
+import { STORY, type StoryChapter } from '../data/story.ts';
 import { GALLERY, HOME_SCENE, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode, GalleryItem } from '../data/types.ts';
-import { dev, galleryOpen, heroineLevel, isMapUnlocked, isUnlocked, reducedMotion, resetSave, save, persist } from '../state/save.ts';
+import {
+  battlesPlayed,
+  dev,
+  galleryOpen,
+  heroineLevel,
+  isMapUnlocked,
+  isUnlocked,
+  markStory,
+  reducedMotion,
+  resetSave,
+  save,
+  storySeen,
+  persist,
+} from '../state/save.ts';
 import { openLightbox } from './art.ts';
 import { playChat, startAmbient, type Ambient } from './chat.ts';
 import { artChain, backdrop, bondBar, capUpscale, closeScreens, sceneUrl, show, topbar } from './common.ts';
@@ -209,6 +223,7 @@ export function showHome(a: HomeActions): void {
       'nav',
       { class: 'lobby-rail left', 'aria-label': 'Places' },
       tile('Messages', 'chat', () => showMessages(() => showHome(a)), fresh),
+      tile('Story', 'scroll', () => showStory(a), STORY.filter((c) => chapterOpen(c) && !storySeen(c.ep.id)).length),
       tile('Gallery', 'image', () => showGallery(a), `${got}/${GALLERY.length}`),
       tile('Codex', 'book', () => showCodex(a)),
     ),
@@ -594,6 +609,91 @@ function fullPortrait(img: HTMLImageElement, id: string): HTMLImageElement {
     openLightbox([portraitFile(id)], id, `${d.name} — ${d.title}`, { tint: d.color, from: img });
   };
   return img;
+}
+
+/** A main-story chapter is open once the game has reached it (dev mode: all of them). */
+function chapterOpen(c: StoryChapter): boolean {
+  if (dev || storySeen(c.ep.id)) return true;
+  if (c.when.kind === 'battles') return battlesPlayed() >= c.when.n;
+  if (c.when.kind === 'heroine') return isUnlocked(c.when.id);
+  return true;
+}
+
+/**
+ * Story: everything that can be read, in one place, to play again. The main story's
+ * chapters, then each heroine's episodes (the same ones her Diary lists).
+ */
+export function showStory(a: HomeActions): void {
+  const again = () => showStory(a);
+  const row = (open: boolean, fresh: boolean, kicker: string, title: string, lockedTag: string, play: () => void, why: string) =>
+    h(
+      'button',
+      { class: `chat-item ${open ? '' : 'locked'} ${open && !fresh ? 'done' : ''}`, onclick: () => (open ? play() : toast(why)) },
+      icon(open ? 'chat' : 'lock'),
+      h('b', null, h('small', null, kicker), open ? title : 'Locked'),
+      h('span', null, ...(open ? (fresh ? [icon('sparkle'), 'New'] : ['Replay']) : [lockedTag])),
+    );
+  const chapters = STORY.map((c) => {
+    const open = chapterOpen(c);
+    const play = () =>
+      playChat(
+        c.ep,
+        () => {
+          markStory(c.ep.id);
+          again();
+        },
+        { noReward: true },
+      );
+    return row(open, !storySeen(c.ep.id), c.ep.kicker ?? '', c.ep.title, 'Locked', play, c.hint);
+  });
+  const routes = HEROINES.filter((d) => isUnlocked(d.id)).map((d, si) => {
+    const first = d.name.split(' ')[0];
+    const lvl = heroineLevel(d.id);
+    const done = new Set(save.heroines[d.id]?.chatsDone ?? []);
+    return h(
+      'div',
+      { class: 'story-route', style: `--c:${hex(d.color)}` },
+      h('div', { class: 'label' }, d.name),
+      stagger(
+        h(
+          'div',
+          { class: 'chat-list' },
+          ...episodesFor(d.id).map((ep, i) =>
+            row(
+              lvl >= ep.level,
+              !done.has(ep.id),
+              `Episode ${i + 1}`,
+              ep.title,
+              `Bond ${ep.level}`,
+              () => playChat(ep, again),
+              `Reach Bond ${ep.level} with ${first}`,
+            ),
+          ),
+        ),
+        si + 1,
+      ),
+    );
+  });
+  const waiting = HEROINES.filter((d) => !isUnlocked(d.id)).length;
+  show(
+    h(
+      'section',
+      { class: 'screen list story-screen' },
+      topbar('Story', () => showHome(a)),
+      h(
+        'div',
+        { class: 'screen-inner' },
+        h('div', { class: 'label' }, 'Main story'),
+        stagger(h('div', { class: 'chat-list' }, ...chapters)),
+        ...routes,
+        h(
+          'p',
+          { class: 'fine' },
+          `Everything here can be played again. Pictures you have seen are kept in the Gallery.${waiting ? ` ${waiting} more ${waiting === 1 ? 'heroine has' : 'heroines have'} yet to join.` : ''}`,
+        ),
+      ),
+    ),
+  );
 }
 
 /** World lore + bestiary. */

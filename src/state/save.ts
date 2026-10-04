@@ -12,6 +12,8 @@ export interface HeroineProgress {
   chatsDone: string[];
   /** Gifts she has been given at least once (so the UI can show her known tastes). */
   gifted?: string[];
+  /** Gallery pictures seen inside an episode: they stay open in the gallery whatever her Bond. */
+  cgSeen?: string[];
 }
 
 export interface SaveData {
@@ -20,8 +22,12 @@ export interface SaveData {
   bestWave: Record<string, number>; // per map
   wins: number;
   settings: Settings;
-  /** The story prologue has been shown (first Play). */
+  /** The old one-scene prologue was shown (saves before the main story had chapters). */
   seenPrologue?: boolean;
+  /** Main-story chapters that have played (ids from data/story.ts). */
+  story?: string[];
+  /** Battles played to the end, won or lost (older saves: unknown, see battlesPlayed()). */
+  battles?: number;
   /** Gift inventory by gift id (added after v0.4; older saves get the starter pack). */
   gifts?: Record<string, number>;
 }
@@ -102,9 +108,30 @@ export function heroineLevel(id: string): number {
   return bondLevel(save.heroines[id]?.xp ?? 0);
 }
 
-/** A gallery picture opens at its Bond level (dev mode: every picture is open). */
-export function galleryOpen(g: { heroine: string; level: number }): boolean {
-  return dev || heroineLevel(g.heroine) >= g.level;
+/** A gallery picture opens at its Bond level, or once an episode has shown it (dev mode: every picture is open). */
+export function galleryOpen(g: { id: string; heroine: string; level: number }): boolean {
+  return dev || heroineLevel(g.heroine) >= g.level || !!save.heroines[g.heroine]?.cgSeen?.includes(g.id);
+}
+
+/** An episode showed this gallery picture: keep it open in the gallery. */
+export function markCgSeen(heroine: string, id: string): void {
+  const p = (save.heroines[heroine] ??= { xp: 0, chatsDone: [] });
+  if ((p.cgSeen ??= []).includes(id)) return;
+  p.cgSeen.push(id);
+  persist();
+}
+
+export const storySeen = (id: string): boolean => !!save.story?.includes(id);
+
+/** Battles finished. Saves from before this was counted only know that there was at least one. */
+export function battlesPlayed(): number {
+  return save.battles ?? (save.wins > 0 || Object.keys(save.bestWave).length ? 1 : 0);
+}
+
+export function markStory(id: string): void {
+  if (storySeen(id)) return;
+  (save.story ??= []).push(id);
+  persist();
 }
 
 export function addXp(id: string, amount: number): { before: number; after: number } {

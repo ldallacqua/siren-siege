@@ -57,7 +57,7 @@ It runs on desktop and phone, portrait and landscape, and installs to your home 
     <td width="50%" valign="top">
       <img src="docs/readme/chat.webp" alt="A visual-novel chat with Scarlet Vane offering two replies">
       <h3>Bond, chats and a story worth unlocking</h3>
-      25 branching visual-novel chats (Bond 1, 3, 5, 7 and 9 for each heroine, ending in a confession), painted scenes with ambient snow, embers and lanterns, voice blips, auto and skip. Answer well and she remembers it.
+      A main story that opens the game, and 26 branching visual-novel episodes (Bond 1, 3, 5, 7 and 9 for each heroine, ending in a confession): painted scenes, big character sprites, illustrations inside the scenes, other heroines walking in, voice blips, log, auto, skip and hide. Everything you have read can be replayed from the Story page.
     </td>
     <td width="50%" valign="top">
       <img src="docs/readme/bond.webp" alt="Scarlet's Bond screen with her diary, Talk and Gift buttons">
@@ -168,7 +168,7 @@ The Blight is what's left when a memory is eaten. Each layer is a stolen memory;
 | <kbd>Delete</kbd>                      | Sell the selected heroine           | <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> | Zoom in / out / fit     |
 | <kbd>Esc</kbd>                         | Cancel / close                      |                                        |                         |
 
-In chats: <kbd>Space</kbd> advances, <kbd>1</kbd> <kbd>2</kbd> answer, <kbd>A</kbd> auto, <kbd>S</kbd> skip, <kbd>L</kbd> log.
+In chats: <kbd>Space</kbd> advances, <kbd>1</kbd> <kbd>2</kbd> answer, <kbd>A</kbd> auto, <kbd>S</kbd> skip, <kbd>L</kbd> log, <kbd>H</kbd> hides the text to look at the picture.
 
 </details>
 

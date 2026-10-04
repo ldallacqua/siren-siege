@@ -449,11 +449,85 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.keyboard.press('Escape');
   await page.locator('.chat-log').waitFor({ state: 'detached' });
 
-  // Art remains optional, but every shipped first-unlock illustration must load
-  // as the real WebP in its lightbox, not silently fall back to an SVG.
   await page.getByTitle('Leave').click();
   await page.getByTitle('Back', { exact: true }).click();
   await page.getByTitle('Back', { exact: true }).click();
+
+  // Story page: the main story and every episode, to play again
+  await page.getByRole('button', { name: 'Story', exact: true }).click();
+  await page.locator('.story-screen .chat-item').first().waitFor();
+  assert(
+    (await page.locator('.story-screen .chat-list').first().locator('.chat-item.locked').count()) === 0,
+    'dev mode should open every chapter',
+  );
+  await shot('7-story');
+  /** Taps through the open chat until `done()`; answers a choice with its first option. */
+  const readUntil = async (done: () => Promise<boolean>, what: string) => {
+    for (let i = 0; i < 120; i++) {
+      if (await done()) return;
+      const choice = page.locator('.chat-choices .choice').first();
+      if (await choice.count()) {
+        await choice.click();
+        await page.locator('.screen.chat:not(.choosing)').waitFor();
+      } else await page.locator('.chat-box').click();
+    }
+    throw new Error(`the story never reached ${what}`);
+  };
+  // A chapter with second voices: each speaker gets her own name and sprite
+  await page.locator('.story-screen .chat-item', { hasText: 'The Oni Is Late' }).click();
+  await page.locator('.chat-box').waitFor();
+  const voices = new Set<string>();
+  const sprites = new Set<string>();
+  await readUntil(async () => {
+    const seen = await page.evaluate(() => ({
+      name: document.querySelector('.chat-name')!.textContent!,
+      sprite: document.querySelector<HTMLImageElement>('.chat-portrait .chat-art:last-child')?.src.split('/art/')[1]?.split('/')[0] ?? '',
+    }));
+    if (seen.name) voices.add(seen.name);
+    if (seen.sprite) sprites.add(seen.sprite);
+    return voices.size >= 4;
+  }, 'four speakers');
+  assert(
+    ['kaede', 'yuki', 'scarlet'].every((id) => sprites.has(id)),
+    `second voices did not come on stage: ${[...sprites].join(', ')}`,
+  );
+  await page.getByTitle('Leave').click();
+  await page.locator('.story-screen').waitFor();
+
+  // An episode with an illustration: it fills the screen, and Hide clears everything off it
+  await page.locator('.story-screen .chat-item', { hasText: 'Festival Drinks' }).click();
+  await page.locator('.chat-box').waitFor();
+  await readUntil(async () => (await page.locator('.screen.chat.has-cg .chat-cg-img').count()) > 0, 'its illustration');
+  await page.waitForTimeout(800);
+  const pic = await page.evaluate(() => {
+    const img = document.querySelector<HTMLImageElement>('.chat-cg-img')!;
+    const r = img.getBoundingClientRect();
+    return {
+      real: /gallery-1\.webp$/.test(img.src) && img.naturalWidth > 0,
+      wide: r.width / innerWidth,
+      top: r.top,
+      bottom: r.bottom / innerHeight,
+    };
+  });
+  assert(pic.real, 'the illustration did not load');
+  assert(pic.wide > 0.99 && pic.top >= -1 && pic.bottom <= 1.01, `the illustration does not fit the screen: ${JSON.stringify(pic)}`);
+  await shot('6c-cg');
+  await page.getByRole('button', { name: 'Hide' }).click();
+  const shown = () =>
+    page.evaluate(() => ['.chat-top', '.chat-bottom'].map((s) => getComputedStyle(document.querySelector(s)!).opacity).join());
+  await page.waitForTimeout(400);
+  assert((await shown()) === '0,0', 'Hide left something over the picture');
+  const hiddenLine = await current();
+  await page.locator('.screen.chat').click({ position: { x: v.width / 2, y: v.height / 3 } });
+  await page.waitForTimeout(400);
+  assert((await shown()) === '1,1', 'a tap did not bring the text back');
+  assert((await current()) === hiddenLine, 'the tap that ends Hide also advanced the story');
+  await page.getByTitle('Leave').click();
+  await page.locator('.story-screen').waitFor();
+  await page.getByTitle('Back', { exact: true }).click();
+
+  // Art remains optional, but every shipped first-unlock illustration must load
+  // as the real WebP in its lightbox, not silently fall back to an SVG.
   await page.evaluate(() => {
     const progress = (window as any).siren.save.heroines;
     for (const heroine of Object.values(progress) as { xp: number }[]) heroine.xp = 100; // Bond 2

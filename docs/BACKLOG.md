@@ -29,17 +29,15 @@ The owner's reference for the story side is Yuzusoft. Order of work is section 9
 
 The chat player has the target look (VN_DIRECTION 7.1–7.3): frameless window in the speaker's colour, name without a plate, text sized from the screen, big sprite, backdrop at full brightness, chapter ribbon, choice bars, quick menu in small caps. Smoke asserts text size, sprite size and sharpness, and that nothing covers her face, on all five screens. Waiting for the owner's playtest.
 
-### B-23 · P1 · Pictures inside scenes
+### ~~B-23 · P1 · Pictures inside scenes~~ (done 2026-10-03, D-034)
 
-A node can show an event illustration full screen (sprites hidden); every Bond 7 and Bond 9 episode shows its gallery picture at the peak. **Hide** removes the window and menus until the next tap.
-
-- Accept: data type + test (an episode may only show a picture the heroine has); ten episodes updated; Hide works by tap and key.
+A line can show a gallery picture full screen (`cg`), and Hide clears the window and menus until the next tap. Kaede's six episodes show her five pictures; Scarlet, Yuki and Selene show their fifth at the confession. Their Bond 7 pictures wait for their rewrites (the pictures are pin-ups and need a scene written around them), and Nemu has no gallery art yet.
 
 ### B-24 · P1 · A cast on stage
 
-A speaker id per line (any heroine, later side characters), positions (left, centre, right), shots (far, mid, near), the listener dimmed, the speaker's face icon on landscape; one sprite and small faces on an upright phone. One existing episode rewritten with a second voice as the sample (VN_DIRECTION 6).
+Done already (D-034): a speaker per line (`who`); she takes the stage alone with her own name, colour and blip. Still to do: two or three sprites at once on landscape (left, centre, right), shots (far, mid, near), the listener dimmed, entrances and exits, the speaker's face icon; an upright phone keeps one sprite and gets small faces above the window.
 
-- Accept: types and data tests (every speaker exists and has the pose used); works with one, two and three characters at all five screens.
+- Accept: works with one, two and three characters at all five screens; the data says who is on stage, not only who speaks.
 
 ### B-25 · P2 · Reader's tools
 
@@ -49,10 +47,16 @@ Back one line; Skip stops at unread lines by default; leaving mid-episode keeps 
 
 ### B-26 · P1 · Routes written to the standard
 
-One heroine first (owner picks, decision 9): her five episodes at 25–40 lines with a second voice where it fits, her sheet completed (VN_DIRECTION 4.1), and her Bond 10 After episode. The owner reads it; then the other four.
+Kaede is done (`src/data/kaede.ts`, six episodes, D-034) and is the sample. The owner reads it in the game, not as a draft; his verdict comes first. Then Scarlet, Yuki, Selene, Nemu: each in her own file with `script.ts`, 25–40 lines an episode, second voices, her four other pictures written into scenes, a Bond 10 After, her sheet completed in LORE.
 
-- Accept: the episode checklist (VN_DIRECTION 10) for each; LORE updated with anything new; data tests pass.
-- Needs decisions 2–5 and 8.
+- Accept: the "rewritten route" data test covers her; LORE updated; the episode checklist (VN_DIRECTION 10).
+- Scarlet's proposed gap ("out of date") and the side cast were never put to the owner (VN_DIRECTION 11, decisions 5 and 6). He asked not to review story drafts, so decide in the writing and let him react to the result.
+
+### B-29 · P1 · A guide through the first battle
+
+The opening now explains the world and what the Sirens do, but nothing in the battle itself shows a first-time player what to tap. Three or four prompts in the HUD on the first battle only: pick a heroine, place her beside the road, start the wave, tap her to upgrade.
+
+- Accept: shows once per save, can be dismissed, works by touch and mouse on all five screens.
 
 ### B-27 · P2 · Chibi cut-ins
 
@@ -156,7 +160,7 @@ The MVP pass is complete: 19 assets (all four portraits/chibis/First Impression 
 
 ### B-16 · P2 · Main story chapters
 
-The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price, the Hollow King). Add story chapters unlocked by map progress (e.g. after wave 10, after winning), using `playChat` with `noReward` and multi-heroine scenes (needs a `speaker` per node for other heroines). This is the "common route" of `docs/VN_DIRECTION.md` 5.1: ensemble chapters numbered "Chapter 1-1", densest in comedy, never assuming a romance. It comes after B-22 to B-24 and after the side cast is designed with the owner (decision 6).
+The lore sets up a main plot (the Crimson Eclipse, Keeper Haruo, Selene's price, the Hollow King). Add story chapters unlocked by map progress (e.g. after wave 10, after winning), using `playChat` with `noReward` and multi-heroine scenes (needs a `speaker` per node for other heroines). **Started (D-034):** `src/data/story.ts` has chapters 1-1 (opening), 1-2 (after the first battle) and 1-3 (Kaede arrives), with `who` lines for the other heroines and the Story page to replay them. Next: 1-4 when Nemu joins (wave 15) and 1-5 when Selene joins the road (wave 20), then act 2. This is the "common route" of `docs/VN_DIRECTION.md` 5.1: ensemble chapters numbered "Chapter 1-1", densest in comedy, never assuming a romance. It comes after B-22 to B-24 and after the side cast is designed with the owner (decision 6).
 
 - Accept: at least 3 chapters; multi-speaker chat support with tests; stays consistent with docs/LORE.md.
 

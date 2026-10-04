@@ -65,8 +65,8 @@ export const LOBBY_MOODS = ['smile', 'tease', 'wink', 'pout'] as const satisfies
 export type LobbyMood = (typeof LOBBY_MOODS)[number];
 
 /**
- * Painted backdrops, `public/art/scenes/<name>.webp`: one per chat scene, plus `menu`
- * (the shrine courtyard) for the title and menu screens. Like all art they are
+ * Painted backdrops, `public/art/scenes/<name>.webp`: one per chat scene. `menu` is
+ * the shrine courtyard, also shown behind the title and menu screens. Like all art they are
  * optional: without the file the CSS-painted scene shows.
  */
 export const CHAT_SCENES = [
@@ -86,8 +86,9 @@ export const CHAT_SCENES = [
   'archive',
   'teahouse',
   'dream',
+  'menu',
 ] as const satisfies readonly ChatScene[];
-export const SCENE_FILES: readonly string[] = [...CHAT_SCENES, 'menu'];
+export const SCENE_FILES: readonly string[] = CHAT_SCENES;
 
 export function sceneFile(name: string): string {
   return `art/scenes/${name}.webp`;

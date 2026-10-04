@@ -57,7 +57,10 @@ src/
     heroines.ts      Roster, base stats, 3 upgrade paths × tiers (apply() mutates Stats)
     enemies.ts       Layered enemies, rbe() = total layers
     maps.ts          Maps (path, palette, blurb, difficulty, unlock) + WAVES
-    dialogues.ts     Chat episodes (node graph, Bond 1/3/5/7/9 per heroine) + PROLOGUE
+    dialogues.ts     Chat episodes (node graph, Bond 1/3/5/7/9 per heroine): the first-generation sketches
+    script.ts        Notation for long episodes: lines in reading order, branches that rejoin -> node graph
+    kaede.ts         Kaede's route rewritten to docs/VN_DIRECTION.md (six episodes, Bond 10 "After")
+    story.ts         Main-story chapters (play by themselves once, replayable from the Story page)
     gifts.ts         Gift items, heroine tastes, gift XP, battle drops, reaction lines
     lore.ts          Codex entries, bestiary text, per-heroine story entries unlocked by Bond
     progression.ts   Bond XP thresholds, gallery slots, art file naming, moods, scenes
@@ -78,7 +81,7 @@ src/
     upgradeTree.ts   Full-screen BTD6-style upgrade tree (battle: buys, pauses; profile: preview); emblems.ts draws its badges
     bond.ts          Messages: heroine select, her Bond screen (diary of episodes, Talk, Gift); giftArt.ts draws gift badges
     preload.ts       Image preloading + known-missing art (chats wait for their moods)
-    screens.ts       Home, roster, profile, codex, gallery, results, pause, options, settings
+    screens.ts       Home, roster, profile, Story (replay everything), codex, gallery, results, pause, options, settings
     chat.ts          The story screen (VN_DIRECTION 7): scene, big sprite, frameless window, choice bars, log/auto/skip, end card
     common.ts        show(), artChain(), backdrop(), bondBar(), topbar() shared by screens
     art.ts           Loads public/art files, falls back to generated SVG placeholders; lightbox
@@ -107,7 +110,7 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 
 **Tune difficulty:** edit `WAVES` in `maps.ts`, enemy `speed`/`hp`, or economy constants in `BattleSim.endWave()`/`pop()`. Target: `npm run sim` (a naive bot buying cheapest upgrades) should reach wave ~18–20 and lose narrowly; a thinking player wins.
 
-**Write a chat:** read `docs/LORE.md` (canon) and `docs/VN_DIRECTION.md` (the standard for a heroine and a scene, sections 4–6, and the checklist in section 10) first. Add a `ChatEpisode` (with a `scene`) to `EPISODES` using the `her()/nar()/pick()/you()/end()` helpers. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of `MOODS` in `src/data/progression.ts`: smile, laugh, tease, wink, blush, shy, pout, angry, sad. Each is a whole pose of hers, so pick the one whose body language fits the line, give every line of hers a mood (a line without one falls back to `smile` and she snaps back to that pose), and only use a mood she has art for (`public/art/<id>/portrait-<mood>.webp`; a test fails otherwise). Tests verify links, reachability and endings.
+**Write a chat:** read `docs/LORE.md` (canon) and `docs/VN_DIRECTION.md` (the standard for a heroine and a scene, sections 4–6, and the checklist in section 10) first. Write it with the notation in `src/data/script.ts` (see `src/data/kaede.ts`): lines in reading order, `ask()` for a decision whose branches rejoin, `cast('yuki')` for a second voice, `cg()` to show one of her gallery pictures, `at()` to move the scene. The older episodes in `dialogues.ts` use `her()/nar()/pick()/end()` with hand-written ids; a route moves to its own file when it is rewritten. Main-story chapters go in `src/data/story.ts`. The owner reads the story in the game, not as a draft: do not paste plot or lines into your replies. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of `MOODS` in `src/data/progression.ts`: smile, laugh, tease, wink, blush, shy, pout, angry, sad. Each is a whole pose of hers, so pick the one whose body language fits the line, give every line of hers a mood (a line without one falls back to `smile` and she snaps back to that pose), and only use a mood she has art for (`public/art/<id>/portrait-<mood>.webp`; a test fails otherwise). Tests verify links, reachability and endings.
 
 **Write a lobby line** (what she says when tapped on the home screen): add it to `IDLE_LINES` in `src/data/lore.ts` with the Bond `level` that unlocks it and a `mood`. She takes that pose while the line shows. Only the everyday moods are allowed there (`LOBBY_MOODS`: smile, tease, wink, pout); the other five stay a surprise for her chats (a test enforces it).
 

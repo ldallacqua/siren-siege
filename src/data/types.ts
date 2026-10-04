@@ -112,8 +112,14 @@ export interface ChatChoice {
 export interface ChatNode {
   id: string;
   speaker: 'her' | 'you' | 'narration';
+  /** Who speaks a 'her' line when it is not the episode's heroine: a second voice (heroine id). */
+  who?: string;
   text: string;
   mood?: string; // portrait variant key (e.g. 'smile', 'tease', 'blush')
+  /** From this line on, a gallery picture (its id) fills the screen instead of the stage; `false` returns to the stage. */
+  cg?: string | false;
+  /** From this line on, the scene is somewhere else. */
+  scene?: ChatScene;
   next?: string;
   choices?: [ChatChoice, ChatChoice];
   end?: boolean;
@@ -136,7 +142,8 @@ export type ChatScene =
   | 'moongate'
   | 'archive'
   | 'teahouse'
-  | 'dream';
+  | 'dream'
+  | 'menu'; // the shrine courtyard (also the backdrop of the menus)
 
 export interface ChatEpisode {
   id: string;
@@ -146,6 +153,10 @@ export interface ChatEpisode {
   start: string;
   nodes: ChatNode[];
   scene?: ChatScene;
+  /** The line over the title, when it is not "<Name> · Episode n" (main story: "Chapter 0-1"). */
+  kicker?: string;
+  /** Nobody is on stage until someone speaks (default: the heroine is there from the first line). */
+  emptyStage?: boolean;
 }
 
 export interface GalleryItem {

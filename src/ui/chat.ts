@@ -1,9 +1,9 @@
 import { VOICE, sound } from '../audio/sound.ts';
 import { episodesFor } from '../data/dialogues.ts';
 import { HEROINE_BY_ID } from '../data/heroines.ts';
-import { GALLERY, MAX_BOND, bondProgress, portraitFile, sceneFile } from '../data/progression.ts';
+import { GALLERY, MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
 import type { ChatEpisode, ChatNode, ChatScene } from '../data/types.ts';
-import { addXp, persist, reducedMotion, save } from '../state/save.ts';
+import { addXp, markCgSeen, persist, reducedMotion, save } from '../state/save.ts';
 import { artChain, backdrop, capUpscale, show } from './common.ts';
 import { h, hex } from './dom.ts';
 import { icon } from './icons.ts';
@@ -14,8 +14,9 @@ import { chatFiles, preloadAll } from './preload.ts';
  * brightness with ambient particles, a big breathing sprite with mood crossfades,
  * a frameless text window in the speaker's colour, typewriter with per-heroine
  * voice blips, choice bars with affection feedback, chapter ribbon, Bond meter,
- * quick menu (log, auto, skip), and an end card with Bond gained and unlocks.
- * A tap anywhere on the picture advances.
+ * quick menu (log, auto, skip, hide), and an end card with Bond gained and unlocks.
+ * A tap anywhere on the picture advances. A line can bring a second voice on stage
+ * (`who`), move the scene (`scene`) or show an illustration full screen (`cg`).
  */
 
 export interface ChatOptions {
@@ -42,19 +43,22 @@ const AMBIENT: Record<ChatScene, Ambient> = {
   archive: 'dust',
   teahouse: 'lanterns',
   dream: 'motes',
+  menu: 'dustmoon',
 };
 
 const PAUSE: Record<string, number> = { '.': 170, '!': 170, '?': 170, ',': 80, ';': 90, ':': 90, '—': 120 };
 
 /** How long the old pose stays while it fades under the new one (`.leave` in style.css). */
 const MOOD_SWAP_MS = 400;
+/** How long an illustration or a backdrop takes to fade out (`.leave` in style.css). */
+const PICTURE_OUT_MS = 700;
 let opening = false;
 
 /** Opens a chat once her portraits are decoded, so mood changes never flash. */
 export function playChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions = {}): void {
   if (opening) return;
   opening = true;
-  void preloadAll([...chatFiles(ep), sceneFile(ep.scene ?? 'night')], 1500).then(() => {
+  void preloadAll(chatFiles(ep), 1500).then(() => {
     opening = false;
     openChat(ep, onCloseRaw, opts);
   });
@@ -73,7 +77,6 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   const nodes = new Map(ep.nodes.map((n) => [n.id, n]));
   const scene = ep.scene ?? 'night';
   const calm = reducedMotion();
-  const voice = VOICE[ep.heroine] ?? 1.5;
   const xp0 = save.heroines[ep.heroine]?.xp ?? 0;
   let earned = 0;
   let typing = 0;
@@ -81,10 +84,23 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   let auto = false;
   let autoTimer = 0;
   let closed = false;
-  const log: { who: string; text: string; kind: ChatNode['speaker'] }[] = [];
+  let hidden = false;
+  const log: { who: string; text: string; kind: ChatNode['speaker']; color: number }[] = [];
+  /** Who a line belongs to: the episode's heroine unless it names a second voice. */
+  const voiceOf = (n: ChatNode) => HEROINE_BY_ID[n.who ?? ep.heroine] ?? d;
+  const whoOf = (n: ChatNode) => (n.speaker === 'her' ? voiceOf(n).name : n.speaker === 'you' ? 'You' : '');
 
   // ---------------------------------------------------------------- DOM
   const portrait = h('div', { class: 'chat-portrait' });
+  const cgLayer = h('div', { class: 'chat-cg' });
+  const sceneBox = h(
+    'div',
+    { class: 'chat-scene' },
+    backdrop(scene, 'scene-art'),
+    h('div', { class: 'scene-a' }),
+    h('div', { class: 'scene-b' }),
+    h('div', { class: 'scene-c' }),
+  );
   const name = h('div', { class: 'chat-name' });
   // The whole line is laid out from the first letter (the part not typed yet is
   // invisible), so words never jump to the next row while it types.
@@ -101,7 +117,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   const bondLvl = h('span', { class: 'chat-bond-lvl' });
   const autoBtn = h('button', { class: 'chat-tool', title: 'Auto (A)', 'aria-pressed': 'false', onclick: () => setAuto(!auto) }, 'Auto');
   const episode = episodesFor(ep.heroine).findIndex((e) => e.id === ep.id) + 1;
-  const kicker = opts.noReward ? 'Prologue' : episode ? `${first} · Episode ${episode}` : `${first} · Bond ${ep.level}`;
+  const kicker = ep.kicker ?? (episode ? `${first} · Episode ${episode}` : `${first} · Bond ${ep.level}`);
   const screen = h(
     'section',
     {
@@ -109,19 +125,16 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
       style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
       // Anywhere on the picture advances; buttons and the layers above it do their own thing.
       onclick: (e: Event) => {
-        if (!(e.target as Element).closest('button, .chat-log, .chat-end')) advance();
+        const t = e.target as Element;
+        // (the Hide button's own tap bubbles up to here: it must not undo itself)
+        if (hidden) return void (t.closest('button') || setHidden(false));
+        if (!t.closest('button, .chat-log, .chat-end')) advance();
       },
     },
-    h(
-      'div',
-      { class: 'chat-scene' },
-      backdrop(scene, 'scene-art'),
-      h('div', { class: 'scene-a' }),
-      h('div', { class: 'scene-b' }),
-      h('div', { class: 'scene-c' }),
-    ),
+    sceneBox,
     fx,
     portrait,
+    cgLayer,
     hearts,
     h(
       'header',
@@ -143,6 +156,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
         h('button', { class: 'chat-tool', title: 'Log (L)', onclick: () => openLog() }, 'Log'),
         autoBtn,
         h('button', { class: 'chat-tool', title: 'Skip to next choice (S)', onclick: () => skip() }, 'Skip'),
+        h('button', { class: 'chat-tool', title: 'Hide the text to look at the picture (H)', onclick: () => setHidden(true) }, 'Hide'),
       ),
     ),
   );
@@ -160,10 +174,12 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   let node: ChatNode = nodes.get(ep.start)!;
   let mood = '';
 
-  const setPortrait = (m: string) => {
+  /** Puts a heroine on stage in a pose; the one who was there fades out under her. */
+  const setPortrait = (id: string, pose: string) => {
+    const m = `${id}/${pose}`;
     if (m === mood && portrait.firstChild) return;
     mood = m;
-    const img = artChain([portraitFile(ep.heroine, m), portraitFile(ep.heroine)], ep.heroine, d.name, true, 'chat-art enter');
+    const img = artChain([portraitFile(id, pose), portraitFile(id)], id, HEROINE_BY_ID[id]?.name ?? id, true, 'chat-art enter');
     capUpscale(img);
     // Swap only once the new picture is decoded, so the old one never blinks out first.
     // Moods are different poses: the old one fades out under the new one (style.css
@@ -179,12 +195,66 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     else img.decode().then(swap, swap);
   };
 
+  // Where the story is and what is shown: lines change these, and a skip carries them along.
+  let wantScene: ChatScene = scene;
+  let shownScene: ChatScene = scene;
+  let wantCg: string | false = false;
+  let shownCg: string | false = false;
+  const track = (n: ChatNode) => {
+    if (n.scene) wantScene = n.scene;
+    if (n.cg !== undefined) wantCg = n.cg;
+  };
+  const fadeOut = (old: Element[]) => {
+    old.forEach((o) => o.classList.add('leave'));
+    window.setTimeout(() => old.forEach((o) => o.remove()), PICTURE_OUT_MS);
+  };
+  const syncStage = () => {
+    if (wantScene !== shownScene) {
+      screen.classList.replace(`scene-${shownScene}`, `scene-${wantScene}`);
+      shownScene = wantScene;
+      // The new painting fades in over the old one, which leaves once it is covered.
+      const old = [...sceneBox.querySelectorAll('.scene-art')];
+      old[old.length - 1]?.after(backdrop(wantScene, 'scene-art'));
+      window.setTimeout(() => old.forEach((o) => o.remove()), PICTURE_OUT_MS);
+      stopFx();
+      stopFx = startAmbient(fx, AMBIENT[wantScene], d.color, calm);
+    }
+    if (wantCg !== shownCg) {
+      shownCg = wantCg;
+      fadeOut([...cgLayer.children]);
+      const pic = wantCg ? GALLERY.find((g) => g.id === wantCg) : undefined;
+      screen.classList.toggle('has-cg', !!pic);
+      if (pic) {
+        // The whole picture is always in view: where the screen is not its shape, a
+        // blurred copy fills the rest (style.css).
+        const art = (cls: string) => artChain([pic.file], pic.heroine, pic.title, false, cls);
+        cgLayer.append(h('div', { class: 'chat-cg-pic' }, art('chat-cg-fill'), art('chat-cg-img')));
+        markCgSeen(pic.heroine, pic.id);
+      }
+    }
+  };
+
+  /** Hide the window and the menus to look at the picture; the next tap brings them back. */
+  const setHidden = (on: boolean) => {
+    if (hidden === on || closed) return;
+    hidden = on;
+    screen.classList.toggle('ui-hidden', on);
+    if (on && auto) setAuto(false);
+    sound.play('toggle');
+  };
+
   // The first line waits for the opening title card to part.
   let lead = calm ? 60 : 1000;
   const render = () => {
     const speaker = node.speaker;
-    if (speaker === 'her') setPortrait(node.mood ?? 'smile');
-    else if (!portrait.firstChild) setPortrait('smile');
+    const who = voiceOf(node);
+    const voice = VOICE[who.id] ?? 1.5;
+    track(node);
+    syncStage();
+    if (speaker === 'her') setPortrait(who.id, node.mood ?? 'smile');
+    else if (!portrait.firstChild && !ep.emptyStage) setPortrait(ep.heroine, 'smile');
+    // The window takes the speaker's colour; narration and your own lines are neutral.
+    screen.style.setProperty('--w', speaker === 'her' ? hex(who.color) : '');
     screen.classList.toggle('narration', speaker === 'narration');
     screen.classList.toggle('you-speaking', speaker === 'you');
     if (speaker === 'her' && !calm) {
@@ -192,10 +262,10 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
       void portrait.offsetWidth; // restart the hop animation
       portrait.classList.add('speak');
     }
-    name.textContent = speaker === 'her' ? d.name : speaker === 'you' ? 'You' : '';
+    name.textContent = whoOf(node);
     name.className = `chat-name ${speaker === 'you' ? 'you' : ''}`;
     fullText = node.text;
-    log.push({ who: name.textContent, text: node.text, kind: speaker });
+    log.push({ who: name.textContent, text: node.text, kind: speaker, color: who.color });
     line.textContent = '';
     rest.textContent = fullText;
     choices.replaceChildren();
@@ -246,8 +316,10 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   };
 
   const pickChoice = (next: string, affection: number, said: string, k: number) => {
+    // An answer counts once: the bars stay up for a moment after it is picked.
+    if (choices.querySelector('.picked')) return;
     earned += affection;
-    log.push({ who: 'You', text: said, kind: 'you' });
+    log.push({ who: 'You', text: said, kind: 'you', color: d.color });
     choices.children[k]?.classList.add('picked');
     if (affection >= 30) {
       sound.play('heart');
@@ -266,6 +338,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
 
   const advance = () => {
     if (closed) return;
+    if (hidden) return setHidden(false);
     if (typing) return doneTyping();
     if (node.choices) return;
     if (node.end || !node.next) return finish(true);
@@ -277,13 +350,18 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   const skip = () => {
     if (typing) doneTyping();
     let guard = 0;
-    while (!node.choices && !node.end && node.next && guard++ < 50) {
+    let last: ChatNode | undefined;
+    while (!node.choices && !node.end && node.next && guard++ < 200) {
       const n = nodes.get(node.next);
       if (!n) break;
       node = n;
-      log.push({ who: n.speaker === 'her' ? d.name : n.speaker === 'you' ? 'You' : '', text: n.text, kind: n.speaker });
+      track(n);
+      if (n.speaker === 'her') last = n;
+      log.push({ who: whoOf(n), text: n.text, kind: n.speaker, color: voiceOf(n).color });
     }
-    log.pop(); // render() logs the current node again
+    if (guard) log.pop(); // render() logs the current node again
+    // Whoever spoke last among the skipped lines is the one on stage.
+    if (last && node.speaker !== 'her') setPortrait(voiceOf(last).id, last.mood ?? 'smile');
     render();
     doneTyping();
   };
@@ -317,7 +395,9 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     const list = h(
       'div',
       { class: 'chat-log-list' },
-      ...log.map((l) => h('div', { class: `log-line ${l.kind}` }, l.who ? h('b', null, l.who) : null, h('p', null, l.text))),
+      ...log.map((l) =>
+        h('div', { class: `log-line ${l.kind}`, style: `--c:${hex(l.color)}` }, l.who ? h('b', null, l.who) : null, h('p', null, l.text)),
+      ),
     );
     const layer = h(
       'div',
@@ -443,7 +523,9 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     } else if ((k === '1' || k === '2') && node.choices && !typing) {
       const c = node.choices[Number(k) - 1];
       pickChoice(c.next, c.affection, c.text, Number(k) - 1);
-    } else if (k === 'a') setAuto(!auto);
+    } else if (k === 'h') setHidden(!hidden);
+    else if (hidden) setHidden(false);
+    else if (k === 'a') setAuto(!auto);
     else if (k === 's') skip();
     else if (k === 'l') openLog();
     else if (k === 'escape') finish(false);
@@ -453,13 +535,13 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   window.addEventListener('keydown', onKey, true);
 
   // ---------------------------------------------------------------- ambient particles
-  const stopFx = startAmbient(fx, AMBIENT[scene], d.color, calm);
+  let stopFx = startAmbient(fx, AMBIENT[scene], d.color, calm);
 
   if (!calm) {
     const intro = h(
       'div',
       { class: 'chat-intro', 'aria-hidden': 'true' },
-      h('div', { class: 'chat-intro-card' }, h('small', null, opts.noReward ? 'Prologue' : d.name), h('b', null, ep.title)),
+      h('div', { class: 'chat-intro-card' }, h('small', null, ep.kicker ?? d.name), h('b', null, ep.title)),
     );
     screen.append(intro);
     window.setTimeout(() => intro.remove(), 2100);

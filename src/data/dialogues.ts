@@ -1,8 +1,13 @@
+import { KAEDE_EPISODES } from './kaede.ts';
 import type { ChatEpisode, ChatNode } from './types.ts';
 
 // Branching chats. Each node either continues (`next`), offers two choices,
 // or ends. Choices award bond XP (affection). Tone: flirty, teasing, adult,
 // suggestive — never explicit. The player is "Commander".
+//
+// The episodes in this file are the first generation: one-minute sketches written
+// node by node. Routes rewritten to docs/VN_DIRECTION.md live in their own file
+// (kaede.ts) and use the notation in script.ts; the main story is story.ts.
 
 type N = ChatNode;
 const her = (id: string, text: string, next?: string, mood?: string): N => ({ id, speaker: 'her', text, next, mood });
@@ -18,10 +23,8 @@ const pick = (id: string, text: string, a: [string, string, number], b: [string,
   ],
 });
 const end = (id: string, text: string, mood?: string): N => ({ id, speaker: 'her', text, mood, end: true });
-/** The Commander speaking aloud (use sparingly; choices usually cover it). */
-const you = (id: string, text: string, next: string): N => ({ id, speaker: 'you', text, next });
-
 export const EPISODES: ChatEpisode[] = [
+  ...KAEDE_EPISODES,
   // ---------------------------------------------------------------- Scarlet
   {
     id: 'scarlet-1',
@@ -146,69 +149,6 @@ export const EPISODES: ChatEpisode[] = [
       her('g', "Then I understand why everyone likes you so much. It's unfair.", 'z', 'smile'),
       her('h', "...Then my answer is yes. Don't make me say it twice. My face is already steaming.", 'z', 'blush'),
       end('z', 'Next time... you get in too. That is an order from your ice witch.', 'wink'),
-    ],
-  },
-  // ---------------------------------------------------------------- Kaede
-  {
-    id: 'kaede-1',
-    scene: 'festival',
-    heroine: 'kaede',
-    title: 'Festival Drinks',
-    level: 1,
-    start: 'a',
-    nodes: [
-      nar('a', 'Lanterns, drums, and one very loud oni. Kaede spots you from across the festival and waves with her sake gourd.', 'b'),
-      her('b', "COMMANDER! Over here! You're late, and late people drink first. Oni law.", 'c', 'laugh'),
-      pick(
-        'c',
-        'Well? You gonna keep up with me, or do I have to carry you home again?',
-        ["Pour it. I'm not scared of you.", 'd', 30],
-        ['Maybe one cup...', 'e', 10],
-        'tease',
-      ),
-      her('d', "HA! Now that's the face of a commander! Bottoms up!", 'f', 'laugh'),
-      her('e', "One cup? Aww, how cute. Fine, fine, I'll drink yours for you.", 'f', 'tease'),
-      pick(
-        'f',
-        "Hey... dance with me. Everyone's watching and I want them jealous.",
-        ['Lead the way.', 'g', 30],
-        ["I can't dance.", 'h', 15],
-        'wink',
-      ),
-      her('g', 'Hands here. And here. There we go — see? You move good when you stop thinking.', 'z', 'blush'),
-      her('h', "Who cares? Just hold on to me and let me do the work. I'm very good at that.", 'z', 'wink'),
-      end('z', "Best festival in a hundred years. Don't tell the others I said so, or they'll get ideas.", 'smile'),
-    ],
-  },
-  {
-    id: 'kaede-2',
-    scene: 'training',
-    heroine: 'kaede',
-    title: 'Horns and Honesty',
-    level: 3,
-    start: 'a',
-    nodes: [
-      nar('a', 'Kaede is sitting alone on the training ground, unusually quiet, tracing the edge of one of her horns.', 'b'),
-      her('b', "Oh. It's you. Don't make that face, I'm not sulking. Oni don't sulk.", 'c', 'pout'),
-      pick(
-        'c',
-        "A kid at the village said my horns were scary. Stupid, right? Doesn't bother me.",
-        ['I think they suit you.', 'd', 30],
-        ['It clearly bothers you.', 'e', 25],
-        'pout',
-      ),
-      her('d', "...Yeah? You think so? You're not just saying that to be nice?", 'f', 'blush'),
-      her('e', "Tch. You see through me too easily. That's annoying. ...Stay anyway.", 'f', 'shy'),
-      pick(
-        'f',
-        'Wanna touch them? Nobody ever asks. Everyone just stares.',
-        ['Can I?', 'g', 30],
-        ['Only if you want me to.', 'h', 30],
-        'shy',
-      ),
-      her('g', "Gently... Hm. Your hands are warm. That tickles. Don't stop.", 'z', 'blush'),
-      her('h', 'I want you to. Obviously. Why else would I sit here looking pathetic waiting for you?', 'z', 'pout'),
-      end('z', "Okay! Mood fixed! Tomorrow I'm blowing up twice as many monsters, just for you.", 'laugh'),
     ],
   },
   // ---------------------------------------------------------------- Selene
@@ -539,139 +479,6 @@ export const EPISODES: ChatEpisode[] = [
       her('h', "...Oh. Oh no. It's snowing harder. That's your fault.", 'z', 'laugh'),
       her('i', "Spring won't come for this snow. So that means forever. I'm holding you to it.", 'z', 'smile'),
       end('z', "Closer. I want to check if you're still warm. ...You are. You always are.", 'blush'),
-    ],
-  },
-  {
-    id: 'kaede-3',
-    heroine: 'kaede',
-    title: 'Hinoe',
-    level: 5,
-    scene: 'dawn',
-    start: 'a',
-    nodes: [
-      nar('a', 'Dawn on the watchtower. Kaede is sober, which is somehow more alarming than the horns.', 'b'),
-      her('b', "Couldn't sleep. Don't tease me about it. ...Actually, tease me. It'd help.", 'c', 'smile'),
-      pick(
-        'c',
-        'Hey. You ever wonder why an oni is fighting for a human shrine?',
-        ['Every day. Tell me.', 'd', 30],
-        ['I figured you just liked explosions.', 'e', 20],
-        'shy',
-      ),
-      her('d', "Straight to it. That's why I like you.", 'f', 'smile'),
-      her('e', "I DO like explosions. But no. That's not it.", 'f', 'laugh'),
-      her(
-        'f',
-        'My village was Hinoe. Every year we danced the Ember Festival to keep the Blight out of the south. The humans loved the festival. They hated the dancers.',
-        'g',
-        'angry',
-      ),
-      her(
-        'g',
-        'One year they got scared and barred it. No fires, no dance. The Blight came that night. By morning I was the only oni left in Hinoe, standing in the ashes, still burning.',
-        'h',
-        'sad',
-      ),
-      pick(
-        'h',
-        "I don't remember most of that night. Just being so angry that the Blight ran from me. That part scares me more than any monster.",
-        ['You were still protecting them. After everything.', 'i', 30],
-        ["I'm glad you survived.", 'j', 25],
-        'sad',
-      ),
-      her('i', "...Yeah. Stupid, right? I'd do it again. Don't tell anyone I'm sentimental.", 'z', 'blush'),
-      her('j', "Me too. Most days. Today's a good day, 'cause you're here.", 'z', 'smile'),
-      end('z', "Okay! Heavy stuff done! Breakfast. You're buying. Oni law.", 'laugh'),
-    ],
-  },
-  {
-    id: 'kaede-4',
-    heroine: 'kaede',
-    title: 'If I Burn',
-    level: 7,
-    scene: 'training',
-    start: 'a',
-    nodes: [
-      nar('a', "Scorch marks cover the training ground. Kaede's hands are shaking, and the dummy beside her is still smoking.", 'b'),
-      her('b', "It's fine. I'm fine. I pushed the Awakening too far in practice. Almost couldn't stop.", 'c', 'sad'),
-      pick(
-        'c',
-        "I need to ask you something, and you're not allowed to make it sappy.",
-        ['No promises.', 'd', 25],
-        ['Anything. Ask.', 'e', 30],
-        'pout',
-      ),
-      her('d', 'Ugh. Fine. Sappy allowed. A little.', 'f', 'laugh'),
-      her('e', "Just like that? You're too easy. ...That's why it's gotta be you.", 'f', 'shy'),
-      her(
-        'f',
-        'If I ever lose it in a fight, like in Hinoe, I want you to be the one who stops me. Say my name. Grab my hand. Whatever it takes.',
-        'g',
-        'shy',
-      ),
-      pick(
-        'g',
-        "Can you do that? Even if I'm scary?",
-        ["You're never scary to me.", 'h', 25],
-        ["I'll pull you back every time.", 'i', 30],
-        'sad',
-      ),
-      her('h', "Liar. I'm terrifying. ...But thanks. I'll pretend I believe you.", 'z', 'laugh'),
-      her('i', 'Every time, huh? Even if I burn your hand?', 'j', 'tease'),
-      you('j', 'Even then.', 'k'),
-      her('k', '...Oh, damn it. You made it sappy.', 'z', 'blush'),
-      end('z', 'Okay. Deal. Now come here and let me hold on to you for a sec. No reason. Shut up.', 'smile'),
-    ],
-  },
-  {
-    id: 'kaede-5',
-    heroine: 'kaede',
-    title: 'The Ember Dance',
-    level: 9,
-    scene: 'festival',
-    start: 'a',
-    nodes: [
-      nar(
-        'a',
-        'The shrine courtyard is ringed with fire bowls. Kaede stands in the middle in a crimson dancing robe, and for once she looks nervous.',
-        'b',
-      ),
-      her(
-        'b',
-        "There's a dance my people only dance once, for the one who carries your flame. I never thought I'd get to do it.",
-        'c',
-        'shy',
-      ),
-      pick(
-        'c',
-        "So. Uh. Sit there. Don't laugh. If you laugh I'll set your sleeves on fire. Lovingly.",
-        ["I wouldn't dream of laughing.", 'd', 25],
-        ["I've been waiting for this.", 'e', 30],
-        'blush',
-      ),
-      her('d', "Good. Liar. You're smiling already.", 'f', 'laugh'),
-      her('e', 'You... knew? Of course you knew. Everyone knows everything around here.', 'f', 'blush'),
-      nar(
-        'f',
-        'She dances. Every flame in the courtyard leans toward her as she turns, and for a heartbeat the fire traces your name in the air before it settles.',
-        'g',
-      ),
-      her(
-        'g',
-        "That's it. That's the whole thing. It means you're mine and I'm yours. Hinoe would've thrown a party that lasted a week.",
-        'h',
-        'smile',
-      ),
-      pick(
-        'h',
-        'So? Say something before I explode. Literally. It is a real risk.',
-        ['I carry your flame, Kaede. Always.', 'i', 30],
-        ['Teach me the dance.', 'j', 30],
-        'blush',
-      ),
-      her('i', '...Damn it. I said no crying. I love you, you idiot. There.', 'z', 'blush'),
-      her('j', "Teach you? The second time it's a dance for two... yeah. Yeah, I'll teach you. Every year.", 'z', 'laugh'),
-      end('z', "Hinoe's gone. But the festival isn't, as long as I've got you. Now kiss me before the fire bowls get jealous.", 'wink'),
     ],
   },
   {
@@ -1043,62 +850,14 @@ export const EPISODES: ChatEpisode[] = [
   },
 ];
 
-/**
- * Shown once, the first time the player presses Play (not listed in any
- * heroine's chats, awards no Bond). Sets up the world; see docs/LORE.md.
- */
-export const PROLOGUE: ChatEpisode = {
-  id: 'prologue',
-  heroine: 'selene',
-  title: 'The Last Moongate',
-  level: 1,
-  scene: 'moongate',
-  start: 'a',
-  nodes: [
-    nar(
-      'a',
-      "The Moonlit Isles. Every hundred years, on the night of the Crimson Eclipse, the moon's light fails, and the Blight climbs out of the Hollow Sea.",
-      'b',
-    ),
-    nar(
-      'b',
-      'The Moonlit Shrine stands on the last seal. Its keeper walked into the dark ten years ago and never came back. So the shrine sent for you.',
-      'c',
-    ),
-    her('c', 'Ara~ You came. And exactly where the prophecy said: at the bottom of my very long staircase, out of breath.', 'd', 'smile'),
-    pick(
-      'd',
-      "I'm Selene, the shrine's priestess. And you, Commander, are an Anchor. Do you know what that means?",
-      ['Not a clue.', 'e', 0],
-      ['Tell me everything.', 'f', 0],
-    ),
-    her(
-      'e',
-      'Honest. Good. It means Sirens like us can bind our power to you. The more we trust you, the stronger we become.',
-      'g',
-      'tease',
-    ),
-    her(
-      'f',
-      'Eager. Good. It means Sirens like us can bind our power to you. The more we trust you, the stronger we become.',
-      'g',
-      'smile',
-    ),
-    her(
-      'g',
-      'Three of them are waiting on the shrine road: a vampire, a snow witch, and an oni who has already found the sake.',
-      'h',
-      'laugh',
-    ),
-    pick('h', 'The Blight comes tonight. Will you command them?', ["I'm ready.", 'z', 0], ['Do I have a choice?', 'y', 0]),
-    her('y', 'Of course. But you climbed all those stairs. It would be a shame to waste them.', 'z', 'wink'),
-    end(
-      'z',
-      "Place them along the road and keep the lights from reaching the gate. I'll be singing the seal. And Commander... come back and tell me about it.",
-      'smile',
-    ),
-  ],
-};
+// The confession's illustration ("Heart Unveiled", her fifth gallery picture) appears
+// from the line where it happens. The first-generation episodes get it here; rewritten
+// routes place their pictures in the script.
+const CONFESSION_PICTURE: Record<string, string> = { 'scarlet-5': 'f', 'yuki-5': 'f', 'selene-5': 'g' };
+for (const ep of EPISODES) {
+  const line = ep.nodes.find((n) => n.id === CONFESSION_PICTURE[ep.id]);
+  if (line) line.cg = `${ep.heroine}-g5`;
+}
 
 export function episodesFor(heroine: string): ChatEpisode[] {
   return EPISODES.filter((e) => e.heroine === heroine).sort((a, b) => a.level - b.level);

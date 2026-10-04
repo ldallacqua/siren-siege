@@ -229,7 +229,7 @@ Same information; now there is a gag (oni law), a relationship (Yuki), four pose
 
 These are mock-ups built from the game's own art (`docs/vn/mock.html`; open it in a browser, `?frame=line|choice|sd`). They are not the game. They show the layout below is within reach with what we have: the portraits, the painted backdrops at full brightness, the two fonts.
 
-**Built so far (B-22, 2026-10-03):** the stage and the window of 7.2 and 7.3 for one heroine: bright backdrop, big sprite, frameless window in the speaker's colour, name with a gold rule, text sized from the screen, ribbon, Bond meter, choice bars, quick menu with the tools that exist (Log, Auto, Skip). Not yet: the face icon and a second or third character (B-24), illustrations and chibi cut-ins (B-23, B-27), the other tools (B-25). Before this step the player showed one heroine small in the middle of a dimmed scene, with a framed dark text box.
+**Built so far (B-22 and B-23, 2026-10-03):** illustrations inside scenes, Hide, second voices (one sprite at a time), scene changes and the Story page are in; see STATUS. First: the stage and the window of 7.2 and 7.3 for one heroine: bright backdrop, big sprite, frameless window in the speaker's colour, name with a gold rule, text sized from the screen, ribbon, Bond meter, choice bars, quick menu with the tools that exist (Log, Auto, Skip). Not yet: the face icon and a second or third character (B-24), illustrations and chibi cut-ins (B-23, B-27), the other tools (B-25). Before this step the player showed one heroine small in the middle of a dimmed scene, with a framed dark text box.
 
 ### 7.2 The stage
 
@@ -347,6 +347,8 @@ Status on 2026-10-03: the owner was asked about 1 to 4 and which heroine comes f
 6. **A side cast** (4.4): yes or no, and who.
 7. **Voice:** stay with blips, or plan for a few recorded lines per heroine.
 8. **Episode length** (5.4): three to five minutes, or shorter for a phone game.
+   Later the same day he chose Kaede (9), asked not to be shown story drafts (he reads it in the game), and asked for a better opening and for everything to be replayable. Decisions 5 to 8 were therefore not put to him: they are decided in the writing (D-034).
+
 9. **Which heroine's route is rewritten first** as the sample.
 
 ## 12. Sources
@@ -366,3 +368,8 @@ Reviews and summaries:
 - [oprainfall: Riddle Joker review](https://operationrainfall.com/2021/04/13/riddle-joker-review/) and [Noisy Pixel: Riddle Joker review](https://noisypixel.net/riddle-joker-review-pc/): voice bookmarks, the restylable interface, sprite mode.
 - [TV Tropes: Senren＊Banka](https://tvtropes.org/pmwiki/pmwiki.php/VisualNovel/SenrenBanka) and [TV Tropes: Sabbat of the Witch](https://tvtropes.org/pmwiki/pmwiki.php/VisualNovel/SabbatOfTheWitch): premise, tone, chibi art for comic scenes, the flowchart, the hidden second layer of _Sabbat_'s main route.
 - [A Steam review of Senren＊Banka](https://steamcommunity.com/id/0256667/recommended/1144400/): no sprite animation in these two titles, the list of system features, gallery counts.
+
+## 13. Corrections (2026-10-03)
+
+- **The gallery pictures are not scene illustrations.** Sections 5.2, 7.4 and 8 treat the 25 gallery pictures as event illustrations tied to Bond 7 and 9. They are pin-ups with a fixed theme per slot (first impression, off duty, poolside, after hours, heart unveiled) that unlock at Bond 2, 4, 6, 8 and 10, and only 20 exist (Nemu has none). A rewritten route therefore writes its scenes around the pictures the heroine has (Kaede's route does: `src/data/kaede.ts`), and a picture seen in an episode opens in the Gallery at once. Pictures drawn for a scene are future art.
+- **"Never raises her voice at Yuki or Nemu"** (4.2, Kaede) means never in anger. The sample in section 6 has her shout at Yuki; in the written route her outrage at those two is quiet.

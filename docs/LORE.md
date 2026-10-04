@@ -78,6 +78,18 @@ The Commander's past is deliberately left blank so the player can fill it in. Ne
 - **Voice:** deadpan, lazy, short sentences ("...troublesome." / "Five more minutes."). Blunt and sharp-tongued; works for candy; calls the Commander "pillow" after falling asleep on them. Goes quiet and blushes when someone is kind to her without being asked. Loves sweets, quiet and being looked after; hates being woken up and being called cute.
 - **Arc:** (B1) she falls asleep on the Commander during a briefing · (B3) she negotiates her wages, in candy · (B5) Yumeji, and why everything tastes bitter · (B7) she eats the Commander's nightmare without asking, so she knows their fear (never say what it was), and admits she carries a whole town's · (B9) her first dream ever, and the Commander is in it: "I love you. Okay? Don't make it a thing."
 
+## Written canon: spoilers (for agents; the owner reads the story in the game)
+
+Facts fixed by the main story (`src/data/story.ts`) and by Kaede's rewritten route (`src/data/kaede.ts`). Keep new writing consistent with them.
+
+- **The shrine:** 999 steps up to the Moongate. The Commander came because of an unsigned letter ("A heart the Lady cannot see through. Please hurry."). The shrine holds a small festival at the end of every week the gate survives. Keeper Haruo's lantern is still lit and Selene checks it every morning. The gate is cracking weeks ahead of the eclipse (the "dark night").
+- **Who is there when:** Scarlet and Yuki from the first night. Kaede arrives a month late, from festivals (chapter 1-3, wave 10). Nemu comes "whenever she wakes up"; Selene joins the road "the first night the seal can hold without my voice".
+- **The Commander:** narrates in the first person, dry; listens ("the only thing I am actually good at"); hands were shaking after the first battle. Still no gender, face or past.
+- **Scarlet:** has missed twice in four hundred years and will not yet say what the second was. Keeps a tab of what Kaede owes the shrine cellar.
+- **Yuki:** rehearses what she will say and loses it; chews ice.
+- **Kaede's sheet.** Face: loud, cocky, generous. Gap: sulks about her horns, checks faces in a crowd after she uses fire, cooks instead of apologising (the worse she feels, the more dishes). Never: says sorry in words; raises her voice in anger at Yuki or Nemu. Tells: touches a horn when unsure; invents an "oni law" for whatever she wants and cannot ask for; hums the Ember Dance without knowing it. Everyday: her gran taught her to cook for four villages, so she cannot cook small; terrible handwriting, notes in capitals under the door; one horn chipped on a temple bell at nine. Love changes her: she asks instead of announcing, and says please.
+- **Kaede's route:** (1) festival; she relights a fire bowl that went out and looks at the crowd after popping a stray light. (3) a village child called her horns scary; the Commander is the first to ask to touch them. (5) on the day of the Ember Festival she builds a bonfire on the shore with eight bowls, one per family of Hinoe, and gives a ninth to the Commander. (7) she lost control in a battle and the Commander walked into the fire and took her wrist, unburned, because an Anchor can; she cooks twenty-two dishes and asks to be fetched back every time. (9) the Ember Dance: the dancer offers a live coal from her hand; if it does not burn, the answer is yes; "carrying her flame" means her fire has somewhere to go. (10) breakfast for nine, the first argument (whether soup is a drink), she wakes without bracing for the first time since Hinoe.
+
 ## Relationships between the heroines
 
 - **Scarlet ↔ Selene:** old rivals in elegance; secretly each other's confidante.
@@ -91,7 +103,7 @@ The Commander's past is deliberately left blank so the player can fill it in. Ne
 
 ## Writing rules for chats
 
-1. One scene, one feeling. 8–12 nodes, two choices, each ending on a line she'd actually say.
+1. One scene, one turn. A rewritten episode is 25–40 lines with two or three decisions (the older sketches are 8–12 nodes), ending on a line she'd actually say.
 2. The best choice fits _her_: Scarlet wants boldness, Yuki gentleness, Kaede nerve, Selene romance and sincerity.
 3. Every chat from Bond 5 up should reveal one piece of her lore above. Bond 9 is the confession.
 4. Use `speaker: 'you'` sparingly for the Commander's spoken lines when the choice text alone isn't enough.

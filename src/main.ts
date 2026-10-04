@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import './style.css';
 import { sound } from './audio/sound.ts';
-import { PROLOGUE } from './data/dialogues.ts';
+import { STORY, type StoryChapter } from './data/story.ts';
 import { MAPS } from './data/maps.ts';
 import { HEROINES } from './data/heroines.ts';
 import { Battle } from './game/Battle.ts';
 import { BattleScene } from './game/BattleScene.ts';
-import { addGifts, addXp, dev, isUnlocked, persist, save } from './state/save.ts';
+import { addGifts, addXp, battlesPlayed, dev, isUnlocked, markStory, persist, save, storySeen } from './state/save.ts';
 import { rollDrops } from './data/gifts.ts';
 import { h, toast } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
@@ -148,21 +148,31 @@ scene.onToast = toast;
 let battle: Battle | null = null;
 
 let lastMap = MAPS[0].id;
+
+/** Whether a main-story chapter has been reached (it then plays by itself once; the Story page replays it). */
+function storyReady(c: StoryChapter): boolean {
+  if (c.when.kind === 'battles') return battlesPlayed() >= c.when.n;
+  if (c.when.kind === 'heroine') return isUnlocked(c.when.id);
+  return true;
+}
+
+/** Plays the next chapter of that kind that is due and not seen yet, then `after`. Without one, `after` runs now. */
+function playStory(kinds: StoryChapter['when']['kind'][], after: () => void): void {
+  const c = STORY.find((x) => kinds.includes(x.when.kind) && storyReady(x) && !storySeen(x.ep.id));
+  if (!c) return after();
+  playChat(
+    c.ep,
+    () => {
+      markStory(c.ep.id);
+      after();
+    },
+    { noReward: true },
+  );
+}
+
 const home: HomeActions = {
-  play: () => {
-    const select = () => showMapSelect(home, (id) => startBattle(id));
-    if (save.seenPrologue) return select();
-    // First time: the story prologue, then pick a battlefield.
-    playChat(
-      PROLOGUE,
-      () => {
-        save.seenPrologue = true;
-        persist();
-        select();
-      },
-      { noReward: true },
-    );
-  },
+  // First time: the opening chapter, then pick a battlefield.
+  play: () => playStory(['start'], () => showMapSelect(home, (id) => startBattle(id))),
 };
 
 function setPlaying(on: boolean): void {
@@ -207,6 +217,7 @@ function finishBattle(b: Battle): void {
   sound.stopMusic();
   sound.play(won ? 'victory' : 'defeat');
   const newlyUnlocked = recordWave(b, true);
+  save.battles = battlesPlayed() + 1;
   if (won) save.wins++;
   // Bond XP: fighting earns affection; winning earns a lot more.
   const pops = new Map<string, number>();
@@ -243,6 +254,7 @@ function goHome(): void {
 }
 
 function enterHome(): void {
+  const fought = !!battle?.finished;
   if (battle && !battle.finished) {
     recordWave(battle, true);
   }
@@ -253,6 +265,8 @@ function enterHome(): void {
   hud.attach(null);
   setPlaying(false);
   showHome(home);
+  // Back from a battle that was played to the end: the story moves on, one chapter per return.
+  if (fought && !dev) playStory(['battles', 'heroine'], () => showHome(home));
 }
 
 hud.onMenu = () => {

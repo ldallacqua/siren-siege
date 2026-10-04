@@ -1,6 +1,9 @@
 // Data integrity tests: run these after adding heroines, enemies, waves, chats or gallery items.
 import { describe, expect, it } from 'vitest';
-import { EPISODES, PROLOGUE } from '../src/data/dialogues.ts';
+import { EPISODES } from '../src/data/dialogues.ts';
+import { KAEDE_EPISODES } from '../src/data/kaede.ts';
+import { ask, cast, nar, script } from '../src/data/script.ts';
+import { STORY } from '../src/data/story.ts';
 import { ENEMIES, ENEMY_BY_ID, rbe } from '../src/data/enemies.ts';
 import { HEROINES } from '../src/data/heroines.ts';
 import { IDLE_LINES } from '../src/data/lore.ts';
@@ -114,22 +117,115 @@ describe('enemies and waves', () => {
   });
 });
 
+/** Everything the chat player can be given: the heroines' episodes and the main story. */
+const SCRIPTS = [...EPISODES, ...STORY.map((c) => c.ep)];
+
 describe('dialogues', () => {
-  it('each heroine has a chat at Bond 1, 3, 5, 7 and 9 (Bond 9 is the confession)', () => {
+  it('each heroine has a chat at Bond 1, 3, 5, 7 and 9 (Bond 9 is the confession), and at most an After at Bond 10', () => {
     for (const h of HEROINES) {
       const levels = EPISODES.filter((e) => e.heroine === h.id).map((e) => e.level);
       expect(
-        levels.sort((a, b) => a - b),
+        levels.sort((a, b) => a - b).filter((l) => l !== 10),
         h.id,
       ).toEqual([1, 3, 5, 7, 9]);
+      expect(levels.filter((l) => l === 10).length, h.id).toBeLessThanOrEqual(1);
     }
   });
 
-  it('every episode has a scene and two decisions', () => {
-    for (const ep of [...EPISODES, PROLOGUE]) {
+  it('every episode has a scene and two or three decisions', () => {
+    for (const ep of SCRIPTS) {
       expect(ep.scene, ep.id).toBeTruthy();
-      expect(ep.nodes.filter((n) => n.choices).length, ep.id).toBe(2);
+      const decisions = ep.nodes.filter((n) => n.choices).length;
+      // a short main-story chapter may have a single decision
+      expect(decisions, ep.id).toBeGreaterThanOrEqual(ep.kicker ? 1 : 2);
+      expect(decisions, ep.id).toBeLessThanOrEqual(3);
     }
+  });
+
+  it('second voices, scene changes and illustrations point at things that exist', () => {
+    const heroIds = new Set(HEROINES.map((h) => h.id));
+    const scenes: readonly string[] = CHAT_SCENES;
+    for (const ep of SCRIPTS) {
+      for (const n of ep.nodes) {
+        if (n.who) expect(heroIds.has(n.who), `${ep.id}:${n.id} who`).toBe(true);
+        if (n.who) expect(n.speaker, `${ep.id}:${n.id} who on a line that is not hers`).toBe('her');
+        if (n.scene) expect(scenes, `${ep.id}:${n.id} scene`).toContain(n.scene);
+        // an episode only shows a picture of its own heroine
+        if (n.cg) expect(GALLERY.find((g) => g.id === n.cg)?.heroine, `${ep.id}:${n.id} cg`).toBe(ep.heroine);
+      }
+    }
+  });
+
+  it('main-story chapters have unique ids, a chapter number, and never hand out Bond', () => {
+    const ids = STORY.map((c) => c.ep.id);
+    expect(new Set([...ids, ...EPISODES.map((e) => e.id)]).size).toBe(ids.length + EPISODES.length);
+    const heroIds = new Set(HEROINES.map((h) => h.id));
+    for (const c of STORY) {
+      expect(c.ep.kicker, c.ep.id).toMatch(/^Chapter \d+-\d+$/);
+      expect(c.hint, c.ep.id).toBeTruthy();
+      if (c.when.kind === 'heroine') expect(heroIds.has(c.when.id), c.ep.id).toBe(true);
+      for (const n of c.ep.nodes) for (const o of n.choices ?? []) expect(o.affection, `${c.ep.id}:${n.id}`).toBe(0);
+    }
+    expect(STORY[0].when.kind, 'the first chapter is the opening').toBe('start');
+  });
+
+  it('a rewritten route meets the standard in docs/VN_DIRECTION.md (length, acting, pictures)', () => {
+    expect(KAEDE_EPISODES.map((e) => e.level)).toEqual([1, 3, 5, 7, 9, 10]);
+    for (const ep of KAEDE_EPISODES) {
+      const nodes = new Map(ep.nodes.map((n) => [n.id, n]));
+      // every way through it is 25 to 40 lines
+      const lengths: number[] = [];
+      const walk = (id: string, len: number): void => {
+        const n = nodes.get(id)!;
+        if (n.end) return void lengths.push(len);
+        for (const next of n.choices ? n.choices.map((c) => c.next) : [n.next!]) walk(next, len + 1);
+      };
+      walk(ep.start, 1);
+      expect(Math.min(...lengths), `${ep.id} shortest path`).toBeGreaterThanOrEqual(25);
+      expect(Math.max(...lengths), `${ep.id} longest path`).toBeLessThanOrEqual(40);
+      // at least four of her poses, and none held for more than three of her lines in a row
+      const hers = ep.nodes.filter((n) => n.speaker === 'her' && !n.who);
+      expect(new Set(hers.map((n) => n.mood)).size, `${ep.id} poses`).toBeGreaterThanOrEqual(4);
+      let run = 0;
+      let last = '';
+      for (const n of ep.nodes) {
+        if (n.speaker !== 'her') continue;
+        const pose = `${n.who ?? ''}/${n.mood}`;
+        run = pose === last ? run + 1 : 1;
+        last = pose;
+        expect(run, `${ep.id}:${n.id} holds ${pose} too long`).toBeLessThanOrEqual(3);
+      }
+      // the Commander has a voice, and it ends on her line
+      expect(
+        ep.nodes.some((n) => n.speaker === 'you'),
+        `${ep.id} you lines`,
+      ).toBe(true);
+      for (const n of ep.nodes.filter((x) => x.end)) expect(n.speaker === 'her' && !n.who, `${ep.id}:${n.id} last line`).toBe(true);
+      // Bond 7 and 9 show their illustration
+      if (ep.level === 7 || ep.level === 9)
+        expect(
+          ep.nodes.some((n) => n.cg),
+          `${ep.id} illustration`,
+        ).toBe(true);
+    }
+  });
+
+  it('the script notation links lines, rejoins branches and ends where the lines end', () => {
+    const k = cast();
+    const { start, nodes } = script([
+      nar('one'),
+      ask(k('smile', 'two?'), ['a', 30, [k('laugh', 'three-a'), k('blush', 'four-a')]], ['b', 10, []]),
+      k('wink', 'five'),
+    ]);
+    const by = new Map(nodes.map((n) => [n.id, n]));
+    expect(by.size).toBe(5);
+    const q = by.get(by.get(start)!.next!)!;
+    const [a, b] = q.choices!;
+    const last = nodes.find((n) => n.text === 'five')!;
+    expect(by.get(by.get(a.next)!.next!)!.next).toBe(last.id);
+    expect(b.next).toBe(last.id);
+    expect(last.end).toBe(true);
+    expect(() => script([ask(k('smile', '?'), ['a', 0, []], ['b', 0, []])])).toThrow();
   });
 
   it('episode ids are unique and reference real heroines', () => {
@@ -144,7 +240,7 @@ describe('dialogues', () => {
   });
 
   it('every node link resolves, every node is reachable and every path ends', () => {
-    for (const ep of [...EPISODES, PROLOGUE]) {
+    for (const ep of SCRIPTS) {
       const nodes = new Map(ep.nodes.map((n) => [n.id, n]));
       expect(nodes.size, `${ep.id} duplicate node ids`).toBe(ep.nodes.length);
       expect(nodes.has(ep.start), `${ep.id} start`).toBe(true);
@@ -155,8 +251,9 @@ describe('dialogues', () => {
         if (n.mood) expect(MOODS, `${ep.id}:${n.id} mood`).toContain(n.mood);
         // a heroine with art must have the picture for every mood her lines use
         // (otherwise the chat falls back to her base pose, which may not fit the line)
-        const art = existsSync(`public/${portraitFile(ep.heroine)}`);
-        if (n.mood && art) expect(existsSync(`public/${portraitFile(ep.heroine, n.mood)}`), `${ep.id}:${n.id} ${n.mood} art`).toBe(true);
+        const who = n.who ?? ep.heroine;
+        const art = existsSync(`public/${portraitFile(who)}`);
+        if (n.mood && art) expect(existsSync(`public/${portraitFile(who, n.mood)}`), `${ep.id}:${n.id} ${n.mood} art`).toBe(true);
         if (n.choices) for (const c of n.choices) expect(c.affection).toBeGreaterThanOrEqual(0);
       }
       // Reachability + termination (graph must be acyclic from start and reach an end node)
@@ -223,7 +320,7 @@ describe('art framing', () => {
 describe('painted backdrops', () => {
   it('cover every chat scene and give each heroine a place', () => {
     const scenes: readonly string[] = CHAT_SCENES;
-    for (const ep of [...EPISODES, PROLOGUE]) if (ep.scene) expect(scenes, ep.id).toContain(ep.scene);
+    for (const ep of SCRIPTS) if (ep.scene) expect(scenes, ep.id).toContain(ep.scene);
     for (const d of HEROINES) expect(scenes, d.id).toContain(HOME_SCENE[d.id]);
   });
   it('are all there once any is (a missing one would show the plain CSS scene among painted ones)', () => {
