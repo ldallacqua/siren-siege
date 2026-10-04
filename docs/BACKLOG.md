@@ -19,8 +19,9 @@ The art gate (`docs/ART_QA.md`) is in place and every heroine passes its automat
 
 The story screen has a camera now (D-036), and on most screens its close-up needs more pixels than the 1536 px portraits have. `scripts/upscale.py` enlarges the approved pictures to 2048×3072 with an upscaling model already on the owner's PC (nothing is redrawn); the code that uses the copies is on `main` behind an empty `HD_PORTRAITS` (D-037). Six local models and GPT were compared on 2026-10-04 (sheets in `artifacts/review/upscale/`, findings in STATUS).
 
-- Owner picks the method from the sheets (suggested: UltraSharp V1; GPT redraws the picture and its tiles do not join).
-- Then: make all 50 with it into `public/art/<id>/hd/`, list the five ids in `HD_PORTRAITS`, `npm test`, `npm run smoke`, show him the game, commit on his yes; record the sign-off in `docs/ART_QA.md`.
+- The owner picked GPT ("the UltraSharp options destroy the eyes"). `scripts/gpt_upscale.py` + `scripts/gpt_tiles.sh` make a portrait from five overlapping GPT tiles and join them without a seam (STATUS, D-037). Four portraits are done as a test; Selene's ten were running on 2026-10-04.
+- Then, on his go: the other heroines (five GPT images a portrait), into `public/art/<id>/hd/`, list the ids in `HD_PORTRAITS`, `npm test`, `npm run smoke`, show him the game, commit on his yes; record the sign-off in `docs/ART_QA.md`.
+- Hands and faces of every joined portrait are looked at at 4× before he sees them (GPT may add or change a nail or an ornament; a tile that changed something is redrawn: delete its `oN.png` and run `gpt_tiles.sh` again).
 - Then: the lobby, the Bond screen and the profile use the big copies too (`capUpscale` already allows them more), and `warmArt` decides what to fetch ahead.
 - Accept: on a 4K screen at 200 % the mid shot is head to thigh as on 1080p and the close shot is a real close-up, sharp at 1:1; a phone on data saver still gets the standard files.
 

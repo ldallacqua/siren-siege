@@ -94,7 +94,7 @@ src/
   main.ts          Boot, DPR-aware resize, app flow (home ↔ battle ↔ results), match XP awards
   style.css        All styling; orientation handled with aspect-ratio media queries
 scripts/           balance-sim.ts, smoke.ts, art-import.ts + art-check.ts (the art gate; chroma.ts keying, artSpec.ts file spec, browser.ts), make-icons.ts (PWA icons), session-start.sh,
-                   faces.py (measures face positions -> src/data/faces.ts), upscale.py (big copies of portraits -> public/art/<id>/hd/, D-037)
+                   faces.py (measures face positions -> src/data/faces.ts), gpt_upscale.py + gpt_tiles.sh (big copies of portraits from GPT tiles -> public/art/<id>/hd/, D-037; upscale.py: the local-model fallback)
 public/sw.js       Service worker (installable PWA, offline); public/manifest.webmanifest
 tests/             data, sim, chibi, camera and audio tests
 public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp; hd/: big copies of the portraits)
@@ -117,7 +117,7 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 
 **Write a lobby line** (what she says when tapped on the home screen): add it to `IDLE_LINES` in `src/data/lore.ts` with the Bond `level` that unlocks it and a `mood`. She takes that pose while the line shows. Only the everyday moods are allowed there (`LOBBY_MOODS`: smile, tease, wink, pout); the other five stay a surprise for her chats (a test enforces it).
 
-**Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. For a new or replaced portrait also run `python scripts/faces.py` and paste its output into `src/data/faces.ts` (close-ups are framed on her face), and if she is in `HD_PORTRAITS` remake her big copy with `scripts/upscale.py` (a test fails without it). If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots. Art is not done until it passes the art gate (`docs/ART_QA.md`): `npm run art:check` green, the review sheets looked at (count fingers on every hand), and the owner's sign-off recorded in the ART_QA status table.
+**Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. For a new or replaced portrait also run `python scripts/faces.py` and paste its output into `src/data/faces.ts` (close-ups are framed on her face), and if she is in `HD_PORTRAITS` remake her big copy with `scripts/gpt_upscale.py` and `scripts/gpt_tiles.sh` (their headers say how; a test fails without the copy). If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots. Art is not done until it passes the art gate (`docs/ART_QA.md`): `npm run art:check` green, the review sheets looked at (count fingers on every hand), and the owner's sign-off recorded in the ART_QA status table.
 
 **Add a new screen:** add a `showX()` in `ui/screens.ts` that builds DOM with `h()` and calls `show()`. Style in `style.css` with a portrait and a short-landscape variant.
 

@@ -45,7 +45,7 @@ Measured on clean art: halo ≤ 0.03, tint ≤ 1.6 %, spill 0, mood IoU ≥ 0.99
 
 Already approved by the owner one picture at a time: every base portrait, the 15 new chibi poses and Selene's new front chibi, gallery 2–5 for the first four, Selene's gallery-1.
 
-**Big copies (`public/art/<id>/hd/`, D-037):** none in the game yet. Six upscaling models and GPT were compared on 2026-10-04 (`artifacts/review/upscale/`). Agent eye review at 3×: face and hands of Selene (shy), Scarlet (base) and Yuki (blush), arm and outline of Kaede (blush): with every local model the fingers, nails and features are those of the approved pictures, with sharper lines and no new fringe on the outline; GPT changes them. **The owner picks the method, then signs off the copies** before they go into the game.
+**Big copies (`public/art/<id>/hd/`, D-037):** none in the game yet. Six upscaling models and GPT were compared on 2026-10-04 (`artifacts/review/upscale/`). Agent eye review at 3×: face and hands of Selene (shy), Scarlet (base) and Yuki (blush), arm and outline of Kaede (blush): with every local model the fingers, nails and features are those of the approved pictures; GPT redraws them more cleanly. **The owner chose GPT**, joined from tiles (D-037). Each joined portrait gets the 4× look at face and hands before he sees it, and his sign-off before it goes into the game.
 
 ## 4. Fixing what the gate finds
 
