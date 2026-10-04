@@ -17,10 +17,10 @@ The art gate (`docs/ART_QA.md`) is in place and every heroine passes its automat
 
 ### B-19 · P1 · Big copies of the portraits (waiting for the owner's look)
 
-The story screen has a camera now (D-036), and on most screens its close-up needs more pixels than the 1536 px portraits have. `scripts/upscale.py` enlarges the approved pictures to 2048×3072 with an upscaling model (`4x-UltraSharpV2`, already on the owner's PC; nothing is redrawn). All 50 are made and wait in `artifacts/hd/usv2/` (git-ignored); the code that uses them is on `main` behind an empty `HD_PORTRAITS` (D-037).
+The story screen has a camera now (D-036), and on most screens its close-up needs more pixels than the 1536 px portraits have. `scripts/upscale.py` enlarges the approved pictures to 2048×3072 with an upscaling model already on the owner's PC (nothing is redrawn); the code that uses the copies is on `main` behind an empty `HD_PORTRAITS` (D-037). Six local models and GPT were compared on 2026-10-04 (sheets in `artifacts/review/upscale/`, findings in STATUS).
 
-- Owner looks at the comparison sheets (`artifacts/chat/hd-*.jpg`) or the local preview and approves, rejects or picks another model.
-- On approval: copy to `public/art/<id>/hd/`, list the five ids in `HD_PORTRAITS`, `npm test`, `npm run smoke`, commit; record the sign-off in `docs/ART_QA.md`.
+- Owner picks the method from the sheets (suggested: UltraSharp V1; GPT redraws the picture and its tiles do not join).
+- Then: make all 50 with it into `public/art/<id>/hd/`, list the five ids in `HD_PORTRAITS`, `npm test`, `npm run smoke`, show him the game, commit on his yes; record the sign-off in `docs/ART_QA.md`.
 - Then: the lobby, the Bond screen and the profile use the big copies too (`capUpscale` already allows them more), and `warmArt` decides what to fetch ahead.
 - Accept: on a 4K screen at 200 % the mid shot is head to thigh as on 1080p and the close shot is a real close-up, sharp at 1:1; a phone on data saver still gets the standard files.
 
