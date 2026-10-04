@@ -1,4 +1,4 @@
-import { ask, at, cast, nar, script, you } from './script.ts';
+import { ask, at, cast, close, far, nar, script, you } from './script.ts';
 import type { ChatEpisode } from './types.ts';
 
 // The main story: ensemble chapters that play by themselves at a point in the game
@@ -38,7 +38,7 @@ export const STORY: StoryChapter[] = [
       nar(
         'At the top there is a gate with nothing behind it but sky, and a woman who looks as if she has been waiting for exactly this long.',
       ),
-      selene('smile', 'Ara~ You came.'),
+      far(selene('smile', 'Ara~ You came.')),
       selene('tease', 'And just as the prophecy said. At the top of my very long staircase, completely out of breath.'),
       you('The prophecy mentioned the stairs?'),
       selene('laugh', 'It mentioned the breathing.'),
@@ -48,12 +48,12 @@ export const STORY: StoryChapter[] = [
         ['Lost, mostly.', 0, [selene('laugh', 'Honest! Good. I can work with honest.')]],
         ['Someone who answers strange letters.', 0, [selene('tease', 'And I am so very glad that you do.')]],
       ),
-      selene('smile', 'You are an Anchor.'),
+      close(selene('smile', 'You are an Anchor.')),
       selene(
         'smile',
         "A Siren's power is a song, and a song needs someone to hear it. Most people who listen to one of us for long get burned. Or frozen. Or emptied.",
       ),
-      selene('wink', "You won't. That is all an Anchor is. Someone who can listen, and stay."),
+      close(selene('wink', "You won't. That is all an Anchor is. Someone who can listen, and stay.")),
       nar('She says "that is all" the way people say "it\'s only a scratch".'),
       selene('sad', 'This is the Moongate. Under it lies the Hollow Sea, where everything the world forgets sinks and goes hungry.'),
       selene(
@@ -61,8 +61,8 @@ export const STORY: StoryChapter[] = [
         'Once a century the moon goes dark for one night, and the hunger climbs the road. We call it the Blight. The dark night is close, and the gate is cracking early.',
       ),
       you('What happened to the last person who had this job?'),
-      selene('shy', 'Keeper Haruo walked down into the dark ten years ago, to buy us time.'),
-      selene('smile', 'His lantern is still lit. I check every morning.'),
+      close(selene('shy', 'Keeper Haruo walked down into the dark ten years ago, to buy us time.')),
+      close(selene('smile', 'His lantern is still lit. I check every morning.')),
       nar('She smiles when she says it. I decide not to ask about the morning it is not.'),
       selene('laugh', 'Now! Enough gloom. Come and meet the ones who do the actual work.'),
       at(
@@ -71,13 +71,13 @@ export const STORY: StoryChapter[] = [
           'The shrine road runs downhill from the gate between stone lanterns. Two women are waiting on it. Neither looks like she waits for people often.',
         ),
       ),
-      scarlet('smile', 'So this is the Anchor.'),
+      far(scarlet('smile', 'So this is the Anchor.')),
       scarlet('tease', 'Smaller than the prophecy implied, darling. I approve. Less to guard.'),
       scarlet('wink', 'Scarlet Vane. I shoot things. One at a time, very hard, from very far away.'),
       you('Do you ever miss?'),
       scarlet('laugh', 'Twice, in four hundred years. Ask me about the second one when I know you better.'),
       nar('The other one stands where the lantern light gives up. There is frost on the stones around her feet.'),
-      yuki('shy', '...Yuki.'),
+      far(yuki('shy', '...Yuki.')),
       yuki('shy', 'I make them slow. So the others can hit them.'),
       yuki('blush', '...That was all of it. I practised a longer one. It is gone.'),
       scarlet('tease', 'That is more than she has said to me all month. I am trying not to take it personally.'),
@@ -98,7 +98,7 @@ export const STORY: StoryChapter[] = [
         'Set my girls beside the road, wherever you think best. They listen to you now. Whatever reaches this gate, the seal pays for, and it cannot pay for much.',
       ),
       selene('wink', 'I will be up here, singing. And Commander...'),
-      selene('smile', 'Come back and tell me about it.'),
+      close(selene('smile', 'Come back and tell me about it.')),
     ]),
   },
   {
@@ -119,7 +119,7 @@ export const STORY: StoryChapter[] = [
       ),
       yuki('smile', 'The Blight is made of what the Hollow Sea has eaten. A name. A song. The smell of a kitchen.'),
       yuki('smile', 'When a layer breaks, the thing inside is let go. It goes back to whoever lost it.'),
-      yuki('shy', '...That is why we do not hate them.'),
+      close(yuki('shy', '...That is why we do not hate them.')),
       scarlet('smile', 'It is also why the grey ones are such a bore. Grief hardens. Bullets bounce off it.'),
       scarlet('wink', 'Silver does not. Neither does fire. Do remember that when you decide what I learn next, darling.'),
       nar('Selene comes down the steps with her sleeves pushed back and her voice a little hoarse.'),
@@ -138,13 +138,13 @@ export const STORY: StoryChapter[] = [
       nar('The two of them drift off toward the baths, arguing about hot water. Selene does not. She has gone back up to the gate.'),
       at('moongate', nar('Her palm is flat on the stone. Under it there is a crack that was not there this morning.')),
       selene('shy', 'Ara. Caught.'),
-      selene('sad', 'It is early, that is all. The dark night is weeks away, and the gate is cracking as if it were tomorrow.'),
+      close(selene('sad', 'It is early, that is all. The dark night is weeks away, and the gate is cracking as if it were tomorrow.')),
       ask(
-        selene('smile', 'Do not make that face. I have been singing it shut for ten years. I am very good.'),
+        close(selene('smile', 'Do not make that face. I have been singing it shut for ten years. I am very good.')),
         ['What do you need?', 0, [selene('blush', '...Nobody has asked me that in a long time.')]],
         ['What are you not telling me?', 0, [selene('tease', 'A great many things. A priestess needs her mysteries.')]],
       ),
-      selene('smile', 'A commander who comes back. I seem to have one.'),
+      close(selene('smile', 'A commander who comes back. I seem to have one.')),
       selene('wink', 'Go to bed. Tomorrow the road will be longer.'),
     ]),
   },
@@ -155,7 +155,7 @@ export const STORY: StoryChapter[] = [
       nar(
         'The road is still smoking from the last wave when somebody starts singing at the bottom of the stairs. Loudly. Off-key. Getting closer.',
       ),
-      kaede('laugh', "SNOWBALL! I'm home! Did you miss me? You missed me!"),
+      far(kaede('laugh', "SNOWBALL! I'm home! Did you miss me? You missed me!")),
       yuki('blush', '...Kaede. You are a month late.'),
       kaede('tease', "I'm not late. The festival ran long. Then there was another festival."),
       scarlet('tease', 'There are three festivals between here and the south coast, darling. She has attended five.'),
@@ -165,7 +165,7 @@ export const STORY: StoryChapter[] = [
       kaede('smile', "So you're the Anchor. Lemme look at you."),
       nar('She looks. It is like being weighed by a bonfire.'),
       ask(
-        kaede('tease', 'Hm. Small. Tired. Lets too many lights near the gate, from what I saw coming up the hill.'),
+        close(kaede('tease', 'Hm. Small. Tired. Lets too many lights near the gate, from what I saw coming up the hill.')),
         ['You watched and did not help?', 0, [kaede('laugh', "Ha! It talks back! Good. I can't follow somebody who doesn't.")]],
         ['Then show me how it is done.', 0, [kaede('laugh', 'HA! Oh, I like you. That was the right answer.')]],
       ),
@@ -175,7 +175,7 @@ export const STORY: StoryChapter[] = [
       you('You were the one who was late.'),
       kaede('laugh', 'And I got welcomed! See? The law works.'),
       yuki('smile', '...She is like this all the time.'),
-      yuki('shy', '...It is better when she is here.'),
+      close(yuki('shy', '...It is better when she is here.')),
       nar(
         "Kaede pretends not to hear that. She is not good at pretending. She ruffles Yuki's hair, very gently, the way you would touch something that could break.",
       ),

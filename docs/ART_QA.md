@@ -45,6 +45,8 @@ Measured on clean art: halo ≤ 0.03, tint ≤ 1.6 %, spill 0, mood IoU ≥ 0.99
 
 Already approved by the owner one picture at a time: every base portrait, the 15 new chibi poses and Selene's new front chibi, gallery 2–5 for the first four, Selene's gallery-1.
 
+**Big copies (`public/art/<id>/hd/`, D-037):** made 2026-10-04 for all 50 portraits with `scripts/upscale.py` (`4x-UltraSharpV2`), not committed. Agent eye review at 3×: face and hand of Selene (shy), both hands of Scarlet (base), arm and outline of Kaede (blush): same fingers, nails and features as the approved pictures, sharper lines, no new fringe on the outline. **Owner sign-off still needed** before they go into the game.
+
 ## 4. Fixing what the gate finds
 
 - **New cut-outs:** generate them with real transparency (ART_GUIDE §9, `transparent_background`), not a green screen: nothing to key, no coloured edges. `npm run art` strips the generator's faint fringe (`cleanAlpha`).

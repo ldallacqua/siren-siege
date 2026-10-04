@@ -120,10 +120,15 @@ export interface ChatNode {
   cg?: string | false;
   /** From this line on, the scene is somewhere else. */
   scene?: ChatScene;
+  /** How close the camera is for this line. Without it the story screen decides from her mood (ui/chat.ts). */
+  shot?: ChatShot;
   next?: string;
   choices?: [ChatChoice, ChatChoice];
   end?: boolean;
 }
+
+/** The camera's distance: her whole figure, the usual waist-up framing, or her face and shoulders. */
+export type ChatShot = 'far' | 'mid' | 'close';
 
 /** Backdrop for a chat (see chat scenes in ui/screens.ts + style.css). */
 export type ChatScene =

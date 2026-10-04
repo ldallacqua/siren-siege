@@ -2483,8 +2483,50 @@ body.in-battle .zoom-ctl {
   translate: -50% 0;
   filter: drop-shadow(0 calc(10 * var(--u)) calc(30 * var(--u)) rgba(0, 0, 0, 0.45));
   transform-origin: 50% 100%;
-  transition: filter 0.3s;
+  transition:
+    filter 0.3s,
+    height 0.7s var(--ease),
+    top 0.7s var(--ease),
+    left 0.7s var(--ease);
   animation: breathe 5s ease-in-out infinite;
+}
+body.calm .chat-portrait .chat-art {
+  transition: filter 0.3s;
+}
+/* The camera (chat.ts sets .shot-far / .shot-mid / .shot-close on the screen).
+   Far: her whole figure, smaller. Close: her face and shoulders, framed on where her
+   face is in this pose (--fx, --fy from data/faces.ts): the middle of her face sits at
+   the same place on screen whatever the pose. A sprite that --art-max keeps smaller
+   than the shot asks for still stands on the bottom edge. */
+.chat.shot-far {
+  --sprite-top: 12vh;
+  --sprite-top: 12dvh;
+  --sprite-h: 104vh;
+  --sprite-h: 104dvh;
+}
+.chat.shot-close {
+  --sprite-top: 6vh;
+  --sprite-top: 6dvh;
+  --sprite-h: 215vh;
+  --sprite-h: 215dvh;
+}
+.chat.shot-close .chat-portrait .chat-art.full {
+  top: max(calc(var(--sprite-top) - (var(--fy, 0.09) - 0.09) * var(--h)), 100% - var(--h));
+  left: calc(50% + (0.5 - var(--fx, 0.5)) * var(--h) * 0.6667);
+}
+@media (max-aspect-ratio: 1/1) {
+  .chat.shot-far {
+    --sprite-top: 20vh;
+    --sprite-top: 20dvh;
+    --sprite-h: 84vh;
+    --sprite-h: 84dvh;
+  }
+  .chat.shot-close {
+    --sprite-top: 16vh;
+    --sprite-top: 16dvh;
+    --sprite-h: 150vh;
+    --sprite-h: 150dvh;
+  }
 }
 /* Placeholder art (no portrait file) is a bust: stand it on the bottom edge. */
 .chat-portrait .chat-art:not(.full) {

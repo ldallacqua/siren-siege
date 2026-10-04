@@ -51,11 +51,11 @@ export function preloadAll(files: string[], maxMs = 1500): Promise<void> {
 }
 
 /** Every picture a chat can show: each speaker's poses, its scenes and its illustrations. */
-export function chatFiles(ep: ChatEpisode): string[] {
+export function chatFiles(ep: ChatEpisode, hd = false): string[] {
   const files = new Set<string>([sceneFile(ep.scene ?? 'night')]);
-  if (!ep.emptyStage) files.add(portraitFile(ep.heroine)).add(portraitFile(ep.heroine, 'smile'));
+  if (!ep.emptyStage) files.add(portraitFile(ep.heroine)).add(portraitFile(ep.heroine, 'smile', hd));
   for (const n of ep.nodes) {
-    if (n.speaker === 'her') files.add(portraitFile(n.who ?? ep.heroine, n.mood ?? 'smile'));
+    if (n.speaker === 'her') files.add(portraitFile(n.who ?? ep.heroine, n.mood ?? 'smile', hd));
     if (n.scene) files.add(sceneFile(n.scene));
     const pic = n.cg && GALLERY.find((g) => g.id === n.cg);
     if (pic) files.add(pic.file);

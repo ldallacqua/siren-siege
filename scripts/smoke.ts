@@ -394,12 +394,20 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   for (let i = 0; i < 3; i++) await page.locator('.chat-box').click();
   await shot('6-chat');
   // The story screen (docs/VN_DIRECTION.md 7): text sized from the screen, a big sprite that is
-  // never stretched past MAX_UPSCALE, and nothing over her face (the top fifth of the sprite).
+  // never stretched past MAX_UPSCALE (HD_UPSCALE for a big copy), and nothing over her face
+  // (where data/faces.ts says it is in this pose).
   const stage = () =>
     page.evaluate(() => {
       const img = document.querySelector<HTMLImageElement>('.chat-portrait .chat-art:last-child')!;
       const s = img.getBoundingClientRect();
-      const face = { l: s.left + s.width * 0.34, r: s.right - s.width * 0.34, t: s.top + s.height * 0.03, b: s.top + s.height * 0.19 };
+      const fx = parseFloat(img.style.getPropertyValue('--fx')) || 0.5;
+      const fy = parseFloat(img.style.getPropertyValue('--fy')) || 0.09;
+      const face = {
+        l: s.left + s.width * (fx - 0.1),
+        r: s.left + s.width * (fx + 0.1),
+        t: s.top + s.height * (fy - 0.05),
+        b: s.top + s.height * (fy + 0.045),
+      };
       const over = ['.chat-ep', '.chat-bond', '.chat-close', '.chat-box', '.chat-tools', '.chat-choices .choice'].filter((sel) =>
         Array.from(document.querySelectorAll(sel)).some((e) => {
           const r = e.getBoundingClientRect();
@@ -416,6 +424,10 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
         over,
         fits,
         upscale: (s.height * devicePixelRatio) / img.naturalHeight,
+        hd: img.currentSrc.includes('/hd/'),
+        faceY: (s.top + s.height * fy) / innerHeight,
+        faceX: (s.left + s.width * fx) / innerWidth,
+        shot: ['far', 'mid', 'close'].find((k) => document.querySelector('.screen.chat')!.classList.contains(`shot-${k}`)),
         spriteH: s.height / innerHeight,
         text: parseFloat(getComputedStyle(document.querySelector('.chat-text')!).fontSize),
         tools: Math.min(...Array.from(document.querySelectorAll('.chat-tool'), (e) => e.getBoundingClientRect().height)),
@@ -425,8 +437,13 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     const st = await stage();
     assert(!st.over.length, `story screen (${when}): ${st.over.join(', ')} covers her face`);
     assert(st.fits, `story screen (${when}): something is off screen`);
-    assert(st.upscale <= 1.26, `story sprite is stretched ${st.upscale.toFixed(2)}x`);
+    assert(st.upscale <= (st.hd ? 1.51 : 1.26), `story sprite is stretched ${st.upscale.toFixed(2)}x`);
     assert(st.spriteH > 0.7, `story sprite is small (${st.spriteH.toFixed(2)} of the screen height)`);
+    // Her face is on screen and above the text window, whatever the camera does.
+    assert(
+      st.faceY > 0.06 && st.faceY < 0.5 && st.faceX > 0.2 && st.faceX < 0.8,
+      `story (${when}): her face is at ${st.faceX}, ${st.faceY}`,
+    );
     assert(st.text >= 17, `story text is ${st.text}px`);
     assert(st.tools >= 40, `quick menu buttons are ${st.tools}px tall`);
     if (v.width > v.height && v.height > 520)
@@ -478,7 +495,15 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   await page.locator('.chat-box').waitFor();
   const voices = new Set<string>();
   const sprites = new Set<string>();
+  // …and the camera moves: far for an arrival, close for a blush, the face always in frame
+  const shots = new Map<string, number>();
   await readUntil(async () => {
+    if (await page.locator('.chat-portrait .chat-art').count()) {
+      await page.waitForTimeout(800); // the camera's move
+      const st = await stage();
+      if (st.shot) shots.set(st.shot, st.spriteH);
+      await checkStage(`the camera at ${st.shot}`);
+    }
     const seen = await page.evaluate(() => ({
       name: document.querySelector('.chat-name')!.textContent!,
       sprite: document.querySelector<HTMLImageElement>('.chat-portrait .chat-art:last-child')?.src.split('/art/')[1]?.split('/')[0] ?? '',
@@ -491,6 +516,10 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
     ['kaede', 'yuki', 'scarlet'].every((id) => sprites.has(id)),
     `second voices did not come on stage: ${[...sprites].join(', ')}`,
   );
+  // (her idle breathing moves the measured height by half a percent: hence the margin)
+  assert(shots.has('far') && shots.has('mid') && shots.has('close'), `the camera never moved: ${[...shots.keys()].join(', ')}`);
+  assert(shots.get('far')! < shots.get('mid')! + 0.02, 'the far shot is not smaller than the usual one');
+  assert(shots.get('close')! > shots.get('mid')! - 0.02, 'the close shot is smaller than the usual one');
   await page.getByTitle('Leave').click();
   await page.locator('.story-screen').waitFor();
 

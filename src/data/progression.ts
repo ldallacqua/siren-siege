@@ -103,7 +103,16 @@ export const HOME_SCENE: Record<string, ChatScene> = {
   nemu: 'teahouse',
 };
 
-/** Portrait used in shop, chat and roster. Mood variants: portrait-<mood>.webp */
-export function portraitFile(heroine: string, mood?: string): string {
-  return mood ? `art/${heroine}/portrait-${mood}.webp` : `art/${heroine}/portrait.webp`;
+/**
+ * Heroines whose portraits also have a big copy (`public/art/<id>/hd/`, twice the size,
+ * made from the approved picture by `scripts/upscale.py`). The story screen uses it
+ * where the standard file would be stretched: close-ups, and any high-density screen.
+ * A heroine is listed only when every portrait of hers has its copy (a test checks it).
+ */
+export const HD_PORTRAITS: readonly string[] = [];
+
+/** Portrait used in shop, chat and roster. Mood variants: portrait-<mood>.webp. `hd`: the big copy, if she has one. */
+export function portraitFile(heroine: string, mood?: string, hd = false): string {
+  const dir = hd && HD_PORTRAITS.includes(heroine) ? `art/${heroine}/hd` : `art/${heroine}`;
+  return mood ? `${dir}/portrait-${mood}.webp` : `${dir}/portrait.webp`;
 }

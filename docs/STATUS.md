@@ -2,7 +2,7 @@
 
 > Living handoff document. **Every session updates this before finishing** (see AGENTS.md §3).
 
-**Version:** 0.4.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-10-03
+**Version:** 0.4.0 · **Live:** https://ldallacqua.github.io/siren-siege/ · **Last updated:** 2026-10-04
 
 ## What works
 
@@ -49,16 +49,21 @@
 - **Battlefield readability:** chibis are drawn 30% larger (1.5 tiles tall) with a baked "sticker" outline (dark edge + a rim in her colour), on a solid coloured base; enemies drawn 15% larger with a dark outline; tapping a heroine's head selects her.
 - **Painted backdrops (D-030, `public/art/scenes/`):** 17 paintings, one per chat scene plus `menu` (the shrine courtyard). Chats show their scene behind her; the lobby, Bond screen and profile show each heroine in a place from her own chats (`HOME_SCENE`; the lobby crossfades when you switch heroine); the title shows the courtyard; menu screens show it under a heavy veil. Each file loads when its screen opens; without the file the old CSS scene shows.
 - Save in localStorage; `?dev` mode (all heroines, arenas and gallery pictures open, 99 of each gift).
-- Tooling: unit tests (72), balance bot, real-browser smoke test (5 screens: phone upright and sideways, tablet, laptop, 2560×1440) in a pre-push hook, Prettier, CI on PRs, auto-deploy to GitHub Pages from `main` (~1 min). README images regenerate with `npm run shots`.
+- Tooling: unit tests (79), balance bot, real-browser smoke test (5 screens: phone upright and sideways, tablet, laptop, 2560×1440) in a pre-push hook, Prettier, CI on PRs, auto-deploy to GitHub Pages from `main` (~1 min). README images regenerate with `npm run shots`.
+
+- **First-battle guide (B-29, D-035):** four prompts over the battlefield for a new Commander (deploy a Siren, place her, start the wave, upgrade her). They follow what the player does and block nothing; each lights up the control it names and the last one rings the heroine on the map. Ends at the first upgrade bought or at Skip, once per save (`save.guide`); Settings → "Show the battle guide again" brings it back, `?guide` forces it. `src/ui/guide.ts`.
+- **Story camera (D-036):** three distances on the story screen: far (whole figure), mid (the usual waist-up) and close (face and shoulders, framed on where her face is in that pose, `src/data/faces.ts`). A line asks for one with `far()` / `mid()` / `close()` in the script notation; without one, a blush brings the camera in, it stays in while she is shy or sad, and any other mood of hers lets it out. Kaede's six episodes and the three chapters are directed by hand; the older episodes get the automatic rule.
+- **Big copies of the portraits (D-037, waiting for the owner):** the story screen can use a copy twice the size (`public/art/<id>/hd/`, made from the approved picture by `scripts/upscale.py` with an upscaling model, nothing redrawn) where the standard file would be stretched. The code is in; `HD_PORTRAITS` in `progression.ts` is empty and no big copy is committed until the owner approves them (B-19).
 
 ## Known issues / limitations
 
 - **Big monitors:** at 2560×1440 every menu except the Bond screen is small (fixed pixel sizes). B-21.
+- **Close-ups need the big copies on most screens.** The portraits are 1536 px tall and are never stretched past 1.25×, so on a 1440p monitor, a 4K one at 200 % or a 3× phone the sprite is already at its limit: the camera's close shot only reframes her there, it cannot bring her closer. On a 1080p monitor it comes about a third closer. With the big copies (B-19) every screen gets the real close-up.
 - **Art scope:** every mood portrait exists now; all 20 gallery slots have art. The chibis, and `gallery-1` for Scarlet, Yuki and Kaede, predate the full-body portraits (Selene's chibi still shows her old closed-neck gown; her `gallery-1` was redone). The owner explicitly deferred the full 64-image set. Optional follow-up: B-01.
 - Audio is synthesized placeholder quality (no recorded samples). 60 fps with 200 enemies on a mid phone is **not yet measured** (sounds are rate-limited to 24 voices, particles capped at 400).
 - Balance only validated by the naive bot (`npm run sim`: loses around wave 19–20). No human playtest data yet.
 - Upgrade tiers stop at 3 (BTD6 has 5). No camo/regrow enemies, no hero abilities.
-- **Story against the owner's reference (Yuzusoft, `docs/VN_DIRECTION.md`):** done so far: the look (B-22), illustrations and Hide (B-23), second voices one at a time, the opening chapters, and Kaede's route. Still missing: several sprites on stage and the face icon (B-24); Back, resume and Config (B-25); the other four routes at the standard (B-26); arrival chapters for Nemu and Selene and the rest of the main story (B-16); day and dusk backdrops (B-28); Nemu's five gallery pictures; a how-to-play guide in the first battle (B-29). The sprite wears one outfit, so a scene that describes a kimono shows it only in the illustration. Voice acting and recorded music are out of reach.
+- **Story against the owner's reference (Yuzusoft, `docs/VN_DIRECTION.md`):** done so far: the look (B-22), illustrations and Hide (B-23), second voices one at a time, the opening chapters, and Kaede's route. Still missing: several sprites on stage and the face icon (B-24); Back, resume and Config (B-25); the other four routes at the standard (B-26); arrival chapters for Nemu and Selene and the rest of the main story (B-16); day and dusk backdrops (B-28); Nemu's five gallery pictures; The sprite wears one outfit, so a scene that describes a kimono shows it only in the illustration. Voice acting and recorded music are out of reach.
 - Battlefield texture is 80 px/tile: slightly soft at 3× zoom on high-DPI phones. Scenery props are decorative only (you can place a heroine on a tree or pond).
 - No 18+ age gate yet (required before any public promotion — see BACKLOG B-12).
 - Saves are per-browser only; clearing site data wipes progress.
@@ -66,6 +71,18 @@
 - **Owner decision pending:** license. `package.json` says `UNLICENSED` while the repo is public (all rights reserved by default).
 
 ## Last session
+
+**2026-10-04 — First-battle guide, story camera, big copies of the portraits prepared (Claude, local Windows session). Guide and camera on `main`; the big copies wait for the owner**
+
+- The owner asked for B-29 and for the heroine to come closer during a chat ("romantic pieces having her face closer"), and wondered whether it would look blurred and whether the portraits need upscaling.
+- **Guide (B-29):** see What works. The smoke test walks its four steps on the five screens (prompt inside the battlefield, clear of her panel and the zoom buttons, Skip at least 40 px).
+- **Camera:** see What works. The face positions of all 50 portraits were measured with `scripts/faces.py` (skin tone in the top of the picture; it draws a sheet to check by eye) and are in `src/data/faces.ts`. The smoke test reads "The Oni Is Late" and checks that the camera goes far, mid and close and that her face stays on screen above the text window.
+- **Sharpness, measured:** on the owner's monitor (3840×2160 at 200 %) the sprite is 89 % of the screen height at every distance with today's files (the 1.25× cap); a close-up there needs about 4600 px of picture and the files have 1536. So the answer to "will it blur" is: it would, and the game does not let it; it shows her small instead.
+- **Upscaling, tested:** four upscaling models already on the owner's PC (ComfyUI and `C:\dev\OpenTS\build\ai\models`) were tried on two poses. All keep the drawing as it is (same fingers, same nails, same face), only sharper. `4x-UltraSharpV2` keeps the most line detail and is the one used; all 50 portraits were enlarged to 2048×3072 (about 600 KB each, 30 MB in all) into `artifacts/hd/usv2/` (git-ignored). With them a 4K close-up is sharp at 1:1 (`artifacts/chat/hd4k-crop-face.jpg`).
+- **Waiting for the owner:** his look at the big copies. When he approves: copy `artifacts/hd/usv2/<id>/hd/` to `public/art/<id>/hd/`, list the five ids in `HD_PORTRAITS`, run the tests and the smoke test, commit. If he prefers another model: `scripts/upscale.py --model …` (header of the script).
+- Not done: the lobby, the Bond screen and the profile still use the standard files (they show her smaller on high-density screens for the same reason; the big copies would help there too). The guide was not played by hand on a touch device, only by the smoke test's touch emulation.
+
+**Previously:**
 
 **2026-10-03 — Audit (Claude, local Windows session). On `main`**
 
@@ -198,10 +215,11 @@
 
 ## Next up
 
+0. **Big copies of the portraits (B-19):** the owner compares today's files and the enlarged ones (sheets in `artifacts/chat/hd-*.jpg`, or the local preview) and says yes, no, or another model. On yes: the three steps under "Waiting for the owner" in Last session. Then use the big copies on the lobby, Bond and profile screens too.
 1. **Art gate sign-off (B-18):** the owner looks at `artifacts/art-check/` (or the game) and signs off each heroine in `docs/ART_QA.md`; redraw what he rejects. Ask him about B-19 (upscaled portraits for 4K framing).
 2. **Nemu follow-ups (owner):** confirm her chibi (B, two pins forward, is shipped; A, mid-throw, is the alternative), play her chats, and decide what to do with the two portrait poses he also liked (my suggestion: use them as gallery pictures). Her five gallery pictures are still placeholders (B-01).
 3. **Owner check of Kaede's and Selene's moods** (open a chat with each; any face he dislikes is one Codex image to redo with her `portrait.webp` as the reference, Kaede on blue, Selene on green). Then **T-08** (drop the `FULL_BODY` set, full body becomes the default framing). Then **Owner check:** Messages → a heroine → Gift / Diary / Talk. Then **owner playtest of the upgrade tree and the bigger heroines** (is 1.5 tiles right? `CHIBI_H` in `BattleScene.ts`; does the map panel sit on the right side of her?) and **install the PWA** on the phone (Add to Home Screen). Then **owner playtest of the skill effects** (upgrade each path to 3 with `?dev`; are signatures readable, too flashy at 3× speed?) and the longer music. Then **owner playtest of music + motion** (is the lofi too quiet/loud? any animation that feels slow or annoying? Tweak durations in the motion block of `style.css`). Then **owner playtest of the lobby + Frostveil Pass**, then the previous items. **Owner playtest (earlier):** read a Bond 5+ chat, watch combat at tier 3, listen to the new sounds. Tune in `Vfx.ts` / `sound.ts`.
-4. **Visual novel direction:** the owner plays the new opening and Kaede's six episodes (Story page or her Diary) and says whether he got attached; that verdict decides how the other four routes are written (B-26). Then B-24 (several sprites, face icon), B-25 (Back, resume, Config), B-29 (first-battle guide), arrival chapters for Nemu and Selene (B-16).
+4. **Visual novel direction:** the owner plays the new opening and Kaede's six episodes (Story page or her Diary) and says whether he got attached; that verdict decides how the other four routes are written (B-26). Then B-24 (several sprites, face icon), B-25 (Back, resume, Config), arrival chapters for Nemu and Selene (B-16).
 5. **B-21: menus on big monitors.** Ask the owner whether he wants one global UI scale or wide layouts screen by screen (the Bond screen is the sample).
 6. **Bond screen, owner playtest** on his monitor, tablet and phone: is head-to-shin the right framing for her on wide screens, and are the four lobby moods the right ones to give away?
 7. **Backdrops, owner playtest:** are the dim levels right on his phone (`--dim` on `.scene-art` / `.home-art`, `--veil` on `.screen` in `style.css`)? The battle results screen and arena cards could get their own paintings later.

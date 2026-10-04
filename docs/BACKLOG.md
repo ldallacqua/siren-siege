@@ -15,11 +15,14 @@ The art gate (`docs/ART_QA.md`) is in place and every heroine passes its automat
 - Likely redraws already known: the front chibis of Scarlet, Yuki and Kaede and their `gallery-1` predate the full-body portraits (B-01); Nemu's five gallery pictures.
 - Accept: every row in the ART_QA status table reads "ready".
 
-### B-19 · P3 · Sharper portraits for large high-DPI screens (owner decision)
+### B-19 · P1 · Big copies of the portraits (waiting for the owner's look)
 
-Portraits are 1536 px tall (the generator's maximum). On a 4K screen at 200 % the chat and home now show her smaller (head to ankle) to stay sharp (`MAX_UPSCALE` 1.25), where 1080p shows head to mid-thigh. Getting that framing back needs portraits ~3000 px tall: an AI upscaler (e.g. Real-ESRGAN anime, a new local tool) or a generator that outputs larger images. Codex's built-in image tool has no size option (checked 2026-10-03: always 1024×1536); its own notes say the paid API route (`gpt-image-2` with an `OPENAI_API_KEY`) takes sizes up to 2160×3840 but cannot output transparency, so that route would mean an API key (cost per image) plus the green screen again. Every upscaled portrait goes through the art gate again (hands!).
+The story screen has a camera now (D-036), and on most screens its close-up needs more pixels than the 1536 px portraits have. `scripts/upscale.py` enlarges the approved pictures to 2048×3072 with an upscaling model (`4x-UltraSharpV2`, already on the owner's PC; nothing is redrawn). All 50 are made and wait in `artifacts/hd/usv2/` (git-ignored); the code that uses them is on `main` behind an empty `HD_PORTRAITS` (D-037).
 
-- Accept: owner chooses; if done, `MAX_UPSCALE` framing on 4K matches 1080p and the gate passes.
+- Owner looks at the comparison sheets (`artifacts/chat/hd-*.jpg`) or the local preview and approves, rejects or picks another model.
+- On approval: copy to `public/art/<id>/hd/`, list the five ids in `HD_PORTRAITS`, `npm test`, `npm run smoke`, commit; record the sign-off in `docs/ART_QA.md`.
+- Then: the lobby, the Bond screen and the profile use the big copies too (`capUpscale` already allows them more), and `warmArt` decides what to fetch ahead.
+- Accept: on a 4K screen at 200 % the mid shot is head to thigh as on 1080p and the close shot is a real close-up, sharp at 1:1; a phone on data saver still gets the standard files.
 
 ## Visual novel direction (`docs/VN_DIRECTION.md`)
 
@@ -58,11 +61,15 @@ Kaede is done (`src/data/kaede.ts`, six episodes, D-034) and is the sample. The 
 - Cover the after-battle story chapters in the smoke test (they do not play in `?dev`): a second browser context without the flag, with a save that has one battle played.
 - Drop `seenPrologue` from `SaveData` once no code reads it (nothing does today).
 
-### B-29 · P1 · A guide through the first battle
+### ~~B-29 · P1 · A guide through the first battle~~ (done 2026-10-04, D-035)
 
-The opening now explains the world and what the Sirens do, but nothing in the battle itself shows a first-time player what to tap. Three or four prompts in the HUD on the first battle only: pick a heroine, place her beside the road, start the wave, tap her to upgrade.
+Done: `src/ui/guide.ts`. Left over: it was checked with the smoke test's touch emulation, not by hand on a phone; a fifth prompt about targeting or selling was left out on purpose.
 
-- Accept: shows once per save, can be dismissed, works by touch and mouse on all five screens.
+### B-31 · P2 · Direct the camera in the other four routes
+
+Kaede's route and the three chapters ask for far and close shots line by line (`far()`, `close()` in `src/data/script.ts`); the older episodes of Scarlet, Yuki, Selene and Nemu only get the automatic rule (a blush brings the camera in). When a route is rewritten (B-26) it is directed too; a data test already requires a close-up in every rewritten episode and chapter.
+
+- Accept: every episode of a rewritten route has at least one line that asks for a shot; the smoke test still finds her face on screen in every shot.
 
 ### B-27 · P2 · Chibi cut-ins
 

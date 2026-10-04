@@ -235,7 +235,7 @@ These are mock-ups built from the game's own art (`docs/vn/mock.html`; open it i
 
 - **Sprites are large.** On a landscape screen she is drawn at about 1.5 times the screen height and cut at the thigh by the text window. Never above `MAX_UPSCALE` (see section 8 on resolution).
 - **Up to three on screen** on landscape, at left, centre and right. The speaker is at full brightness and slightly larger; the others are a little smaller and dimmed. On a phone held upright only the speaker is on stage; the others are present as small faces above the window.
-- **Three shots** per line, set by the script: `far` (whole figure, arrivals and comedy), `mid` (the default, head to thigh), `near` (head and shoulders, for a line that matters).
+- **Three shots** per line, set by the script: `far` (whole figure, arrivals and comedy), `mid` (the default, head to thigh), `close` (head and shoulders, for a line that matters). Built 2026-10-04 (D-036): `far()`, `mid()`, `close()` in `src/data/script.ts`; a line that does not ask is framed by her mood (a blush brings the camera in). Use `close` for the line a scene turns on and for what she says quietly, `far` for an arrival or someone across the room, and let the rule handle the rest: a scene where every line asks for a shot reads like a slideshow.
 - **Entrances and exits** slide or fade; a pose change crossfades as today.
 - **The backdrop is not dimmed** in a story scene. A light grade at the top and the bottom keeps the ribbon and the text readable.
 

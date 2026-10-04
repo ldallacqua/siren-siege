@@ -1,4 +1,4 @@
-import { ask, at, cast, cg, nar, script, you } from './script.ts';
+import { ask, at, cast, cg, close, far, nar, script, you } from './script.ts';
 import type { ChatEpisode } from './types.ts';
 
 // Kaede's route, written to docs/VN_DIRECTION.md sections 4 to 6: the face (Bond 1),
@@ -21,13 +21,13 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       nar(
         'The shrine holds a small festival at the end of every week the gate survives. Tonight there are lanterns, drums, and one very loud oni who has decided it is hers.',
       ),
-      k('laugh', "COMMANDER! Over here! You're late!"),
+      far(k('laugh', "COMMANDER! Over here! You're late!")),
       k('tease', 'Late people drink first. Oni law.'),
       you('I am exactly on time.'),
       k('wink', "Then you're late for being early. Drink."),
       nar('The cup she hands me is the size of a soup bowl. She watches me decide.'),
       ask(
-        k('tease', 'Well? You gonna keep up with me, or do I carry you home?'),
+        close(k('tease', 'Well? You gonna keep up with me, or do I carry you home?')),
         ["Pour. I'm not scared of you.", 30, [k('laugh', "HA! That's the face! That's a commander's face!")]],
         [
           'One cup. I have to walk tomorrow.',
@@ -75,11 +75,11 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       ),
       k('tease', "Come on. Dance with me. Everyone's looking and I want 'em jealous."),
       you('I cannot dance.'),
-      k('wink', "Then hold on and let me do the work. I'm very good at that."),
+      close(k('wink', "Then hold on and let me do the work. I'm very good at that.")),
       nar(
         'She is. By the third song she is also carrying most of my weight, and humming something that is not the tune the drums are playing.',
       ),
-      k('smile', "Best festival in a hundred years. Don't tell the others I said so."),
+      close(k('smile', "Best festival in a hundred years. Don't tell the others I said so.")),
       k('laugh', 'Now home. And whoever gets carried buys breakfast. Oni law.'),
     ]),
   },
@@ -103,21 +103,25 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       nar('There is a full cup of sake next to the tea. It has been full for a while. That is the part that worries me.'),
       ask(
         k('pout', "It's nothing. A kid in the village. I waved, and she grabbed her mum's sleeve and said the lady had scary horns."),
-        ['It bothers you.', 25, [k('shy', "...You see through me too easy. It's annoying. Stay anyway.")]],
+        ['It bothers you.', 25, [close(k('shy', "...You see through me too easy. It's annoying. Stay anyway."))]],
         [
           'I think they suit you.',
           30,
           [k('blush', "...Yeah? You're not just being nice?"), you('I am rarely nice. Ask Scarlet.'), k('laugh', 'Ha! True.')],
         ],
       ),
-      k('sad', "It's dumb. I've been punched by things with more teeth than that kid has years."),
+      close(k('sad', "It's dumb. I've been punched by things with more teeth than that kid has years.")),
       k('sad', "She's right, though. They're horns. They're for scaring. That's what they're for."),
-      k('pout', 'I just forget, sometimes. Around here. You lot make it easy to forget.'),
+      close(k('pout', 'I just forget, sometimes. Around here. You lot make it easy to forget.')),
       nar('She is tracing the edge of one horn with her thumb. I do not think she knows she is doing it.'),
       ask(
-        k('shy', '...Wanna touch them? Nobody ever asks. People just stare. From over there.'),
+        close(k('shy', '...Wanna touch them? Nobody ever asks. People just stare. From over there.')),
         ['Can I?', 30, [k('blush', "I said so, didn't I? ...Go on.")]],
-        ['Only if you want me to.', 30, [k('pout', "I asked, didn't I? Obviously I want. Why else am I sitting here looking pathetic?")]],
+        [
+          'Only if you want me to.',
+          30,
+          [close(k('pout', "I asked, didn't I? Obviously I want. Why else am I sitting here looking pathetic?"))],
+        ],
       ),
       nar('They are warm. Smooth as a river stone, with a ridge near the base where one was chipped a long time ago and grew back.'),
       k('blush', '...Gently. They can feel, you know.'),
@@ -132,7 +136,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       yuki('tease', '...I never left. I wanted to see if it worked.'),
       cg(false, nar('Kaede throws a towel at her. It misses by a distance that has to be on purpose.')),
       k('smile', "Tomorrow I'm burning twice as many of those things. For you. And a few for the kid."),
-      k('shy', "...Maybe she'll watch from the wall. From over there is fine. It's a start."),
+      close(k('shy', "...Maybe she'll watch from the wall. From over there is fine. It's a start.")),
     ]),
   },
   {
@@ -177,7 +181,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       ),
       you('Kaede. What day is it?'),
       k('smile', "...Heh. You're too sharp. That's gonna be a problem for me."),
-      k('shy', "It's the Ember Festival. Would've been. Back home."),
+      close(k('shy', "It's the Ember Festival. Would've been. Back home.")),
       k(
         'smile',
         'Hinoe. Little oni village in the southern mountains. Every year we lit the fires and danced all night, and the Blight stayed out of the south. That was the deal. Our fire, their dark.',
@@ -186,9 +190,11 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       k('blush', '...I hum? Since when do I hum?'),
       k('laugh', 'The humans down the valley loved it. Best night of their year. They came up for the food and the drums.'),
       k('angry', 'They liked the festival. They never liked the dancers.'),
-      k(
-        'sad',
-        'One year somebody got scared enough to say it out loud. Horns. Fire. Too many of us, too close. So they barred the road. No fires. No dance.',
+      close(
+        k(
+          'sad',
+          'One year somebody got scared enough to say it out loud. Horns. Fire. Too many of us, too close. So they barred the road. No fires. No dance.',
+        ),
       ),
       k('sad', 'The Blight came that same night. It did not even wait a day.'),
       nar('She says it to the fire, not to me. I let her. Listening is the only thing I am actually good at.'),
@@ -207,7 +213,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
         [
           "I'm glad something was left standing. I'm glad it was you.",
           25,
-          [k('smile', "...Me too. Most days. Today's a good day. You're in it.")],
+          [close(k('smile', "...Me too. Most days. Today's a good day. You're in it."))],
         ],
       ),
       you('Eight bowls. Why eight?'),
@@ -244,7 +250,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
           'Fourteen was an undercount. The table is not visible. Kaede is kneeling behind it in a kimono I have never seen, sitting very straight, like someone waiting for a verdict.',
         ),
       ),
-      k('shy', "Hey. Sit. Eat. Don't say anything yet."),
+      far(k('shy', "Hey. Sit. Eat. Don't say anything yet.")),
       nar('I sit. I eat. It is extremely good, which I had no reason to expect and probably should have.'),
       ask(
         k('pout', '...Well? Say something. Not about today. About the food.'),
@@ -261,11 +267,16 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
         [
           'I did not know food could apologise.',
           25,
-          [k('pout', "It's not apologising! It's dinner!"), k('shy', '...Is it working?'), you('Completely.'), k('blush', '...Good.')],
+          [
+            k('pout', "It's not apologising! It's dinner!"),
+            close(k('shy', '...Is it working?')),
+            you('Completely.'),
+            k('blush', '...Good.'),
+          ],
         ],
       ),
       nar('Then she reaches across the table and takes my right hand, and turns it over, and looks at it for a long time.'),
-      k('sad', 'Not a mark.'),
+      close(k('sad', 'Not a mark.')),
       k(
         'sad',
         "I lost it out there today. You saw. The wave came in thick and something in me went, and then it wasn't me holding the fire any more.",
@@ -273,7 +284,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       k('shy', 'And you walked into it. Straight in. You took my wrist and said my name like you were asking me to pass the salt.'),
       you('It seemed like the thing to do.'),
       k('angry', 'It was a STUPID thing to do! You should have a hand like a roast chestnut!'),
-      k('shy', "...I checked. After. Four times. You were asleep on the bench. That's not weird."),
+      close(k('shy', "...I checked. After. Four times. You were asleep on the bench. That's not weird.")),
       nar(
         'An Anchor can hold what would burn anyone else. Selene told me that on the first night as if it were a small thing. Kaede is holding my hand as if it is not.',
       ),
@@ -324,12 +335,12 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       nar('No note this time. She comes to my door herself, knocks, and then stands there as if she has forgotten what doors are for.'),
       k('shy', "Hey. You busy? You're not busy. Come with me."),
       you('Is this a law?'),
-      k('pout', "No. It's not a law. I just... would you come with me. Please."),
+      close(k('pout', "No. It's not a law. I just... would you come with me. Please.")),
       nar('In all the time I have known her, Kaede Emberhorn has never said please. I get my coat.'),
       nar(
         'The courtyard is empty and every fire bowl is lit. Eight in a ring. And the ninth, the spare, set in the middle where a dancer would stand.',
       ),
-      k('shy', "Sit there. Don't laugh. If you laugh I'll set your sleeves on fire. Lovingly."),
+      far(k('shy', "Sit there. Don't laugh. If you laugh I'll set your sleeves on fire. Lovingly.")),
       ask(
         k('blush', "I'm serious. I haven't done this in front of anybody. I haven't done this at all."),
         [
@@ -348,7 +359,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
         ],
       ),
       k('smile', "There's a dance in Hinoe you only dance once. Not for the Blight. Not for the village."),
-      k('shy', "For one person. The one who carries your flame. That's what we called it."),
+      close(k('shy', "For one person. The one who carries your flame. That's what we called it.")),
       k(
         'sad',
         "My mum danced it for my dad. My gran for my grandad. I learned the steps at six and figured I'd never use them. Who was I gonna dance it for? Everyone who'd know what it meant is ash.",
@@ -356,7 +367,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       nar(
         'She takes a coal out of the ninth bowl with her bare fingers. It is white at the edges. She holds it out to me on her open palm.',
       ),
-      k('shy', 'This is the asking part. You take it out of my hand.'),
+      close(k('shy', 'This is the asking part. You take it out of my hand.')),
       k('sad', "If it burns you, that's a no. And that's okay, and we never talk about it, and I still fight for your shrine. I swear."),
       nar('Her hand is shaking. I have watched this woman headbutt a Colossus.'),
       ask(
@@ -383,7 +394,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       ),
       k('smile', 'I love you, you idiot. There. No law. Just true.'),
       cg(false, nar('The coal is still warm in my hand when the bowls burn low. I do not think it is going to go out.')),
-      k('wink', 'Now kiss me before the fire bowls get jealous.'),
+      close(k('wink', 'Now kiss me before the fire bowls get jealous.')),
     ]),
   },
   {
@@ -401,7 +412,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       nar(
         'The kitchen terrace is covered in food. Kaede is in the middle of it with her sleeves tied back, turning rice balls with the concentration of a bomb-maker, which she also is.',
       ),
-      k('smile', 'Morning. Sit. I made... okay, I made a lot.'),
+      far(k('smile', 'Morning. Sit. I made... okay, I made a lot.')),
       scarlet('tease', 'She has cooked for nine, darling. We are not nine. And one of us is on a liquid diet.'),
       k('pout', 'You eat. I have seen you eat.'),
       scarlet('wink', 'I taste. It is different. Good morning, Commander. You look rested. How unusual.'),
@@ -433,12 +444,12 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
       you('Nobody chews ice.'),
       k('laugh', 'SNOWBALL chews ice! Ha! I win!'),
       nar('I let her win. This, I am informed later, also counts as losing.'),
-      k('smile', "...Hey. It's weird, right? Nothing's different. Same shrine. Same road. Blight's still coming up it tonight."),
+      close(k('smile', "...Hey. It's weird, right? Nothing's different. Same shrine. Same road. Blight's still coming up it tonight.")),
       k(
         'shy',
         "But I woke up and I wasn't braced. You know? First thing every morning since Hinoe, there's a second where I check if everything's still there.",
       ),
-      k('smile', 'Today I just smelled the stove and thought, oh. Breakfast.'),
+      close(k('smile', 'Today I just smelled the stove and thought, oh. Breakfast.')),
       ask(
         k('blush', "That's you. You did that. I don't know how to say thanks for something that big, so I made forty rice balls."),
         ['Forty is about right.', 30, [k('laugh', 'Ha! Yeah. Yeah, I thought so too.')]],
@@ -453,7 +464,7 @@ export const KAEDE_EPISODES: ChatEpisode[] = [
         ],
       ),
       k('wink', "Put me at the bend in the road tonight. I'm gonna burn so bright the moon files a complaint."),
-      k('smile', "And after, come home with me. ...Please. See? Asking. I'm getting good at it."),
+      close(k('smile', "And after, come home with me. ...Please. See? Asking. I'm getting good at it.")),
     ]),
   },
 ];

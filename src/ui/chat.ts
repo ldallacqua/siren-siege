@@ -2,9 +2,10 @@ import { VOICE, sound } from '../audio/sound.ts';
 import { episodesFor } from '../data/dialogues.ts';
 import { HEROINE_BY_ID } from '../data/heroines.ts';
 import { GALLERY, MAX_BOND, bondProgress, portraitFile } from '../data/progression.ts';
-import type { ChatEpisode, ChatNode, ChatScene } from '../data/types.ts';
+import { faceOf } from '../data/faces.ts';
+import type { ChatEpisode, ChatNode, ChatScene, ChatShot } from '../data/types.ts';
 import { addXp, markCgSeen, persist, reducedMotion, save } from '../state/save.ts';
-import { artChain, backdrop, capUpscale, show } from './common.ts';
+import { artChain, backdrop, capUpscale, show, wantsHdArt } from './common.ts';
 import { h, hex } from './dom.ts';
 import { icon } from './icons.ts';
 import { chatFiles, preloadAll } from './preload.ts';
@@ -17,6 +18,8 @@ import { chatFiles, preloadAll } from './preload.ts';
  * quick menu (log, auto, skip, hide), and an end card with Bond gained and unlocks.
  * A tap anywhere on the picture advances. A line can bring a second voice on stage
  * (`who`), move the scene (`scene`) or show an illustration full screen (`cg`).
+ * The camera has three distances (far, mid, close): a line can ask for one, and
+ * otherwise her mood decides.
  */
 
 export interface ChatOptions {
@@ -58,13 +61,15 @@ let opening = false;
 export function playChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions = {}): void {
   if (opening) return;
   opening = true;
-  void preloadAll(chatFiles(ep), 1500).then(() => {
+  // The big copies of her portraits where this screen would stretch the standard ones.
+  const hd = wantsHdArt();
+  void preloadAll(chatFiles(ep, hd), hd ? 2500 : 1500).then(() => {
     opening = false;
-    openChat(ep, onCloseRaw, opts);
+    openChat(ep, onCloseRaw, opts, hd);
   });
 }
 
-function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): void {
+function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions, hd: boolean): void {
   // Her own theme while you talk; the previous music comes back afterwards.
   const prevMusic = sound.music;
   sound.startMusic(`chat-${ep.heroine}`);
@@ -123,7 +128,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   const screen = h(
     'section',
     {
-      class: `screen chat scene-${scene}`,
+      class: `screen chat scene-${scene} shot-mid`,
       style: `--c:${hex(d.color)};--a:${hex(d.accent)}`,
       // Anywhere on the picture advances; buttons and the layers above it do their own thing.
       onclick: (e: Event) => {
@@ -181,8 +186,13 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     const m = `${id}/${pose}`;
     if (m === mood && portrait.firstChild) return;
     mood = m;
-    const img = artChain([portraitFile(id, pose), portraitFile(id)], id, HEROINE_BY_ID[id]?.name ?? id, true, 'chat-art enter');
+    const files = [...new Set([portraitFile(id, pose, hd), portraitFile(id, pose), portraitFile(id)])];
+    const img = artChain(files, id, HEROINE_BY_ID[id]?.name ?? id, true, 'chat-art enter');
     capUpscale(img);
+    // Where her face is in this pose: a close-up is framed on it (style.css).
+    const [fx, fy] = faceOf(id, pose);
+    img.style.setProperty('--fx', String(fx));
+    img.style.setProperty('--fy', String(fy));
     // Swap only once the new picture is decoded, so the old one never blinks out first.
     // Moods are different poses: the old one fades out under the new one (style.css
     // `.leave`) instead of vanishing, or an arm that moved would pop out of the air.
@@ -236,6 +246,24 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     }
   };
 
+  // The camera. A line can ask for a shot; without one, a blush brings the camera in and
+  // it stays in while she is shy or sad, and any other mood of hers lets it back out.
+  // Narration and the Commander's own lines leave it where it is.
+  let shot: ChatShot = 'mid';
+  const shotFor = (n: ChatNode): ChatShot => {
+    if (n.shot) return n.shot;
+    if (n.speaker !== 'her') return shot;
+    const m = n.mood ?? 'smile';
+    if (m === 'blush') return 'close';
+    return shot === 'close' && (m === 'shy' || m === 'sad') ? 'close' : 'mid';
+  };
+  const setShot = (s: ChatShot) => {
+    shot = s;
+    if (screen.classList.contains(`shot-${s}`)) return;
+    screen.classList.remove('shot-far', 'shot-mid', 'shot-close');
+    screen.classList.add(`shot-${s}`);
+  };
+
   /** Hide the window and the menus to look at the picture; the next tap brings them back. */
   const setHidden = (on: boolean) => {
     if (hidden === on || closed) return;
@@ -253,6 +281,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     const voice = VOICE[who.id] ?? 1.5;
     track(node);
     syncStage();
+    setShot(shotFor(node));
     if (speaker === 'her') setPortrait(who.id, node.mood ?? 'smile');
     else if (!portrait.firstChild && !ep.emptyStage) setPortrait(ep.heroine, 'smile');
     // The window takes the speaker's colour; narration and your own lines are neutral.
@@ -359,6 +388,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
       if (!n) break;
       node = n;
       track(n);
+      shot = shotFor(n); // the camera follows the skipped lines; render() shows where it ended up
       if (n.speaker === 'her') last = n;
       log.push({ who: whoOf(n), text: n.text, kind: n.speaker, color: voiceOf(n).color });
     }

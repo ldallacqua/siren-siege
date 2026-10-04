@@ -48,6 +48,8 @@ The story screen (chats and story chapters) is the exception to the dark look: b
 - Section labels: small uppercase label with a short gold rule.
 - Motion: see **Motion** below. Never re-render a screen for an in-screen change (update nodes in place, D-016).
 
+- **Guide prompt** (`.guide`, the first battle): a small dark card with a gold left edge at the bottom of the battlefield (top when her panel is at the bottom), sized from the screen (`clamp(15px, 1.55vmin, 26px)`), never over her panel or the zoom buttons. It lets taps through; only Skip is a button. What it talks about is marked with a pulsing gold frame laid over the control (`.guide-lights`), because `clip-path` buttons cut their own outlines off.
+
 ## Motion (`src/ui/motion.ts` + the "motion" block at the end of `style.css`)
 
 - Easing tokens: `--ease` (settle, most things), `--spring` (slight overshoot: pops, modals, badges), `--out` (exits). Micro-interactions 120–200 ms, entrances 350–450 ms, exits ~300 ms (exits are faster than entrances).

@@ -2,18 +2,20 @@
 import { describe, expect, it } from 'vitest';
 import { EPISODES } from '../src/data/dialogues.ts';
 import { KAEDE_EPISODES } from '../src/data/kaede.ts';
-import { ask, cast, nar, script } from '../src/data/script.ts';
+import { FACES, faceOf } from '../src/data/faces.ts';
+import { ask, cast, close, far, nar, script } from '../src/data/script.ts';
 import { STORY } from '../src/data/story.ts';
 import { ENEMIES, ENEMY_BY_ID, rbe } from '../src/data/enemies.ts';
 import { HEROINES } from '../src/data/heroines.ts';
 import { IDLE_LINES } from '../src/data/lore.ts';
 import { MAPS, WAVES } from '../src/data/maps.ts';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import {
   BOND_XP,
   CHAT_SCENES,
   FULL_BODY,
   GALLERY,
+  HD_PORTRAITS,
   HOME_SCENE,
   LOBBY_MOODS,
   MAX_BOND,
@@ -152,8 +154,40 @@ describe('dialogues', () => {
         if (n.scene) expect(scenes, `${ep.id}:${n.id} scene`).toContain(n.scene);
         // an episode only shows a picture of its own heroine
         if (n.cg) expect(GALLERY.find((g) => g.id === n.cg)?.heroine, `${ep.id}:${n.id} cg`).toBe(ep.heroine);
+        if (n.shot) expect(['far', 'mid', 'close'], `${ep.id}:${n.id} shot`).toContain(n.shot);
       }
     }
+  });
+
+  it('a rewritten route and every chapter direct the camera: it comes close and it steps back', () => {
+    for (const ep of [...KAEDE_EPISODES, ...STORY.map((c) => c.ep)]) {
+      const shots = new Set(ep.nodes.map((n) => n.shot));
+      expect(shots.has('close'), `${ep.id} never asks for a close-up`).toBe(true);
+    }
+    const k = cast();
+    const { nodes } = script([far(k('smile', 'a')), close(nar('b')), k('wink', 'c')]);
+    expect(nodes.map((n) => n.shot)).toEqual(['far', 'close', undefined]);
+  });
+
+  it('face positions are measured for real heroines and poses, inside the top of the picture', () => {
+    const heroIds = new Set(HEROINES.map((h) => h.id));
+    for (const [id, poses] of Object.entries(FACES)) {
+      expect(heroIds.has(id), id).toBe(true);
+      for (const [pose, [x, y]] of Object.entries(poses)) {
+        expect(pose === 'base' || (MOODS as readonly string[]).includes(pose), `${id} ${pose}`).toBe(true);
+        expect(x > 0.3 && x < 0.7 && y > 0.02 && y < 0.25, `${id} ${pose}: ${x}, ${y}`).toBe(true);
+      }
+    }
+    expect(faceOf('nobody', 'smile')).toEqual([0.5, 0.09]);
+  });
+
+  it('a heroine listed in HD_PORTRAITS has a big copy of every portrait', () => {
+    for (const id of HD_PORTRAITS) {
+      const files = readdirSync(`public/art/${id}`).filter((f) => /^portrait(-\w+)?\.webp$/.test(f));
+      expect(files.length, id).toBeGreaterThan(0);
+      for (const f of files) expect(existsSync(`public/art/${id}/hd/${f}`), `public/art/${id}/hd/${f}`).toBe(true);
+    }
+    expect(portraitFile('nobody', 'smile', true)).toBe('art/nobody/portrait-smile.webp');
   });
 
   it('main-story chapters have unique ids, a chapter number, and never hand out Bond', () => {

@@ -102,6 +102,20 @@ export function artChain(files: string[], heroine: string, label: string, portra
  * them 2× (blurry). 1.25 still looks sharp.
  */
 export const MAX_UPSCALE = 1.25;
+/** The big copies (art/<id>/hd/) have clean, hard edges and take a little more. */
+export const HD_UPSCALE = 1.5;
+
+/**
+ * Whether the story screen should use the big copies of her portraits: when its closest
+ * shot would stretch the standard file past MAX_UPSCALE on this screen. Never with the
+ * browser's data saver on or on a device short of memory: there she is shown smaller.
+ */
+export function wantsHdArt(): boolean {
+  const nav = navigator as Navigator & { connection?: { saveData?: boolean }; deviceMemory?: number };
+  if (nav.connection?.saveData || (nav.deviceMemory ?? 8) < 4) return false;
+  const closest = innerHeight * (innerWidth > innerHeight ? 2.15 : 1.5) * devicePixelRatio;
+  return closest > 1536 * MAX_UPSCALE;
+}
 
 /**
  * Sets --art-max on a big portrait: the tallest it may be drawn (CSS px) without
@@ -109,7 +123,10 @@ export const MAX_UPSCALE = 1.25;
  * shows a little smaller instead of blurry.
  */
 export function capUpscale(img: HTMLImageElement): HTMLImageElement {
-  const cap = () => img.style.setProperty('--art-max', `${(img.naturalHeight * MAX_UPSCALE) / devicePixelRatio}px`);
+  const cap = () => {
+    const most = img.currentSrc.includes('/hd/') ? HD_UPSCALE : MAX_UPSCALE;
+    img.style.setProperty('--art-max', `${(img.naturalHeight * most) / devicePixelRatio}px`);
+  };
   if (img.complete && img.naturalHeight) cap();
   img.addEventListener('load', cap);
   return img;

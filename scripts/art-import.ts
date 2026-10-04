@@ -38,7 +38,7 @@ for (const dir of readdirSync(ROOT)) {
     continue;
   }
   for (const file of readdirSync(full)) {
-    if (file === 'README.md' || file === '.gitkeep') continue;
+    if (file === 'README.md' || file === '.gitkeep' || file === 'hd') continue; // hd/: big copies from scripts/upscale.py
     const ext = extname(file).toLowerCase();
     const base = file.slice(0, file.length - ext.length).toLowerCase();
     const kind: ArtKind | null = scenes ? (SCENE_FILES.includes(base) ? 'scene' : null) : kindOf(base);

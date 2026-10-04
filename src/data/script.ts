@@ -13,6 +13,7 @@ import type { ChatNode, ChatScene } from './types.ts';
 //     ask(k('tease', 'Well?'), ['Bold answer.', 30, [k('blush', '…')]], ['Safe answer.', 15, []]),
 //     cg('kaede-g2', k('wink', '…')),   // from here the illustration fills the screen
 //     cg(false, nar('…')),              // back to the stage
+//     close(k('smile', '…')),           // the camera comes in for this line (far, mid, close)
 //     k('smile', 'Her last line.'),
 //   ])
 
@@ -38,6 +39,14 @@ export const ask = (line: Draft, a: Option, b: Option): Draft => ({ ...line, opt
 export const cg = (id: string | false, line: Draft): Draft => ({ ...line, cg: id });
 /** From this line on, the scene is somewhere else. */
 export const at = (scene: ChatScene, line: Draft): Draft => ({ ...line, scene });
+// The camera. A line without one of these is framed by her mood: a blush brings the camera
+// in, and it stays in while she is shy or sad (ui/chat.ts). These say it for one line.
+/** Her whole figure: an arrival, someone across the room. */
+export const far = (line: Draft): Draft => ({ ...line, shot: 'far' });
+/** The usual framing, from the waist up. */
+export const mid = (line: Draft): Draft => ({ ...line, shot: 'mid' });
+/** Her face and shoulders: the line that matters. */
+export const close = (line: Draft): Draft => ({ ...line, shot: 'close' });
 
 export function script(lines: Draft[]): { start: string; nodes: ChatNode[] } {
   const nodes: ChatNode[] = [];

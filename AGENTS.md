@@ -61,6 +61,7 @@ src/
     script.ts        Notation for long episodes: lines in reading order, branches that rejoin -> node graph
     kaede.ts         Kaede's route rewritten to docs/VN_DIRECTION.md (six episodes, Bond 10 "After")
     story.ts         Main-story chapters (play by themselves once, replayable from the Story page)
+    faces.ts         Where her face is in every portrait (close-ups are framed on it); measured by scripts/faces.py
     gifts.ts         Gift items, heroine tastes, gift XP, battle drops, reaction lines
     lore.ts          Codex entries, bestiary text, per-heroine story entries unlocked by Bond
     progression.ts   Bond XP thresholds, gallery slots, art file naming, moods, scenes
@@ -82,7 +83,8 @@ src/
     bond.ts          Messages: heroine select, her Bond screen (diary of episodes, Talk, Gift); giftArt.ts draws gift badges
     preload.ts       Image preloading + known-missing art (chats wait for their moods)
     screens.ts       Home, roster, profile, Story (replay everything), codex, gallery, results, pause, options, settings
-    chat.ts          The story screen (VN_DIRECTION 7): scene, big sprite, frameless window, choice bars, log/auto/skip, end card
+    chat.ts          The story screen (VN_DIRECTION 7): scene, big sprite, camera (far/mid/close), frameless window, choice bars, log/auto/skip, end card
+    guide.ts         The first battle's guide: four prompts that follow the player's moves (D-035)
     common.ts        show(), artChain(), backdrop(), bondBar(), topbar() shared by screens
     art.ts           Loads public/art files, falls back to generated SVG placeholders; lightbox
     icons.ts         Inline SVG icon set (use this, never emoji/unicode glyphs in UI chrome)
@@ -91,10 +93,11 @@ src/
   state/save.ts    localStorage save (versioned), bond XP, unlocks, ?dev flag
   main.ts          Boot, DPR-aware resize, app flow (home ↔ battle ↔ results), match XP awards
   style.css        All styling; orientation handled with aspect-ratio media queries
-scripts/           balance-sim.ts, smoke.ts, art-import.ts + art-check.ts (the art gate; chroma.ts keying, artSpec.ts file spec, browser.ts), make-icons.ts (PWA icons), session-start.sh
+scripts/           balance-sim.ts, smoke.ts, art-import.ts + art-check.ts (the art gate; chroma.ts keying, artSpec.ts file spec, browser.ts), make-icons.ts (PWA icons), session-start.sh,
+                   faces.py (measures face positions -> src/data/faces.ts), upscale.py (big copies of portraits -> public/art/<id>/hd/, D-037)
 public/sw.js       Service worker (installable PWA, offline); public/manifest.webmanifest
 tests/             data, sim, chibi, camera and audio tests
-public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp)
+public/art/<id>/   Heroine art (portrait.webp, portrait-<mood>.webp, gallery-<n>.webp; hd/: big copies of the portraits)
 public/art/scenes/ Painted backdrops: one per chat scene + menu (SCENE_FILES in progression.ts)
 docs/              GDD, ARCHITECTURE, UI_STYLE, VN_DIRECTION (+ vn/ mock of the story screen), LORE, ART_DIRECTION, ART_GUIDE, STATUS, BACKLOG, DECISIONS
 public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
@@ -110,11 +113,11 @@ public/fonts/      Self-hosted Cinzel + Barlow Semi Condensed (OFL)
 
 **Tune difficulty:** edit `WAVES` in `maps.ts`, enemy `speed`/`hp`, or economy constants in `BattleSim.endWave()`/`pop()`. Target: `npm run sim` (a naive bot buying cheapest upgrades) should reach wave ~18–20 and lose narrowly; a thinking player wins.
 
-**Write a chat:** read `docs/LORE.md` (canon) and `docs/VN_DIRECTION.md` (the standard for a heroine and a scene, sections 4–6, and the checklist in section 10) first. Write it with the notation in `src/data/script.ts` (see `src/data/kaede.ts`): lines in reading order, `ask()` for a decision whose branches rejoin, `cast('yuki')` for a second voice, `cg()` to show one of her gallery pictures, `at()` to move the scene. The older episodes in `dialogues.ts` use `her()/nar()/pick()/end()` with hand-written ids; a route moves to its own file when it is rewritten. Main-story chapters go in `src/data/story.ts`. The owner reads the story in the game, not as a draft: do not paste plot or lines into your replies. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of `MOODS` in `src/data/progression.ts`: smile, laugh, tease, wink, blush, shy, pout, angry, sad. Each is a whole pose of hers, so pick the one whose body language fits the line, give every line of hers a mood (a line without one falls back to `smile` and she snaps back to that pose), and only use a mood she has art for (`public/art/<id>/portrait-<mood>.webp`; a test fails otherwise). Tests verify links, reachability and endings.
+**Write a chat:** read `docs/LORE.md` (canon) and `docs/VN_DIRECTION.md` (the standard for a heroine and a scene, sections 4–6, and the checklist in section 10) first. Write it with the notation in `src/data/script.ts` (see `src/data/kaede.ts`): lines in reading order, `ask()` for a decision whose branches rejoin, `cast('yuki')` for a second voice, `cg()` to show one of her gallery pictures, `at()` to move the scene, `far()` / `close()` to move the camera for a line (without them her mood decides: a blush comes close). The older episodes in `dialogues.ts` use `her()/nar()/pick()/end()` with hand-written ids; a route moves to its own file when it is rewritten. Main-story chapters go in `src/data/story.ts`. The owner reads the story in the game, not as a draft: do not paste plot or lines into your replies. Two choices per decision; `affection` 10 (meh) – 30 (she loves it). Moods must be one of `MOODS` in `src/data/progression.ts`: smile, laugh, tease, wink, blush, shy, pout, angry, sad. Each is a whole pose of hers, so pick the one whose body language fits the line, give every line of hers a mood (a line without one falls back to `smile` and she snaps back to that pose), and only use a mood she has art for (`public/art/<id>/portrait-<mood>.webp`; a test fails otherwise). Tests verify links, reachability and endings.
 
 **Write a lobby line** (what she says when tapped on the home screen): add it to `IDLE_LINES` in `src/data/lore.ts` with the Bond `level` that unlocks it and a `mood`. She takes that pose while the line shows. Only the everyday moods are allowed there (`LOBBY_MOODS`: smile, tease, wink, pout); the other five stay a surprise for her chats (a test enforces it).
 
-**Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots. Art is not done until it passes the art gate (`docs/ART_QA.md`): `npm run art:check` green, the review sheets looked at (count fingers on every hand), and the owner's sign-off recorded in the ART_QA status table.
+**Add art:** drop files into `public/art/<id>/` using the names in `docs/ART_GUIDE.md` §2. No code change. For a new or replaced portrait also run `python scripts/faces.py` and paste its output into `src/data/faces.ts` (close-ups are framed on her face), and if she is in `HD_PORTRAITS` remake her big copy with `scripts/upscale.py` (a test fails without it). If the owner uploaded PNG/JPG ("import the new art"), run `npm run art`, fix anything it lists, then `npm run smoke` and check the screenshots. Art is not done until it passes the art gate (`docs/ART_QA.md`): `npm run art:check` green, the review sheets looked at (count fingers on every hand), and the owner's sign-off recorded in the ART_QA status table.
 
 **Add a new screen:** add a `showX()` in `ui/screens.ts` that builds DOM with `h()` and calls `show()`. Style in `style.css` with a portrait and a short-landscape variant.
 
