@@ -2,6 +2,8 @@
 # and prints the rows for src/data/faces.ts. The face is found as the first dense patch of
 # skin tone from the top of the picture; artifacts/faces.png shows each pose with a cross
 # on the result, so look at it before pasting. Needs Pillow and numpy.
+# Known misses: Kaede (her bells) and Selene (her gold moon) read as skin, and the cross lands
+# on the ornament. Their rows in faces.ts are placed by hand; do not paste over them.
 #
 #   python scripts/faces.py
 import os

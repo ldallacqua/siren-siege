@@ -169,7 +169,9 @@ def join(hero, pose, work, out):
         drawn = (solid / np.maximum(weight, 1e-6))[..., 0]
         near = np.ones((3, 3), np.uint8)
         surely_in = cv2.erode((alpha > 0.95).astype(np.uint8), near, iterations=7).astype(np.float32)
-        maybe_in = cv2.dilate((alpha > 0.05).astype(np.uint8), near, iterations=7).astype(np.float32)
+        # (wide and soft: GPT draws loose hairs a little past the approved outline, and a tight
+        # or hard limit cuts them off in a visible line)
+        maybe_in = cv2.GaussianBlur(cv2.dilate((alpha > 0.05).astype(np.uint8), near, iterations=18).astype(np.float32), (0, 0), 5)
         alpha = np.clip(np.maximum(drawn, surely_in) * maybe_in, 0, 1)
         inner = cv2.erode((alpha > 0.9).astype(np.uint8), near, iterations=2).astype(bool)
         # (where a tile left a hole in what must be solid, the colours come from around it)
