@@ -561,6 +561,61 @@ async function runView(browser: Awaited<ReturnType<typeof launch>>, base: string
   assert(await page.evaluate(() => (window as any).siren.save.settings.musicVolume === 0.2), 'music slider did not save');
   await shot('10-settings');
 
+  // The first-battle guide, asked for again in Settings: four prompts that follow the player's
+  // moves, each inside the battlefield, clear of her panel, with the control it names lit up.
+  await page.getByRole('button', { name: 'Show the battle guide again' }).click();
+  await page.getByTitle('Back', { exact: true }).click();
+  await page.getByRole('button', { name: /Play/ }).click();
+  await page.getByRole('button', { name: 'Moonlit Shrine' }).click();
+  await page.locator('.dock.shop').waitFor();
+  const guideAt = async (title: string, lit: string | null, step: string) => {
+    await page.locator('.guide b', { hasText: title }).waitFor({ timeout: 5000 });
+    const g = await page.evaluate((lit) => {
+      const r = document.querySelector('.guide')!.getBoundingClientRect();
+      const st = document.getElementById('stage')!.getBoundingClientRect();
+      const hit = (sel: string) =>
+        Array.from(document.querySelectorAll(sel)).some((e) => {
+          const q = e.getBoundingClientRect();
+          return q.width > 0 && q.left < r.right && q.right > r.left && q.top < r.bottom && q.bottom > r.top;
+        });
+      return {
+        inside: r.left >= st.left - 1 && r.right <= st.right + 1 && r.top >= st.top - 1 && r.bottom <= st.bottom + 1,
+        covers: ['.hpanel', '.zoom-ctl'].filter(hit),
+        lit: lit ? document.querySelectorAll(`${lit}.guide-target`).length : 1,
+        skip: document.querySelector('.guide-skip')!.getBoundingClientRect().height,
+      };
+    }, lit);
+    assert(g.inside, `guide (${title}) is not inside the battlefield`);
+    assert(!g.covers.length, `guide (${title}) covers ${g.covers.join(', ')}`);
+    assert(g.lit > 0, `guide (${title}) did not light up ${lit}`);
+    assert(g.skip >= 40, `the guide's Skip button is ${g.skip}px tall`);
+    await shot(step);
+  };
+  await guideAt('Deploy a Siren', '.dock.shop .card', '12-guide-deploy');
+  await page.locator('.card', { hasText: 'Scarlet' }).click();
+  await guideAt('Place her', v.touch ? '.dock.placing .btn' : null, '12b-guide-place');
+  const spot = await tileToPage(page, 5.5, 5.5);
+  await tap(page, v.touch, spot);
+  if (v.touch) await page.getByRole('button', { name: 'Place', exact: true }).click();
+  await page.locator('.hpanel').waitFor({ timeout: 3000 });
+  await guideAt('Start the wave', '.btn.start', '12c-guide-start');
+  await page.keyboard.press('Escape');
+  await page.locator('.hpanel').waitFor({ state: 'detached' });
+  await page.getByRole('button', { name: /Start/ }).click();
+  await guideAt('Upgrade her', null, '12d-guide-upgrade');
+  const ringOff = await page.evaluate(() => {
+    const r = document.querySelector('.guide-ring')!.getBoundingClientRect();
+    const p = (window as any).siren.scene.pagePoint(5.5, 5.5) as { x: number; y: number };
+    return Math.hypot(r.left + r.width / 2 - p.x, r.top + r.height / 2 - p.y);
+  });
+  assert(ringOff < 3, `the guide's ring is ${ringOff.toFixed(1)}px off the heroine`);
+  await tap(page, v.touch, spot);
+  await page.locator('.hpanel').waitFor();
+  await guideAt('Upgrade her', '.hpanel button.hp-path', '12e-guide-paths');
+  await page.locator('.hpanel .btn.buy').first().click();
+  await page.locator('.guide').waitFor({ state: 'detached' });
+  assert(await page.evaluate(() => (window as any).siren.save.guide === 'done'), 'the guide did not end at the first upgrade');
+
   await ctx.close();
   assert(errors.length === 0, `page errors:\n${errors.join('\n')}`);
 }

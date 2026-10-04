@@ -11,6 +11,7 @@ import { rollDrops } from './data/gifts.ts';
 import { h, toast } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
 import { Hud } from './ui/Hud.ts';
+import { guideDue, startGuide } from './ui/guide.ts';
 import { playChat } from './ui/chat.ts';
 import { backdrop } from './ui/common.ts';
 import { applyCalm, wipe } from './ui/motion.ts';
@@ -139,13 +140,16 @@ document.addEventListener(
 );
 
 const hud = new Hud(side, stage);
-hud.locate = (t) => {
-  const p = scene.pagePoint(t.x, t.y);
+/** A map position in CSS px relative to the stage. */
+const onStage = (x: number, y: number) => {
+  const p = scene.pagePoint(x, y);
   const r = stage.getBoundingClientRect();
   return { x: p.x - r.left, y: p.y - r.top };
 };
+hud.locate = (t) => onStage(t.x, t.y);
 scene.onToast = toast;
 let battle: Battle | null = null;
+let stopGuide: (() => void) | null = null;
 
 let lastMap = MAPS[0].id;
 
@@ -200,6 +204,9 @@ function beginBattle(mapId: string): void {
   };
   scene.setBattle(battle);
   hud.attach(battle);
+  // After the HUD, so each prompt finds the controls the HUD has just drawn.
+  stopGuide?.();
+  stopGuide = guideDue() ? startGuide(battle, stage, onStage) : null;
   sound.startMusic(battle.map.id);
   setPlaying(true);
 }
@@ -262,6 +269,8 @@ function enterHome(): void {
   sound.duck(false);
   sound.startMusic('menu');
   scene.setBattle(null);
+  stopGuide?.();
+  stopGuide = null;
   hud.attach(null);
   setPlaying(false);
   showHome(home);

@@ -28,6 +28,8 @@ export interface SaveData {
   story?: string[];
   /** Battles played to the end, won or lost (older saves: unknown, see battlesPlayed()). */
   battles?: number;
+  /** The first-battle guide: finished or skipped, or asked for again in Settings (ui/guide.ts). */
+  guide?: 'done' | 'again';
   /** Gift inventory by gift id (added after v0.4; older saves get the starter pack). */
   gifts?: Record<string, number>;
 }

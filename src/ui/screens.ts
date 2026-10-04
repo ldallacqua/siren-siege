@@ -441,6 +441,19 @@ function showSettings(a: HomeActions): void {
             { class: 'panel' },
             h('p', { style: 'margin-bottom:10px' }, 'Tap a card, then tap the map to deploy. Pinch or scroll to zoom, drag to pan.'),
             keyList(),
+            h(
+              'button',
+              {
+                class: 'btn',
+                style: 'margin-top:12px',
+                onclick: () => {
+                  save.guide = 'again';
+                  persist();
+                  toast('The guide will show in your next battle');
+                },
+              },
+              'Show the battle guide again',
+            ),
           ),
           h('div', { class: 'label' }, 'Data'),
           h(
