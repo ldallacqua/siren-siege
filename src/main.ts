@@ -6,7 +6,7 @@ import { MAPS } from './data/maps.ts';
 import { HEROINES } from './data/heroines.ts';
 import { Battle } from './game/Battle.ts';
 import { BattleScene } from './game/BattleScene.ts';
-import { addGifts, addXp, battlesPlayed, dev, isUnlocked, markStory, persist, save, storySeen } from './state/save.ts';
+import { addGifts, addXp, battlesPlayed, dev, isUnlocked, markStory, persist, save, storySeen, unlockedIds } from './state/save.ts';
 import { rollDrops } from './data/gifts.ts';
 import { h, toast } from './ui/dom.ts';
 import { icon, type IconName } from './ui/icons.ts';
@@ -19,7 +19,7 @@ import { portraitFile } from './data/progression.ts';
 import { closeScreens, showHome, showOptions, showPauseMenu, showResults, type HomeActions, showMapSelect } from './ui/screens.ts';
 
 applyCalm();
-warmArt();
+warmArt(unlockedIds());
 
 // iOS home-screen apps with a translucent status bar size fixed layers one
 // status bar short, leaving a band at the bottom. There, size the app to the

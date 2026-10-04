@@ -1,6 +1,6 @@
 import type { ChatEpisode } from '../data/types.ts';
 import { HEROINES } from '../data/heroines.ts';
-import { GALLERY, MOODS, portraitFile, sceneFile } from '../data/progression.ts';
+import { GALLERY, LOBBY_MOODS, portraitFile, sceneFile } from '../data/progression.ts';
 
 /**
  * Image preloading. Art is decoded before a screen that swaps pictures (chat
@@ -63,12 +63,19 @@ export function chatFiles(ep: ChatEpisode): string[] {
   return [...files];
 }
 
-/** Warm the cache in idle time: every portrait, then every mood variant. */
-export function warmArt(): void {
+/**
+ * Warm the cache in idle time: every portrait (the roster shows them all), then the
+ * lobby poses of the heroines this player has. The chat-only poses load when a chat
+ * opens (it waits for them). It used to fetch all 50 files, 16 MB, on the first visit,
+ * whoever was unlocked; for a new player it is now 4.8 MB, and with the browser's
+ * data saver on, the poses are left for when they are needed.
+ */
+export function warmArt(recruited: string[]): void {
   const idle = (fn: () => void) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn) : setTimeout(fn, 400));
+  const saver = !!(navigator as { connection?: { saveData?: boolean } }).connection?.saveData;
   idle(() => {
-    void Promise.all(HEROINES.map((h) => preload(portraitFile(h.id)))).then(() =>
-      idle(() => HEROINES.forEach((h) => MOODS.forEach((m) => void preload(portraitFile(h.id, m))))),
-    );
+    void Promise.all(HEROINES.map((h) => preload(portraitFile(h.id)))).then(() => {
+      if (!saver) idle(() => recruited.forEach((id) => LOBBY_MOODS.forEach((m) => void preload(portraitFile(id, m)))));
+    });
   });
 }

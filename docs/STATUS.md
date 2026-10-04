@@ -67,6 +67,14 @@
 
 ## Last session
 
+**2026-10-03 — Audit (Claude, local Windows session). On `main`**
+
+- The owner asked for a free audit. Fixed: the first-visit background download (16 MB of poses for all five heroines, now 4.8 MB for a new player and none of the poses under data saver); the story text was announced letter by letter to screen readers (now each line once); keys 1 and 2 could answer a choice hidden by Hide.
+- Checked and fine: no known vulnerabilities in runtime dependencies; the live build is the one on `main`; the service worker fetches pages and art network-first, so a deploy shows on the next visit; no `innerHTML` with outside data; the lobby lines and "Her story" texts do not contradict the new opening.
+- Found, not fixed (in BACKLOG as B-30): 14 portrait files are over 400 KB (Yuki's poses are 530 to 690 KB each) and could be re-encoded; `seenPrologue` in the save is dead; the chapters that follow a finished battle are not covered by the smoke test because they do not play in `?dev`; the Story page and the log are small on a 1440p monitor (B-21).
+
+**Previously:**
+
 **2026-10-03 — Illustrations in scenes, the Story page, a new opening, Kaede's route (Claude, local Windows session). On `main`**
 
 - The owner said: go with B-23; Kaede first; he does not want to review the story as drafts but to read it in the game; the opening does not explain or engage enough; everything (chats, pictures, the first dialogues) must be replayable. D-034 records what followed from that. **Do not paste plot or lines into replies to him** (he wants to read it unspoiled); `docs/LORE.md` now has a spoiler section for agents.

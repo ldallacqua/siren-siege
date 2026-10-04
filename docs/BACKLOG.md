@@ -52,6 +52,12 @@ Kaede is done (`src/data/kaede.ts`, six episodes, D-034) and is the sample. The 
 - Accept: the "rewritten route" data test covers her; LORE updated; the episode checklist (VN_DIRECTION 10).
 - Scarlet's proposed gap ("out of date") and the side cast were never put to the owner (VN_DIRECTION 11, decisions 5 and 6). He asked not to review story drafts, so decide in the writing and let him react to the result.
 
+### B-30 · P2 · Audit leftovers (2026-10-03)
+
+- Re-encode the 14 portrait poses over 400 KB (Yuki's are 530 to 690 KB) at a lower WebP quality and compare them side by side; the owner approves the result, since it is his art.
+- Cover the after-battle story chapters in the smoke test (they do not play in `?dev`): a second browser context without the flag, with a save that has one battle played.
+- Drop `seenPrologue` from `SaveData` once no code reads it (nothing does today).
+
 ### B-29 · P1 · A guide through the first battle
 
 The opening now explains the world and what the Sirens do, but nothing in the battle itself shows a first-time player what to tap. Three or four prompts in the HUD on the first battle only: pick a heroine, place her beside the road, start the wave, tap her to upgrade.

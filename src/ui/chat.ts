@@ -107,9 +107,11 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
   const line = h('span', { class: 'chat-line' });
   const rest = h('span', { class: 'chat-rest', 'aria-hidden': 'true' });
   const more = h('i', { class: 'chat-more', 'aria-hidden': 'true' });
-  const text = h('div', { class: 'chat-text', 'aria-live': 'polite' }, line, rest, more);
+  const text = h('div', { class: 'chat-text', 'aria-hidden': 'true' }, line, rest, more);
+  // The typewriter is for the eyes; a screen reader gets each line whole, once.
+  const said = h('div', { class: 'sr-only', 'aria-live': 'polite' });
   const choices = h('div', { class: 'chat-choices' });
-  const box = h('div', { class: 'chat-box' }, name, text);
+  const box = h('div', { class: 'chat-box' }, name, text, said);
   const hearts = h('div', { class: 'chat-hearts', 'aria-hidden': 'true' });
   const fx = h('canvas', { class: 'chat-fx', 'aria-hidden': 'true' });
   const bondFill = h('span', { class: 'bond-fill' });
@@ -268,6 +270,7 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     log.push({ who: name.textContent, text: node.text, kind: speaker, color: who.color });
     line.textContent = '';
     rest.textContent = fullText;
+    said.textContent = name.textContent ? `${name.textContent}: ${fullText}` : fullText;
     choices.replaceChildren();
     screen.classList.remove('choosing');
     more.classList.remove('on');
@@ -520,12 +523,12 @@ function openChat(ep: ChatEpisode, onCloseRaw: () => void, opts: ChatOptions): v
     if (k === ' ' || k === 'enter') {
       e.preventDefault();
       advance();
-    } else if ((k === '1' || k === '2') && node.choices && !typing) {
-      const c = node.choices[Number(k) - 1];
-      pickChoice(c.next, c.affection, c.text, Number(k) - 1);
     } else if (k === 'h') setHidden(!hidden);
     else if (hidden) setHidden(false);
-    else if (k === 'a') setAuto(!auto);
+    else if ((k === '1' || k === '2') && node.choices && !typing) {
+      const c = node.choices[Number(k) - 1];
+      pickChoice(c.next, c.affection, c.text, Number(k) - 1);
+    } else if (k === 'a') setAuto(!auto);
     else if (k === 's') skip();
     else if (k === 'l') openLog();
     else if (k === 'escape') finish(false);
